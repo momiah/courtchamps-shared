@@ -9,7 +9,7 @@ import {
   CollectionName,
   CompetitionLocation,
   ApprovalStatus,
-  CourtInput,
+  Court,
 } from "./types";
 import moment from "moment";
 
@@ -206,13 +206,19 @@ const competitionLocationSchema: CompetitionLocation = {
   ...locationSchema,
 };
 
-export const courtSchema: CourtInput = {
+export const courtSchema: Court = {
+  courtId: "",
   courtName: "",
   location: {
     ...locationSchema,
     latitude: null,
     longitude: null,
   },
+  verified: false,
+  submittedBy: "",
+  verifiedBy: null,
+  verifiedAt: null,
+  createdAt: new Date(),
 };
 
 export const leagueSchema: League = {
