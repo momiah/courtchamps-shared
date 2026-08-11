@@ -11,9 +11,8 @@ export interface CourtLocation extends Location {
 }
 
 /**
- * A single physical court in the court registry. Shared out from
- * courtchamps-website so the mobile app and backend can consume the same
- * shape. (The venue-level aggregate with competition counts is `CourtVenue`.)
+ * A single physical court in the `courts` collection — the one shared court
+ * shape written by both courtchamps-website and the mobile app.
  */
 export interface Court {
   courtId: string;

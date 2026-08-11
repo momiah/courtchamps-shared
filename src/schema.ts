@@ -9,7 +9,7 @@ import {
   CollectionName,
   CompetitionLocation,
   ApprovalStatus,
-  CourtVenue,
+  CourtInput,
 } from "./types";
 import moment from "moment";
 
@@ -206,17 +206,13 @@ const competitionLocationSchema: CompetitionLocation = {
   ...locationSchema,
 };
 
-export const courtSchema: CourtVenue = {
+export const courtSchema: CourtInput = {
   courtName: "",
-  courtDescription: "",
-  courtImage: "",
-  location: locationSchema,
-  numberOfLeagues: 0,
-  numberOfCourts: 0,
-  numberOfTeams: 0,
-  numberOfPlayers: 0,
-  numberOfGames: 0,
-  numberOfTournaments: 0,
+  location: {
+    ...locationSchema,
+    latitude: null,
+    longitude: null,
+  },
 };
 
 export const leagueSchema: League = {
