@@ -9,7 +9,7 @@ import {
   CollectionName,
   CompetitionLocation,
   ApprovalStatus,
-  Court,
+  CourtVenue,
 } from "./types";
 import moment from "moment";
 
@@ -206,7 +206,7 @@ const competitionLocationSchema: CompetitionLocation = {
   ...locationSchema,
 };
 
-export const courtSchema: Court = {
+export const courtSchema: CourtVenue = {
   courtName: "",
   courtDescription: "",
   courtImage: "",

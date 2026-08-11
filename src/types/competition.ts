@@ -29,7 +29,13 @@ export interface CompetitionLocation extends Location {
   courtId: string;
 }
 
-export interface Court {
+/**
+ * A venue/location that hosts play — carries aggregate competition counts
+ * (note `numberOfCourts`: a venue contains multiple courts). Distinct from
+ * `Court` (a single physical court in the registry). Used by the mobile app's
+ * court-selection and league context flows.
+ */
+export interface CourtVenue {
   id?: string;
   courtName: string;
   courtImage?: string;
