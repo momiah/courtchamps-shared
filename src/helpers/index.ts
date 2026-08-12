@@ -13,3 +13,4 @@ export { isShellGame } from "./advanceBrackets";
 export { generateInitialTeamStats } from "./generateInitialTeamStats";
 export { normalizeTeamKey } from "./generateInitialTeamStats";
 export { createTeam } from "./generateInitialTeamStats";
+export * from "./getRankInCompetition";
