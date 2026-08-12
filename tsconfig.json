@@ -5,8 +5,6 @@
     "moduleResolution": "Node",
     "lib": ["ES2019"],
     "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,

@@ -28,6 +28,13 @@
       "require": "./dist/helpers/index.js"
     }
   },
+  "typesVersions": {
+    "*": {
+      "types": ["dist/types/index.d.ts"],
+      "schema": ["dist/schema.d.ts"],
+      "helpers": ["dist/helpers/index.d.ts"]
+    }
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "prepare": "npm run build",
