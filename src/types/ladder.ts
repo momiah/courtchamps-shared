@@ -1,3 +1,6 @@
+import { ScoreboardProfile } from "./player";
+import { TeamStats } from "./competition";
+
 export const LADDER_STATUS = {
   REGISTRATION_OPEN: "registrationOpen",
   REGISTRATION_CLOSED: "registrationClosed",
@@ -46,6 +49,10 @@ export interface Ladder {
   maxPlayers: number;
   participantCount: number;
   prizesDistributed: boolean;
+  // Empty at creation; populated as users join (mirrors
+  // League.leagueParticipants / League.leagueTeams).
+  ladderParticipants?: ScoreboardProfile[];
+  ladderTeams?: TeamStats[];
   createdBy: string;
   createdAt: Date;
   updatedBy: string;

@@ -2,6 +2,8 @@ export { calculatePlayerPerformance } from "./calculatePlayerPerformance";
 export { calculateTeamPerformance } from "./calculateTeamPerformance";
 export { transformDate } from "./dateTransform";
 export { calculateTournamentPrizePool } from "./calculateTournamentPrizePool";
+export { calculateLadderPrizePool, PLATFORM_FEE } from "./calculateLadderPrizePool";
+export type { LadderPrizePoolParams } from "./calculateLadderPrizePool";
 export { recalculateParticipantsFromFixtures } from "./recalculatePerformance";
 export { getOrderedApprovedGames } from "./recalculatePerformance";
 export { advanceBrackets } from "./advanceBrackets";
