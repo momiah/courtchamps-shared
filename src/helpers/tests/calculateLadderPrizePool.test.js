@@ -1,57 +1,90 @@
 import {
   calculateLadderPrizePool,
   PLATFORM_FEE,
+  LADDER_XP_PER_PLAYER,
 } from "../calculateLadderPrizePool";
 
 describe("calculateLadderPrizePool", () => {
-  describe("PAID ladder (entryFee > 0)", () => {
-    it("returns collected entry fees less the platform fee", () => {
+  describe("cash pot (paid ladders only)", () => {
+    it("PAID: returns collected entry fees less the platform fee", () => {
       // 10 * 8 = 80 collected, minus 10% platform fee => 72
-      const pot = calculateLadderPrizePool({
+      const { cash } = calculateLadderPrizePool({
         entryFee: 10,
         participantCount: 8,
       });
 
-      expect(pot).toBeCloseTo(72, 5);
+      expect(cash).toBeCloseTo(72, 5);
+      expect(cash).toBeCloseTo(80 * (1 - PLATFORM_FEE), 5);
     });
 
-    it("ignores the free-ladder game inputs when paid", () => {
-      const pot = calculateLadderPrizePool({
-        entryFee: 5,
-        participantCount: 4,
-        numberOfGamesPlayed: 100,
-        totalGamePointsWon: 9999,
+    it("PAID: matches the worked £20 / 1024-player example", () => {
+      // 20 * 1024 * 0.9 = 18,432
+      const { cash } = calculateLadderPrizePool({
+        entryFee: 20,
+        participantCount: 1024,
       });
 
-      // 5 * 4 * (1 - 0.10) = 18
-      expect(pot).toBeCloseTo(20 * (1 - PLATFORM_FEE), 5);
-      expect(pot).toBeCloseTo(18, 5);
+      expect(cash).toBeCloseTo(18432, 5);
     });
 
-    it("is zero when no one has joined a paid ladder", () => {
-      expect(
-        calculateLadderPrizePool({ entryFee: 10, participantCount: 0 })
-      ).toBe(0);
+    it("FREE: cash pot is 0", () => {
+      const { cash } = calculateLadderPrizePool({
+        entryFee: 0,
+        participantCount: 6,
+      });
+
+      expect(cash).toBe(0);
+    });
+
+    it("is 0 when no one has joined a paid ladder", () => {
+      const { cash } = calculateLadderPrizePool({
+        entryFee: 10,
+        participantCount: 0,
+      });
+
+      expect(cash).toBe(0);
     });
   });
 
-  describe("FREE ladder (entryFee === 0)", () => {
-    it("uses the league formula (participants * games + points) / 2", () => {
-      // (6 * 10 + 40) / 2 = 50
-      const pot = calculateLadderPrizePool({
+  describe("XP pot (flat per participant, awarded on every ladder)", () => {
+    it("is participantCount * LADDER_XP_PER_PLAYER", () => {
+      const { xp } = calculateLadderPrizePool({
         entryFee: 0,
         participantCount: 6,
-        numberOfGamesPlayed: 10,
-        totalGamePointsWon: 40,
       });
 
-      expect(pot).toBe(50);
+      expect(xp).toBe(6 * LADDER_XP_PER_PLAYER);
     });
 
-    it("defaults missing game inputs to 0", () => {
-      expect(
-        calculateLadderPrizePool({ entryFee: 0, participantCount: 6 })
-      ).toBe(0);
+    it("stays bounded on a large ladder (1024 players)", () => {
+      const { xp } = calculateLadderPrizePool({
+        entryFee: 20,
+        participantCount: 1024,
+      });
+
+      expect(xp).toBe(1024 * LADDER_XP_PER_PLAYER);
+    });
+
+    it("is the same on paid and free ladders of equal size", () => {
+      const free = calculateLadderPrizePool({
+        entryFee: 0,
+        participantCount: 12,
+      });
+      const paid = calculateLadderPrizePool({
+        entryFee: 10,
+        participantCount: 12,
+      });
+
+      expect(paid.xp).toBe(free.xp);
+    });
+
+    it("is 0 when no one has joined", () => {
+      const { xp } = calculateLadderPrizePool({
+        entryFee: 0,
+        participantCount: 0,
+      });
+
+      expect(xp).toBe(0);
     });
   });
 });
