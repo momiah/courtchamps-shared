@@ -7,7 +7,6 @@ import {
 describe("calculateLadderPrizePool", () => {
   describe("cash pot (paid ladders only)", () => {
     it("PAID: returns collected entry fees less the platform fee", () => {
-      // 10 * 8 = 80 collected, minus 10% platform fee => 72
       const { cash } = calculateLadderPrizePool({
         entryFee: 10,
         participantCount: 8,
@@ -18,7 +17,6 @@ describe("calculateLadderPrizePool", () => {
     });
 
     it("PAID: matches the worked £20 / 1024-player example", () => {
-      // 20 * 1024 * 0.9 = 18,432
       const { cash } = calculateLadderPrizePool({
         entryFee: 20,
         participantCount: 1024,

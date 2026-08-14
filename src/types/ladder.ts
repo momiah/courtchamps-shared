@@ -49,8 +49,6 @@ export interface Ladder {
   maxPlayers: number;
   participantCount: number;
   prizesDistributed: boolean;
-  // Empty at creation; populated as users join (mirrors
-  // League.leagueParticipants / League.leagueTeams).
   ladderParticipants?: ScoreboardProfile[];
   ladderTeams?: TeamStats[];
   createdBy: string;
