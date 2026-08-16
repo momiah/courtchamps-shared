@@ -15,6 +15,15 @@ export const LADDER_STATUS_LABELS: Record<LadderStatus, string> = {
   [LADDER_STATUS.CANCELLED]: "Cancelled",
 };
 
+const KNOWN_LADDER_STATUSES = new Set<string>(Object.values(LADDER_STATUS));
+
+export const normalizeLadderStatus = (
+  value: string | null | undefined,
+): LadderStatus =>
+  value != null && KNOWN_LADDER_STATUSES.has(value)
+    ? (value as LadderStatus)
+    : LADDER_STATUS.REGISTRATION_OPEN;
+
 export type LadderPhaseState = "completed" | "active" | "upcoming";
 
 export const getLadderPhaseState = (

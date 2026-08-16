@@ -2,6 +2,7 @@ import {
   LADDER_STATUS_SEQUENCE,
   LADDER_STATUS_LABELS,
   getLadderPhaseState,
+  normalizeLadderStatus,
 } from "../ladderStatus";
 import { LADDER_STATUS } from "../../types/ladder";
 
@@ -59,6 +60,27 @@ describe("ladder status timeline", () => {
       expect(
         getLadderPhaseState(LADDER_STATUS.CANCELLED, LADDER_STATUS.PLAYOFFS),
       ).toBe("upcoming");
+    });
+  });
+
+  describe("normalizeLadderStatus", () => {
+    it("keeps a known status unchanged", () => {
+      expect(normalizeLadderStatus(LADDER_STATUS.PLAYOFFS)).toBe(
+        LADDER_STATUS.PLAYOFFS,
+      );
+      expect(normalizeLadderStatus(LADDER_STATUS.CANCELLED)).toBe(
+        LADDER_STATUS.CANCELLED,
+      );
+    });
+
+    it("coerces missing or legacy statuses to registrationOpen", () => {
+      expect(normalizeLadderStatus(undefined)).toBe(
+        LADDER_STATUS.REGISTRATION_OPEN,
+      );
+      expect(normalizeLadderStatus(null)).toBe(LADDER_STATUS.REGISTRATION_OPEN);
+      expect(normalizeLadderStatus("draft")).toBe(
+        LADDER_STATUS.REGISTRATION_OPEN,
+      );
     });
   });
 });

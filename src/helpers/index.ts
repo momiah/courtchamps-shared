@@ -15,6 +15,7 @@ export {
   LADDER_STATUS_SEQUENCE,
   LADDER_STATUS_LABELS,
   getLadderPhaseState,
+  normalizeLadderStatus,
 } from "./ladderStatus";
 export type { LadderPhaseState } from "./ladderStatus";
 export { recalculateParticipantsFromFixtures } from "./recalculatePerformance";
