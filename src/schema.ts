@@ -27,6 +27,7 @@ export const leagueStatus = [
 export const COMPETITION_TYPES = {
   LEAGUE: "league",
   TOURNAMENT: "tournament",
+  LADDER: "ladder",
 };
 
 export const COLLECTION_NAMES: Record<CollectionName, string> = {
