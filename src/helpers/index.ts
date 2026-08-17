@@ -18,6 +18,14 @@ export {
   normalizeLadderStatus,
 } from "./ladderStatus";
 export type { LadderPhaseState } from "./ladderStatus";
+export {
+  LADDER_PLAYOFF_STRUCTURE,
+  LADDER_PLAYOFF_SIZES,
+  PLAYOFF_SPOTS_DIVISOR,
+  IN_THE_MONEY_DIVISOR,
+  getLadderPlayoffStructure,
+} from "./ladderPlayoffStructure";
+export type { LadderPlayoffStructure } from "./ladderPlayoffStructure";
 export { recalculateParticipantsFromFixtures } from "./recalculatePerformance";
 export { getOrderedApprovedGames } from "./recalculatePerformance";
 export { advanceBrackets } from "./advanceBrackets";
