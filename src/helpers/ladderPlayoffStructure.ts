@@ -36,26 +36,8 @@ export const getLadderPlayoffStructure = (
   };
 };
 
-/**
- * Smallest ladder size that runs a playoff / prize distribution. Below this a
- * ladder has not reached the first tier, so no spots or prizes are allocated.
- */
 export const LADDER_MIN_PLAYOFF_SIZE = 256;
 
-/**
- * The playoff/payout structure is TIERED, not based on a ladder's advertised
- * maxPlayers. Prizes are distributed against the ladder's *actual* size at the
- * close of registration, snapped DOWN to the nearest defined tier.
- *
- * Example: a 2048-capacity ladder that only reaches 512 registrations by the
- * registration end date pays out at the 512 tier (32 playoff spots, 16 in the
- * money) — not the 2048 tier.
- *
- * @param registeredCount number of players registered at registration close
- * @param maxPlayers      optional cap; the effective size never exceeds it
- * @returns the effective tier size (a key of LADDER_PLAYOFF_STRUCTURE), or 0
- *          when fewer than LADDER_MIN_PLAYOFF_SIZE players registered
- */
 export const getEffectiveLadderSize = (
   registeredCount: number,
   maxPlayers?: number,
@@ -67,17 +49,9 @@ export const getEffectiveLadderSize = (
       ? Math.min(registeredCount, maxPlayers)
       : registeredCount;
 
-  // LADDER_PLAYOFF_SIZES is ordered largest-first, so the first tier that is
-  // <= the registered count is the highest tier the ladder actually reached.
   return LADDER_PLAYOFF_SIZES.find((size) => size <= capped) ?? 0;
 };
 
-/**
- * Tiered playoff structure driven by the ladder's actual registrations at
- * registration close (see {@link getEffectiveLadderSize}). This is the source
- * of truth the payout function should consume; the onboarding screen uses it to
- * explain how prizes scale with the final ladder size.
- */
 export const getLadderPlayoffStructureForRegistrations = (
   registeredCount: number,
   maxPlayers?: number,
