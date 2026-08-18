@@ -3,7 +3,10 @@ import {
   LADDER_PLAYOFF_SIZES,
   PLAYOFF_SPOTS_DIVISOR,
   IN_THE_MONEY_DIVISOR,
+  LADDER_MIN_PLAYOFF_SIZE,
   getLadderPlayoffStructure,
+  getEffectiveLadderSize,
+  getLadderPlayoffStructureForRegistrations,
 } from "../ladderPlayoffStructure";
 
 describe("ladder playoff structure", () => {
@@ -85,6 +88,62 @@ describe("ladder playoff structure", () => {
         playoffSpots: 0,
         inTheMoney: 0,
       });
+    });
+  });
+
+  describe("getEffectiveLadderSize (tiered by actual registrations)", () => {
+    it("snaps the registered count down to the nearest defined tier", () => {
+      expect(getEffectiveLadderSize(2048)).toBe(2048);
+      expect(getEffectiveLadderSize(1024)).toBe(1024);
+      expect(getEffectiveLadderSize(512)).toBe(512);
+      expect(getEffectiveLadderSize(256)).toBe(256);
+      expect(getEffectiveLadderSize(700)).toBe(512);
+      expect(getEffectiveLadderSize(511)).toBe(256);
+      expect(getEffectiveLadderSize(3000)).toBe(2048);
+    });
+
+    it("returns 0 below the minimum playoff size", () => {
+      expect(getEffectiveLadderSize(255)).toBe(0);
+      expect(getEffectiveLadderSize(LADDER_MIN_PLAYOFF_SIZE - 1)).toBe(0);
+      expect(getEffectiveLadderSize(0)).toBe(0);
+      expect(getEffectiveLadderSize(-10)).toBe(0);
+      expect(getEffectiveLadderSize(Number.NaN)).toBe(0);
+    });
+
+    it("never exceeds the ladder's maxPlayers cap", () => {
+      // A 512-capacity ladder can never pay out beyond the 512 tier.
+      expect(getEffectiveLadderSize(5000, 512)).toBe(512);
+      expect(getEffectiveLadderSize(300, 512)).toBe(256);
+    });
+  });
+
+  describe("getLadderPlayoffStructureForRegistrations", () => {
+    it("pays out at the tier the ladder actually reached, not maxPlayers", () => {
+      // 2048-capacity ladder, only 512 registered -> 512 tier.
+      expect(getLadderPlayoffStructureForRegistrations(512, 2048)).toEqual({
+        playoffSpots: 32,
+        inTheMoney: 16,
+      });
+    });
+
+    it("uses the highest reached tier for an in-between count", () => {
+      expect(getLadderPlayoffStructureForRegistrations(700, 2048)).toEqual({
+        playoffSpots: 32,
+        inTheMoney: 16,
+      });
+    });
+
+    it("distributes nothing when the minimum tier is not reached", () => {
+      expect(getLadderPlayoffStructureForRegistrations(200, 2048)).toEqual({
+        playoffSpots: 0,
+        inTheMoney: 0,
+      });
+    });
+
+    it("matches the full-tier structure when the ladder fills", () => {
+      expect(getLadderPlayoffStructureForRegistrations(2048, 2048)).toEqual(
+        LADDER_PLAYOFF_STRUCTURE[2048],
+      );
     });
   });
 });
