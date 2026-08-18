@@ -35,3 +35,28 @@ export const getLadderPlayoffStructure = (
     inTheMoney: Math.floor(maxPlayers / IN_THE_MONEY_DIVISOR),
   };
 };
+
+export const LADDER_MIN_PLAYOFF_SIZE = 256;
+
+export const getEffectiveLadderSize = (
+  registeredCount: number,
+  maxPlayers?: number,
+): number => {
+  if (!Number.isFinite(registeredCount) || registeredCount <= 0) return 0;
+
+  const capped =
+    maxPlayers && maxPlayers > 0
+      ? Math.min(registeredCount, maxPlayers)
+      : registeredCount;
+
+  return LADDER_PLAYOFF_SIZES.find((size) => size <= capped) ?? 0;
+};
+
+export const getLadderPlayoffStructureForRegistrations = (
+  registeredCount: number,
+  maxPlayers?: number,
+): LadderPlayoffStructure => {
+  const size = getEffectiveLadderSize(registeredCount, maxPlayers);
+  if (size === 0) return { playoffSpots: 0, inTheMoney: 0 };
+  return getLadderPlayoffStructure(size);
+};

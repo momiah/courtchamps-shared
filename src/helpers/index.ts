@@ -23,7 +23,10 @@ export {
   LADDER_PLAYOFF_SIZES,
   PLAYOFF_SPOTS_DIVISOR,
   IN_THE_MONEY_DIVISOR,
+  LADDER_MIN_PLAYOFF_SIZE,
   getLadderPlayoffStructure,
+  getEffectiveLadderSize,
+  getLadderPlayoffStructureForRegistrations,
 } from "./ladderPlayoffStructure";
 export type { LadderPlayoffStructure } from "./ladderPlayoffStructure";
 export { recalculateParticipantsFromFixtures } from "./recalculatePerformance";
