@@ -36,6 +36,7 @@ export interface GameResult {
 }
 
 export type ApprovalStatus =
+  | ""
   | "Scheduled"
   | "Pending"
   | "pending"
