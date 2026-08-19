@@ -19,10 +19,18 @@ export type LadderGameStatus =
 
 export const LADDER_GAME_BEST_OF_OPTIONS = [3, 5, 7, 9] as const;
 
+/** A scheduled match window, both values in 24-hour "HH:MM" format. */
+export interface MatchTime {
+  start: string;
+  end: string;
+}
+
 export interface LadderGame {
   ladderGameId: string;
   court: Court;
   bestOf: number;
+  matchDate: string;
+  matchTime: MatchTime;
   /**
    * Total court-hire cost, split across players. The poster pays the venue
    * first; the accepter then pays their share to the poster, and the platform
@@ -40,5 +48,11 @@ export interface LadderGame {
 
 export type LadderGameInput = Pick<
   LadderGame,
-  "court" | "bestOf" | "courtFee" | "currencyType" | "shuttleType"
+  | "court"
+  | "bestOf"
+  | "matchDate"
+  | "matchTime"
+  | "courtFee"
+  | "currencyType"
+  | "shuttleType"
 >;
