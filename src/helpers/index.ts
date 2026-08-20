@@ -37,7 +37,7 @@ export { assignCourtForGameIndex } from "./advanceBrackets";
 export { isKnockoutComplete } from "./knockoutTopFour";
 export { getKnockoutTopFour } from "./knockoutTopFour";
 export { isShellGame } from "./advanceBrackets";
-export { createLadderGameShells } from "./createLadderGameShells";
+export { createLadderMatchGames } from "./createLadderMatchGames";
 export { generateInitialTeamStats } from "./generateInitialTeamStats";
 export { normalizeTeamKey } from "./generateInitialTeamStats";
 export { createTeam } from "./generateInitialTeamStats";

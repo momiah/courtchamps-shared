@@ -1,12 +1,12 @@
 import type { Game } from "../types/game";
 
 /**
- * Build `bestOf` empty {@link Game} shells for a ladder game. Each shell mirrors
- * the `gameSchema` defaults (empty teams/scores/result, `approvalStatus` ""),
- * carries a sequential `gameNumber` (1..bestOf), and is recognised by the
+ * Build `bestOf` empty {@link Game} shells for a ladder match. Each shell
+ * mirrors the `gameSchema` defaults (empty teams/scores/result, `approvalStatus`
+ * ""), carries a sequential `gameNumber` (1..bestOf), and is recognised by the
  * shared `isShellGame` helper (both teams have no `player1`).
  */
-export const createLadderGameShells = (bestOf: number): Game[] => {
+export const createLadderMatchGames = (bestOf: number): Game[] => {
   const count = Math.max(0, Math.floor(bestOf));
 
   return Array.from({ length: count }, (_, index) => ({
