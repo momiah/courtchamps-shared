@@ -19,10 +19,10 @@ export type LadderGameStatus =
 
 export const LADDER_GAME_BEST_OF_OPTIONS = [3, 5, 7, 9] as const;
 
-/** A scheduled match window, both values in 24-hour "HH:MM" format. */
+/** A scheduled match slot in 24-hour "HH:MM" format. `end` is optional. */
 export interface MatchTime {
   start: string;
-  end: string;
+  end?: string;
 }
 
 export interface LadderGame {
