@@ -1,4 +1,5 @@
 import type { Location } from "./player";
+import type { CompetitionType } from "./competition";
 
 /**
  * Geocoded physical location of a single court/venue: the base {@link Location}
@@ -23,6 +24,13 @@ export interface Court {
   verifiedBy: string | null;
   verifiedAt: Date | null;
   createdAt: Date;
+  /**
+   * Which product flow created this court. Optional for backwards
+   * compatibility with existing court documents. Leagues and tournaments accept
+   * unverified courts, but ladders require verification, so this lets
+   * ladder-submitted courts be prioritised for admin verification.
+   */
+  submittedVia?: CompetitionType;
 }
 
 /** Shape accepted when creating a court — the caller-supplied subset. */

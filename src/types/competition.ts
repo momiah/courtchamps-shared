@@ -17,7 +17,8 @@ export type CollectionName =
 
 export type CompetitionType =
   | typeof COMPETITION_TYPES.LEAGUE
-  | typeof COMPETITION_TYPES.TOURNAMENT;
+  | typeof COMPETITION_TYPES.TOURNAMENT
+  | typeof COMPETITION_TYPES.LADDER;
 
 export interface CompetitionAdmins {
   userId: string;
