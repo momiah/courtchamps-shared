@@ -1,6 +1,3 @@
-import { ScoreboardProfile } from "./player";
-import { TeamStats } from "./competition";
-
 export const LADDER_STATUS = {
   REGISTRATION_OPEN: "registrationOpen",
   REGISTRATION_CLOSED: "registrationClosed",
@@ -49,8 +46,9 @@ export interface Ladder {
   maxPlayers: number;
   participantCount: number;
   prizesDistributed: boolean;
-  ladderParticipants?: ScoreboardProfile[];
-  ladderTeams?: TeamStats[];
+  // Participants and teams live in the `ladderParticipants` / `ladderTeams`
+  // subcollections under the ladder document, not embedded arrays, so a ladder
+  // scales to thousands of players/teams without bloating the doc.
   createdBy: string;
   createdAt: Date;
   updatedBy: string;
