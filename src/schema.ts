@@ -28,7 +28,7 @@ export const COMPETITION_TYPES = {
   LEAGUE: "league",
   TOURNAMENT: "tournament",
   LADDER: "ladder",
-};
+} as const;
 
 export const COLLECTION_NAMES: Record<CollectionName, string> = {
   leagues: "leagues",

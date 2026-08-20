@@ -1,5 +1,5 @@
 import type { Location } from "./player";
-import type { COMPETITION_TYPES } from "../schema";
+import type { CompetitionType } from "./competition";
 
 /**
  * Geocoded physical location of a single court/venue: the base {@link Location}
@@ -25,12 +25,12 @@ export interface Court {
   verifiedAt: Date | null;
   createdAt: Date;
   /**
-   * Which product flow created this court — a `COMPETITION_TYPES` value.
-   * Optional for backwards compatibility with existing court documents. Leagues
-   * and tournaments accept unverified courts, but ladders require verification,
-   * so this lets ladder-submitted courts be prioritised for admin verification.
+   * Which product flow created this court. Optional for backwards
+   * compatibility with existing court documents. Leagues and tournaments accept
+   * unverified courts, but ladders require verification, so this lets
+   * ladder-submitted courts be prioritised for admin verification.
    */
-  submittedVia?: (typeof COMPETITION_TYPES)[keyof typeof COMPETITION_TYPES];
+  submittedVia?: CompetitionType;
 }
 
 /** Shape accepted when creating a court — the caller-supplied subset. */
