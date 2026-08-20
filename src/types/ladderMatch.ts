@@ -8,16 +8,16 @@ export const SHUTTLE_TYPE = {
 
 export type ShuttleType = (typeof SHUTTLE_TYPE)[keyof typeof SHUTTLE_TYPE];
 
-export const LADDER_GAME_STATUS = {
+export const LADDER_MATCH_STATUS = {
   POSTED: "posted",
   ACCEPTED: "accepted",
   COMPLETED: "completed",
 } as const;
 
-export type LadderGameStatus =
-  (typeof LADDER_GAME_STATUS)[keyof typeof LADDER_GAME_STATUS];
+export type LadderMatchStatus =
+  (typeof LADDER_MATCH_STATUS)[keyof typeof LADDER_MATCH_STATUS];
 
-export const LADDER_GAME_BEST_OF_OPTIONS = [5, 7, 9, 11] as const;
+export const LADDER_MATCH_BEST_OF_OPTIONS = [5, 7, 9, 11] as const;
 
 /** A scheduled match slot in 24-hour "HH:MM" format. `end` is optional. */
 export interface MatchTime {
@@ -25,8 +25,12 @@ export interface MatchTime {
   end?: string;
 }
 
-export interface LadderGame {
-  ladderGameId: string;
+/**
+ * A ladder match: a single fixture between players that contains `bestOf`
+ * individual {@link Game} shells.
+ */
+export interface LadderMatch {
+  ladderMatchId: string;
   court: Court;
   bestOf: number;
   matchDate: string;
@@ -40,14 +44,14 @@ export interface LadderGame {
   currencyType: string;
   participants: string[];
   games: Game[];
-  gameStatus: LadderGameStatus;
+  matchStatus: LadderMatchStatus;
   shuttleType: ShuttleType;
   createdBy: string;
   createdAt: Date;
 }
 
-export type LadderGameInput = Pick<
-  LadderGame,
+export type LadderMatchInput = Pick<
+  LadderMatch,
   | "court"
   | "bestOf"
   | "matchDate"
