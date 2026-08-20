@@ -17,7 +17,7 @@ export const LADDER_GAME_STATUS = {
 export type LadderGameStatus =
   (typeof LADDER_GAME_STATUS)[keyof typeof LADDER_GAME_STATUS];
 
-export const LADDER_GAME_BEST_OF_OPTIONS = [3, 5, 7, 9] as const;
+export const LADDER_GAME_BEST_OF_OPTIONS = [5, 7, 9, 11] as const;
 
 /** A scheduled match slot in 24-hour "HH:MM" format. `end` is optional. */
 export interface MatchTime {
