@@ -48,6 +48,10 @@ export interface LadderMatch {
   shuttleType: ShuttleType;
   createdBy: string;
   createdAt: Date;
+  /** userId of the player who accepted the match (set on accept). */
+  acceptedBy?: string;
+  /** When the match was accepted (set on accept). */
+  acceptedAt?: Date;
 }
 
 export type LadderMatchInput = Pick<

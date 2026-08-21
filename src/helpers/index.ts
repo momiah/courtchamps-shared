@@ -38,6 +38,12 @@ export { isKnockoutComplete } from "./knockoutTopFour";
 export { getKnockoutTopFour } from "./knockoutTopFour";
 export { isShellGame } from "./advanceBrackets";
 export { createLadderMatchGames } from "./createLadderMatchGames";
+export {
+  canAcceptLadderMatch,
+  buildAcceptedLadderMatch,
+  LADDER_SINGLES_MAX_PARTICIPANTS,
+} from "./acceptLadderMatch";
+export type { AcceptedLadderMatchUpdate } from "./acceptLadderMatch";
 export { generateInitialTeamStats } from "./generateInitialTeamStats";
 export { normalizeTeamKey } from "./generateInitialTeamStats";
 export { createTeam } from "./generateInitialTeamStats";
