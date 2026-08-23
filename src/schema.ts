@@ -389,7 +389,7 @@ export const notificationTypes = {
       TYPE: "video_removed",
     },
     LADDER_MATCH_ACCEPTED: {
-      ROUTE: "MatchDetails",
+      ROUTE: "Ladder",
       TYPE: "ladder-match-accepted",
     },
   },
