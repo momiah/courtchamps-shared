@@ -26,6 +26,21 @@ export interface MatchTime {
 }
 
 /**
+ * Persisted check-in state for a ladder match. Check-in is a single mutual
+ * handshake: the poster displays a QR code, the accepter scans it, and on a
+ * successful scan the match is checked in as a unit (both players at once).
+ * Absent until that scan completes.
+ */
+export interface LadderMatchCheckIn {
+  /** True once the QR handshake has completed and the games are unlocked. */
+  completed: boolean;
+  /** When the successful scan happened. */
+  checkedInAt: Date;
+  /** userId of the player who scanned the poster's QR (the accepter). */
+  scannedBy: string;
+}
+
+/**
  * A ladder match: a single fixture between players that contains `bestOf`
  * individual {@link Game} shells.
  */
@@ -52,6 +67,8 @@ export interface LadderMatch {
   acceptedBy?: string;
   /** When the match was accepted (set on accept). */
   acceptedAt?: Date;
+  /** Persisted check-in handshake state (set on a successful QR scan). */
+  checkIn?: LadderMatchCheckIn;
 }
 
 export type LadderMatchInput = Pick<
