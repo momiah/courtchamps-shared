@@ -44,6 +44,16 @@ export {
   LADDER_SINGLES_MAX_PARTICIPANTS,
 } from "./acceptLadderMatch";
 export type { AcceptedLadderMatchUpdate } from "./acceptLadderMatch";
+export {
+  LADDER_CHECKIN_REFERENCE_LENGTH,
+  getLadderMatchReference,
+  buildLadderCheckInPayload,
+  parseLadderCheckInPayload,
+  isValidLadderCheckInScan,
+  buildLadderMatchCheckIn,
+  isLadderMatchCheckedIn,
+} from "./ladderMatchCheckIn";
+export type { LadderCheckInPayload } from "./ladderMatchCheckIn";
 export { generateInitialTeamStats } from "./generateInitialTeamStats";
 export { normalizeTeamKey } from "./generateInitialTeamStats";
 export { createTeam } from "./generateInitialTeamStats";
