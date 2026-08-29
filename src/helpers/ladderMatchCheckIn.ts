@@ -76,22 +76,69 @@ export const isValidLadderCheckInScan = (
   );
 };
 
-/**
- * Build the persisted {@link LadderMatchCheckIn} written on a successful scan.
- * Pure — the caller persists the result (e.g. via Firestore `updateDoc`).
- */
-export const buildLadderMatchCheckIn = (
-  scannedBy: string,
-  checkedInAt: Date = new Date(),
-): LadderMatchCheckIn => ({
-  completed: true,
-  checkedInAt,
-  scannedBy,
-});
+/** The userIds that have checked in for a match (empty when none have). */
+export const getLadderCheckedInUserIds = (
+  match: Pick<LadderMatch, "checkIn">,
+): string[] => match.checkIn?.checkedInBy ?? [];
+
+/** True when `userId` has completed their own check-in for the match. */
+export const hasUserCheckedIn = (
+  match: Pick<LadderMatch, "checkIn">,
+  userId: string,
+): boolean => getLadderCheckedInUserIds(match).includes(userId);
+
+/** Check-in progress: how many participants are in vs the total required. */
+export const getLadderCheckInProgress = (
+  match: Pick<LadderMatch, "checkIn" | "participants">,
+): { checkedIn: number; total: number } => {
+  const checkedIn = getLadderCheckedInUserIds(match);
+  return {
+    checkedIn: match.participants.filter((id) => checkedIn.includes(id)).length,
+    total: match.participants.length,
+  };
+};
 
 /**
- * True when a match's persisted check-in handshake is complete. Games unlock is
- * derived from this, not from any local toggle state.
+ * Add `userId`'s check-in to a match and return the updated
+ * {@link LadderMatchCheckIn}. Pure — the caller persists the result (e.g. via a
+ * Firestore transaction). Idempotent per user (checking in twice is a no-op),
+ * and recomputes `completed`/`completedAt` against the current participants so
+ * the games only unlock once everyone is in.
+ */
+export const addLadderMatchCheckIn = (
+  match: Pick<LadderMatch, "participants" | "checkIn">,
+  userId: string,
+  at: Date = new Date(),
+): LadderMatchCheckIn => {
+  const existing = match.checkIn;
+  const priorBy = Array.isArray(existing?.checkedInBy)
+    ? existing.checkedInBy
+    : [];
+  const checkedInBy = priorBy.includes(userId)
+    ? priorBy
+    : [...priorBy, userId];
+
+  const checkedInAt: Record<string, Date> = {
+    ...(existing?.checkedInAt ?? {}),
+    [userId]: existing?.checkedInAt?.[userId] ?? at,
+  };
+
+  const completed =
+    match.participants.length > 0 &&
+    match.participants.every((id) => checkedInBy.includes(id));
+
+  const result: LadderMatchCheckIn = { checkedInBy, checkedInAt, completed };
+  if (completed) {
+    // Preserve the original completion time once set.
+    result.completedAt = existing?.completedAt ?? at;
+  }
+  return result;
+};
+
+/**
+ * True when a match is fully checked in (every participant has checked in) and
+ * the games are unlocked. Games unlock is derived from this, not from any local
+ * toggle state.
  */
 export const isLadderMatchCheckedIn = (
   match: Pick<LadderMatch, "checkIn">,

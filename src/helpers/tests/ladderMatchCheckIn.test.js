@@ -3,7 +3,10 @@ import {
   buildLadderCheckInPayload,
   parseLadderCheckInPayload,
   isValidLadderCheckInScan,
-  buildLadderMatchCheckIn,
+  addLadderMatchCheckIn,
+  getLadderCheckedInUserIds,
+  hasUserCheckedIn,
+  getLadderCheckInProgress,
   isLadderMatchCheckedIn,
 } from "../ladderMatchCheckIn";
 
@@ -70,25 +73,78 @@ describe("isValidLadderCheckInScan", () => {
 });
 
 describe("check-in state", () => {
-  it("builds a completed check-in record", () => {
+  const singles = { participants: ["a", "b"] };
+  const doubles = { participants: ["a", "b", "c", "d"] };
+
+  it("records the first participant without completing (singles)", () => {
     const at = new Date("2026-08-27T10:00:00Z");
-    expect(buildLadderMatchCheckIn("user-1", at)).toEqual({
-      completed: true,
-      checkedInAt: at,
-      scannedBy: "user-1",
-    });
+    const checkIn = addLadderMatchCheckIn(singles, "a", at);
+    expect(checkIn.checkedInBy).toEqual(["a"]);
+    expect(checkIn.checkedInAt).toEqual({ a: at });
+    expect(checkIn.completed).toBe(false);
+    expect(checkIn.completedAt).toBeUndefined();
   });
 
-  it("derives the checked-in flag from persisted state", () => {
+  it("completes once every participant is in (singles)", () => {
+    const at1 = new Date("2026-08-27T10:00:00Z");
+    const at2 = new Date("2026-08-27T10:05:00Z");
+    const first = addLadderMatchCheckIn(singles, "a", at1);
+    const second = addLadderMatchCheckIn(
+      { ...singles, checkIn: first },
+      "b",
+      at2,
+    );
+    expect(second.checkedInBy).toEqual(["a", "b"]);
+    expect(second.completed).toBe(true);
+    expect(second.completedAt).toEqual(at2);
+  });
+
+  it("needs all four before completing (doubles)", () => {
+    let checkIn;
+    ["a", "b", "c"].forEach((id) => {
+      checkIn = addLadderMatchCheckIn({ ...doubles, checkIn }, id);
+      expect(checkIn.completed).toBe(false);
+    });
+    checkIn = addLadderMatchCheckIn({ ...doubles, checkIn }, "d");
+    expect(checkIn.completed).toBe(true);
+    expect(checkIn.checkedInBy).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("is idempotent per user", () => {
+    const first = addLadderMatchCheckIn(singles, "a");
+    const again = addLadderMatchCheckIn({ ...singles, checkIn: first }, "a");
+    expect(again.checkedInBy).toEqual(["a"]);
+    expect(again.completed).toBe(false);
+  });
+
+  it("preserves the original completion time", () => {
+    const at1 = new Date("2026-08-27T10:00:00Z");
+    const at2 = new Date("2026-08-27T10:05:00Z");
+    const at3 = new Date("2026-08-27T10:09:00Z");
+    const a = addLadderMatchCheckIn(singles, "a", at1);
+    const done = addLadderMatchCheckIn({ ...singles, checkIn: a }, "b", at2);
+    // A redundant re-add keeps the first completion time.
+    const still = addLadderMatchCheckIn({ ...singles, checkIn: done }, "b", at3);
+    expect(still.completedAt).toEqual(at2);
+  });
+
+  it("reports progress and per-user status", () => {
+    const first = addLadderMatchCheckIn(doubles, "a");
+    const match = { ...doubles, checkIn: first };
+    expect(getLadderCheckedInUserIds(match)).toEqual(["a"]);
+    expect(hasUserCheckedIn(match, "a")).toBe(true);
+    expect(hasUserCheckedIn(match, "b")).toBe(false);
+    expect(getLadderCheckInProgress(match)).toEqual({ checkedIn: 1, total: 4 });
+  });
+
+  it("derives the games-unlock flag from completed", () => {
     expect(isLadderMatchCheckedIn({})).toBe(false);
     expect(
-      isLadderMatchCheckedIn({
-        checkIn: { completed: false, checkedInAt: new Date(), scannedBy: "x" },
-      }),
+      isLadderMatchCheckedIn({ checkIn: { checkedInBy: ["a"], completed: false } }),
     ).toBe(false);
     expect(
       isLadderMatchCheckedIn({
-        checkIn: { completed: true, checkedInAt: new Date(), scannedBy: "x" },
+        checkIn: { checkedInBy: ["a", "b"], completed: true },
       }),
     ).toBe(true);
   });
