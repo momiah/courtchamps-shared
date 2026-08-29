@@ -32,12 +32,19 @@ export interface MatchTime {
  * Absent until that scan completes.
  */
 export interface LadderMatchCheckIn {
-  /** True once the QR handshake has completed and the games are unlocked. */
+  /**
+   * userIds of the participants who have completed their own check-in. Every
+   * player checks in from their own (location-verified) device, so the games
+   * only unlock once this covers every participant — for singles that's 2, for
+   * doubles all 4.
+   */
+  checkedInBy: string[];
+  /** Per-user check-in time, keyed by userId. */
+  checkedInAt: Record<string, Date>;
+  /** True once every participant has checked in and the games are unlocked. */
   completed: boolean;
-  /** When the successful scan happened. */
-  checkedInAt: Date;
-  /** userId of the player who scanned the poster's QR (the accepter). */
-  scannedBy: string;
+  /** When the match became fully checked in (the last participant checked in). */
+  completedAt?: Date;
 }
 
 /**

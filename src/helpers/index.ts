@@ -50,7 +50,10 @@ export {
   buildLadderCheckInPayload,
   parseLadderCheckInPayload,
   isValidLadderCheckInScan,
-  buildLadderMatchCheckIn,
+  addLadderMatchCheckIn,
+  getLadderCheckedInUserIds,
+  hasUserCheckedIn,
+  getLadderCheckInProgress,
   isLadderMatchCheckedIn,
 } from "./ladderMatchCheckIn";
 export type { LadderCheckInPayload } from "./ladderMatchCheckIn";
