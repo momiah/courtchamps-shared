@@ -148,6 +148,11 @@ export const scoreboardProfileSchema: ScoreboardProfile = {
   winPercentage: 0,
   numberOfLosses: 0,
   numberOfGamesPlayed: 0,
+  // Per-competition Court Points (still XP; "CP" is a display label). On a
+  // ladder participant record this is the CP earned in that ladder alone — the
+  // playoff/prize tiebreaker — separate from the global profileDetail.XP that
+  // drives the rank medal.
+  XP: 0,
 };
 
 export const profileDetailSchema: ProfileDetail = {
