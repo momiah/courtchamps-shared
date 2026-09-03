@@ -27,18 +27,20 @@ describe("getLadderMatchReference", () => {
 describe("check-in payload round-trip", () => {
   const match = { ladderMatchId: "match_XY9zab" };
 
-  it("builds a payload carrying the id and derived reference", () => {
-    expect(buildLadderCheckInPayload(match)).toEqual({
+  it("builds a payload carrying the id, derived reference and owner userId", () => {
+    expect(buildLadderCheckInPayload(match, "user1")).toEqual({
       ladderMatchId: "match_XY9zab",
       reference: "XY9ZAB",
+      userId: "user1",
     });
   });
 
   it("parses back a stringified payload", () => {
-    const raw = JSON.stringify(buildLadderCheckInPayload(match));
+    const raw = JSON.stringify(buildLadderCheckInPayload(match, "user1"));
     expect(parseLadderCheckInPayload(raw)).toEqual({
       ladderMatchId: "match_XY9zab",
       reference: "XY9ZAB",
+      userId: "user1",
     });
   });
 
@@ -46,19 +48,27 @@ describe("check-in payload round-trip", () => {
     expect(parseLadderCheckInPayload("not-json")).toBeNull();
     expect(parseLadderCheckInPayload(JSON.stringify({ foo: "bar" }))).toBeNull();
   });
+
+  it("returns null when the owner userId is missing", () => {
+    expect(
+      parseLadderCheckInPayload(
+        JSON.stringify({ ladderMatchId: "match_XY9zab", reference: "XY9ZAB" }),
+      ),
+    ).toBeNull();
+  });
 });
 
 describe("isValidLadderCheckInScan", () => {
   const match = { ladderMatchId: "match_XY9zab" };
 
   it("accepts this match's own QR", () => {
-    const raw = JSON.stringify(buildLadderCheckInPayload(match));
+    const raw = JSON.stringify(buildLadderCheckInPayload(match, "user1"));
     expect(isValidLadderCheckInScan(match, raw)).toBe(true);
   });
 
   it("rejects a QR for a different match", () => {
     const other = JSON.stringify(
-      buildLadderCheckInPayload({ ladderMatchId: "match_other1" }),
+      buildLadderCheckInPayload({ ladderMatchId: "match_other1" }, "user1"),
     );
     expect(isValidLadderCheckInScan(match, other)).toBe(false);
   });
@@ -67,6 +77,7 @@ describe("isValidLadderCheckInScan", () => {
     const raw = JSON.stringify({
       ladderMatchId: "match_XY9zab",
       reference: "WRONG1",
+      userId: "user1",
     });
     expect(isValidLadderCheckInScan(match, raw)).toBe(false);
   });
