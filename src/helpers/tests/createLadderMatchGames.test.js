@@ -35,4 +35,21 @@ describe("createLadderMatchGames", () => {
     expect(createLadderMatchGames(0)).toEqual([]);
     expect(createLadderMatchGames(-2)).toEqual([]);
   });
+
+  it("leaves gameId empty when no ladderMatchId is supplied", () => {
+    createLadderMatchGames(3).forEach((game) => {
+      expect(game.gameId).toBe("");
+    });
+  });
+
+  it("assigns stable, unique gameIds when a ladderMatchId is supplied", () => {
+    const shells = createLadderMatchGames(3, "match123");
+    expect(shells.map((game) => game.gameId)).toEqual([
+      "match123-g1",
+      "match123-g2",
+      "match123-g3",
+    ]);
+    // still detected as shells despite having ids
+    shells.forEach((game) => expect(isShellGame(game)).toBe(true));
+  });
 });

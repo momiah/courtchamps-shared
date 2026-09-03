@@ -5,6 +5,7 @@ import {
   ScoreboardProfile,
   UsersToUpdate,
 } from "../types";
+import { computeGameXp } from "./computeGameXp";
 
 export const calculatePlayerPerformance = (
   game: Game,
@@ -147,53 +148,14 @@ export const calculatePlayerPerformance = (
     winnerScore: number,
     loserScore: number,
   ): XpUpdateResult => {
-    const baseXP = streakType === "W" ? 20 : -15;
-    const scoreDifference = winnerScore - loserScore;
-
-    const differenceMultiplier =
-      combinedWinnerXp > 0 ? combinedLoserXp / combinedWinnerXp : 1;
-
-    const rankMultiplier =
-      differenceMultiplier < 2
-        ? 0
-        : differenceMultiplier > 3
-          ? 3
-          : differenceMultiplier;
-
-    const lossMultiplier =
-      streakCount <= -7
-        ? 3
-        : streakCount <= -5
-          ? 2.5
-          : streakCount <= -3
-            ? 2
-            : streakCount <= -2
-              ? 1.5
-              : 1;
-
-    const winMultiplier =
-      streakCount >= 7
-        ? 5
-        : streakCount >= 5
-          ? 4
-          : streakCount >= 3
-            ? 3
-            : streakCount > 1
-              ? 2
-              : 1;
-
-    const multiplier = streakType === "W" ? winMultiplier : lossMultiplier;
-    const streakXp = baseXP * multiplier;
-
-    const rankXpValue = streakXp * rankMultiplier;
-    const rankXp = isNaN(rankXpValue) ? 0 : rankXpValue;
-
-    let demonBonus = 0;
-    if (scoreDifference >= 10) {
-      demonBonus = streakType === "W" ? streakXp : -streakXp;
-    }
-
-    const finalXp = streakXp + rankXp + demonBonus;
+    const { finalXp } = computeGameXp({
+      streakType,
+      streakCount,
+      combinedWinnerXp,
+      combinedLoserXp,
+      winnerScore,
+      loserScore,
+    });
 
     player.prevGameXP = finalXp;
 
