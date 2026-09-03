@@ -10,6 +10,7 @@ export const createTeam = (players: string[], teamKey: string): TeamStats => ({
   numberOfLosses: 0,
   numberOfGamesPlayed: 0,
   resultLog: [],
+  matchResultLog: [],
   pointDifferenceLog: [],
   averagePointDifference: 0,
   totalPointDifference: 0,
@@ -22,6 +23,7 @@ export const createTeam = (players: string[], teamKey: string): TeamStats => ({
   demonWin: 0,
   lossesTo: {},
   rival: null,
+  XP: 20,
 });
 
 export const generateInitialTeamStats = (fixtures: Fixtures[]): TeamStats[] => {

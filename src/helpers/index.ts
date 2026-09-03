@@ -1,5 +1,10 @@
 export { calculatePlayerPerformance } from "./calculatePlayerPerformance";
 export { calculateTeamPerformance } from "./calculateTeamPerformance";
+export { computeGameXp } from "./computeGameXp";
+export type {
+  ComputeGameXpParams,
+  GameXpBreakdown,
+} from "./computeGameXp";
 export { transformDate } from "./dateTransform";
 export { calculateTournamentPrizePool } from "./calculateTournamentPrizePool";
 export {

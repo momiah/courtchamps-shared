@@ -140,6 +140,7 @@ export const scoreboardProfileSchema: ScoreboardProfile = {
   averagePointDifference: 0,
   pointDifferenceLog: [],
   resultLog: [],
+  matchResultLog: [],
   currentStreak: {
     type: null, // or '' if needed
     count: 0,
@@ -397,6 +398,10 @@ export const notificationTypes = {
       ROUTE: "Ladder",
       TYPE: "ladder-match-accepted",
     },
+    LADDER: {
+      ROUTE: "Ladder",
+      TYPE: "ladder",
+    },
   },
   WELCOME: {
     TYPE: "welcome",
@@ -419,6 +424,7 @@ export const notificationTypes = {
     ADD_GAME: {
       LEAGUE: "add-league-game",
       TOURNAMENT: "add-tournament-game",
+      LADDER: "add-ladder-game",
     },
   },
   RESPONSE: {

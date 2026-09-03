@@ -19,7 +19,7 @@ export interface ScoreboardProfile {
    * Per-MATCH results ("W"/"L"), distinct from the per-game `resultLog`. Used
    * on ladders where a match is a set of games. Optional/back-compat.
    */
-  ladderResultLog?: string[];
+  matchResultLog?: string[];
   /**
    * Court Points (displayed as "CP"). Still the XP field in types/db/backend —
    * "CP" is only a display label. On a competition participant record this is
