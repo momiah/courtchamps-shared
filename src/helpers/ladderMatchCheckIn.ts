@@ -14,22 +14,31 @@ export const getLadderMatchReference = (ladderMatchId: string): string =>
     .slice(-LADDER_CHECKIN_REFERENCE_LENGTH)
     .toUpperCase();
 
-/** The minimal payload encoded in the poster's check-in QR code. */
+/**
+ * The payload encoded in a participant's check-in QR code. Every participant
+ * displays their OWN QR, so `userId` identifies who is showing it — a scanner
+ * checks in both themselves and this `userId`, forming the mutual handshake.
+ */
 export interface LadderCheckInPayload {
   ladderMatchId: string;
   reference: string;
+  /** The participant displaying this QR (the person a scanner checks in with). */
+  userId: string;
 }
 
 /**
- * Build the QR payload for a match: just the id and its derived reference, kept
- * minimal so the QR stays easy to scan. Encode with `JSON.stringify` for the QR
- * value; decode the scanned string with {@link parseLadderCheckInPayload}.
+ * Build the QR payload for `userId` in a match: the match id, its derived
+ * reference, and the displaying participant's id — kept minimal so the QR stays
+ * easy to scan. Encode with `JSON.stringify` for the QR value; decode a scanned
+ * string with {@link parseLadderCheckInPayload}.
  */
 export const buildLadderCheckInPayload = (
   match: Pick<LadderMatch, "ladderMatchId">,
+  userId: string,
 ): LadderCheckInPayload => ({
   ladderMatchId: match.ladderMatchId,
   reference: getLadderMatchReference(match.ladderMatchId),
+  userId,
 });
 
 /**
@@ -45,11 +54,13 @@ export const parseLadderCheckInPayload = (
     if (
       parsed &&
       typeof parsed.ladderMatchId === "string" &&
-      typeof parsed.reference === "string"
+      typeof parsed.reference === "string" &&
+      typeof parsed.userId === "string"
     ) {
       return {
         ladderMatchId: parsed.ladderMatchId,
         reference: parsed.reference,
+        userId: parsed.userId,
       };
     }
   } catch {
@@ -69,10 +80,9 @@ export const isValidLadderCheckInScan = (
 ): boolean => {
   const payload = parseLadderCheckInPayload(raw);
   if (!payload) return false;
-  const expected = buildLadderCheckInPayload(match);
   return (
-    payload.ladderMatchId === expected.ladderMatchId &&
-    payload.reference === expected.reference
+    payload.ladderMatchId === match.ladderMatchId &&
+    payload.reference === getLadderMatchReference(match.ladderMatchId)
   );
 };
 
