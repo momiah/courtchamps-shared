@@ -79,13 +79,15 @@ export interface GameVideoUploadPayload {
   competitionName: string;
   competitionType:
     | typeof COMPETITION_TYPES.LEAGUE
-    | typeof COMPETITION_TYPES.TOURNAMENT;
+    | typeof COMPETITION_TYPES.TOURNAMENT
+    | typeof COMPETITION_TYPES.LADDER;
   videoUrl: string;
   gamescore: string;
   date: string;
   postedBy: VideoPostedBy;
   teams: Teams;
   videoLength?: number;
+  matchId?: string;
 }
 
 export interface PendingUpload extends Omit<
