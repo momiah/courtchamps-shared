@@ -42,6 +42,19 @@ describe("computeGameXp", () => {
     expect(finalXp).toBe(-15);
   });
 
+  it("doubles the penalty for a loss by a 10+ margin (demon)", () => {
+    const { streakXp, demonBonus, finalXp } = computeGameXp({
+      ...base,
+      streakType: "L",
+      streakCount: -1,
+      winnerScore: 21,
+      loserScore: 5,
+    });
+    expect(streakXp).toBe(-15);
+    expect(demonBonus).toBe(-15);
+    expect(finalXp).toBe(-30);
+  });
+
   it("applies the rank (upset) multiplier when the loser out-ranks the winner", () => {
     // combinedLoser / combinedWinner = 300 / 100 = 3 → rankMultiplier 3
     const { streakXp, rankXp } = computeGameXp({
