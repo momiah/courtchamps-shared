@@ -531,13 +531,14 @@ describe("calculatePlayerPerformance function", () => {
       usersCopy
     );
 
-    // L4: base=-15, lossMultiplier=2 → -30; demon adds +30 → net 0
+    // L4: base=-15, lossMultiplier=2 → -30; a 10+ margin (demon) doubles the
+    // penalty by adding another -30 → net -60.
     expect(
       usersToUpdate.find((u) => u.username === PLAYER_USERNAME_3).profileDetail
         .XP
-    ).toBeCloseTo(beforeXPPlayerThree, 5);
+    ).toBeCloseTo(beforeXPPlayerThree - 60, 5);
     expect(
       playersToUpdate.find((p) => p.username === PLAYER_USERNAME_3).prevGameXP
-    ).toBeCloseTo(0, 5);
+    ).toBeCloseTo(-60, 5);
   });
 });

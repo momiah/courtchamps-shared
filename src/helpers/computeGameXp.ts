@@ -81,9 +81,13 @@ export const computeGameXp = ({
   const rankXpValue = streakXp * rankMultiplier;
   const rankXp = isNaN(rankXpValue) ? 0 : rankXpValue;
 
+  // A 10+ point margin doubles the game's XP swing: an extra +streakXp reward
+  // for the winner, an extra penalty for the loser. streakXp already carries the
+  // sign (positive for a win, negative for a loss), so the demon term is simply
+  // streakXp for both sides.
   let demonBonus = 0;
   if (scoreDifference >= 10) {
-    demonBonus = streakType === "W" ? streakXp : -streakXp;
+    demonBonus = streakXp;
   }
 
   const finalXp = streakXp + rankXp + demonBonus;
