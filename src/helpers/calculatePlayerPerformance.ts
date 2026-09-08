@@ -1,16 +1,19 @@
 import {
+  CompetitionType,
   Game,
   PlayersToUpdate,
   ProfileDetail,
   ScoreboardProfile,
   UsersToUpdate,
 } from "../types";
+import { COMPETITION_TYPES } from "../schema";
 import { computeGameXp } from "./computeGameXp";
 
 export const calculatePlayerPerformance = (
   game: Game,
   playersToUpdate: PlayersToUpdate,
   usersToUpdate: UsersToUpdate = [],
+  competitionType?: CompetitionType,
 ) => {
   const date = game.date ?? "";
 
@@ -27,15 +30,22 @@ export const calculatePlayerPerformance = (
   const getParticipantById = (userId: string | undefined) =>
     playersToUpdate.find((p) => p.userId === userId);
 
-  const combinedWinnerXp = winnerPlayers.reduce((sum, player) => {
-    const user = getUserById(player?.userId);
-    return user ? sum + (user.profileDetail?.XP || 0) : sum;
-  }, 0);
+  const getBasisXp = (userId: string | undefined) => {
+    if (competitionType === COMPETITION_TYPES.LADDER) {
+      return getParticipantById(userId)?.XP || 0;
+    }
+    return getUserById(userId)?.profileDetail?.XP || 0;
+  };
 
-  const combinedLoserXp = loserPlayers.reduce((sum, player) => {
-    const user = getUserById(player?.userId);
-    return user ? sum + (user.profileDetail?.XP || 0) : sum;
-  }, 0);
+  const combinedWinnerXp = winnerPlayers.reduce(
+    (sum, player) => sum + getBasisXp(player?.userId),
+    0,
+  );
+
+  const combinedLoserXp = loserPlayers.reduce(
+    (sum, player) => sum + getBasisXp(player?.userId),
+    0,
+  );
 
   const updatePlayerStats = (
     player: ScoreboardProfile,
