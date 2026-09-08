@@ -541,4 +541,114 @@ describe("calculatePlayerPerformance function", () => {
       playersToUpdate.find((p) => p.username === PLAYER_USERNAME_3).prevGameXP
     ).toBeCloseTo(-60, 5);
   });
+
+  describe("ladder basis (competitionType === 'ladder')", () => {
+    const WINNER = "ladder-winner";
+    const LOSER = "ladder-loser";
+
+    const singlesGame = {
+      date: "01-02-2025",
+      gameId: "ladder-game-1",
+      gamescore: "21 - 15",
+      result: {
+        winner: { players: ["W"], score: 21, team: "Team 1" },
+        loser: { players: ["L"], score: 15, team: "Team 2" },
+      },
+      team1: { player1: { userId: WINNER, username: "W" }, score: 21 },
+      team2: { player1: { userId: LOSER, username: "L" }, score: 15 },
+    };
+
+    const makeUser = (userId, xp) => ({
+      userId,
+      username: userId,
+      profileDetail: {
+        numberOfWins: 0,
+        numberOfLosses: 0,
+        numberOfGamesPlayed: 0,
+        winPercentage: 0,
+        totalPoints: 0,
+        totalPointDifference: 0,
+        highestWinStreak: 0,
+        highestLossStreak: 0,
+        winStreak3: 0,
+        winStreak5: 0,
+        winStreak7: 0,
+        demonWin: 0,
+        averagePointDifference: 0,
+        lastActive: "",
+        XP: xp,
+      },
+    });
+
+    const makeParticipant = (userId, xp) => ({
+      userId,
+      username: userId,
+      numberOfWins: 0,
+      numberOfLosses: 0,
+      numberOfGamesPlayed: 0,
+      winPercentage: 0,
+      resultLog: [],
+      currentStreak: { type: null, count: 0 },
+      highestWinStreak: 0,
+      highestLossStreak: 0,
+      pointDifferenceLog: [],
+      averagePointDifference: 0,
+      totalPointDifference: 0,
+      totalPoints: 0,
+      demonWin: 0,
+      winStreak3: 0,
+      winStreak5: 0,
+      winStreak7: 0,
+      prevGameXP: 0,
+      lastActive: "",
+      XP: xp,
+    });
+
+    // A new low-CP account (winner, global XP 20) beats an established account
+    // (loser, global XP 2000). On the GLOBAL basis that is a massive upset →
+    // large XP. On the LADDER basis both start at 0 CP → no upset multiplier.
+    const globalWinnerXp = () => {
+      const result = calculatePlayerPerformance(
+        JSON.parse(JSON.stringify(singlesGame)),
+        [makeParticipant(WINNER, 0), makeParticipant(LOSER, 0)],
+        [makeUser(WINNER, 20), makeUser(LOSER, 2000)]
+      );
+      return result.playersToUpdate.find((p) => p.userId === WINNER).prevGameXP;
+    };
+
+    const ladderWinnerXp = () => {
+      const result = calculatePlayerPerformance(
+        JSON.parse(JSON.stringify(singlesGame)),
+        [makeParticipant(WINNER, 0), makeParticipant(LOSER, 0)],
+        [makeUser(WINNER, 20), makeUser(LOSER, 2000)],
+        "ladder"
+      );
+      return result.playersToUpdate.find((p) => p.userId === WINNER).prevGameXP;
+    };
+
+    it("uses per-ladder CP, not global XP, for the upset multiplier", () => {
+      expect(ladderWinnerXp()).toBeLessThan(globalWinnerXp());
+    });
+
+    it("gives no upset bonus when both sides have equal ladder CP", () => {
+      // Two equal-CP entrants → differenceMultiplier neutral → flat base win.
+      expect(ladderWinnerXp()).toBeCloseTo(20, 5);
+    });
+
+    it("leaves league/tournament (global basis) identical to no competitionType", () => {
+      const args = () => [
+        JSON.parse(JSON.stringify(singlesGame)),
+        [makeParticipant(WINNER, 0), makeParticipant(LOSER, 0)],
+        [makeUser(WINNER, 20), makeUser(LOSER, 2000)],
+      ];
+      const withoutType = calculatePlayerPerformance(...args());
+      const asLeague = calculatePlayerPerformance(...args(), "league");
+      expect(
+        asLeague.playersToUpdate.find((p) => p.userId === WINNER).prevGameXP
+      ).toBeCloseTo(
+        withoutType.playersToUpdate.find((p) => p.userId === WINNER).prevGameXP,
+        5
+      );
+    });
+  });
 });
