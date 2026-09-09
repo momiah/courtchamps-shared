@@ -601,7 +601,7 @@ describe("calculatePlayerPerformance function", () => {
       winStreak7: 0,
       prevGameXP: 0,
       lastActive: "",
-      XP: xp,
+      competitionXP: xp,
     });
 
     // A new low-CP account (winner, global XP 20) beats an established account

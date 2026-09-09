@@ -32,7 +32,7 @@ export const calculatePlayerPerformance = (
 
   const getBasisXp = (userId: string | undefined) => {
     if (competitionType === COMPETITION_TYPES.LADDER) {
-      return getParticipantById(userId)?.XP || 0;
+      return getParticipantById(userId)?.competitionXP || 0;
     }
     return getUserById(userId)?.profileDetail?.XP || 0;
   };
