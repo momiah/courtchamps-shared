@@ -17,14 +17,15 @@ const compareByWinsThenPD = (a: Placeable, b: Placeable): number =>
   (b.numberOfWins || 0) - (a.numberOfWins || 0) ||
   (b.totalPointDifference || 0) - (a.totalPointDifference || 0);
 
-// Ladder placement order: per-ladder CP (participant XP) first, then wins, then
-// point difference. CP is the headline ranking metric on a ladder; wins and PD
-// break ties. Used by both the standings display and the ladder payout, so the
-// two can never diverge.
+// Ladder placement order: per-ladder CP (participant competitionXP) first, then
+// wins, then point difference. CP is the headline ranking metric on a ladder;
+// wins and PD break ties. Used by both the standings display and the ladder
+// payout, so the two can never diverge.
 export const compareLadderParticipants = (
   a: ScoreboardProfile,
   b: ScoreboardProfile,
-): number => (b.XP || 0) - (a.XP || 0) || compareByWinsThenPD(a, b);
+): number =>
+  (b.competitionXP || 0) - (a.competitionXP || 0) || compareByWinsThenPD(a, b);
 
 export const sortLadderParticipantsByPlacement = (
   participants: ScoreboardProfile[],

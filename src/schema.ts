@@ -149,15 +149,19 @@ export const scoreboardProfileSchema: ScoreboardProfile = {
   winPercentage: 0,
   numberOfLosses: 0,
   numberOfGamesPlayed: 0,
-  // Per-competition Court Points (still XP; "CP" is a display label). On a
-  // ladder participant record this is the CP earned in that ladder alone — the
-  // playoff/prize tiebreaker — separate from the global profileDetail.XP that
-  // drives the rank medal.
-  XP: 0,
+  // Per-competition CP (displayed as "CP"). On a ladder participant record this
+  // is the CP earned in that ladder alone — the playoff/prize tiebreaker —
+  // separate from the global profileDetail.XP that drives the rank medal.
+  competitionXP: 0,
 };
 
+// The global profile has no per-competition CP, so drop competitionXP from the
+// base spread; profileDetailSchema carries its own global XP instead.
+const { competitionXP: _competitionXP, ...scoreboardProfileBase } =
+  scoreboardProfileSchema;
+
 export const profileDetailSchema: ProfileDetail = {
-  ...scoreboardProfileSchema,
+  ...scoreboardProfileBase,
   XP: 20,
   memberSince: moment().format("MMM YYYY"),
   leagueStats: {

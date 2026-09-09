@@ -21,11 +21,12 @@ export interface ScoreboardProfile {
    */
   matchResultLog?: string[];
   /**
-   * Court Points (displayed as "CP"). Still the XP field in types/db/backend —
-   * "CP" is only a display label. On a competition participant record this is
-   * the CP earned in that competition; optional for back-compat.
+   * Per-competition value, displayed as "CP" ("Court Points" is only a display
+   * label). On a competition participant record this is the CP earned in that
+   * competition — distinct from the global profileDetail.XP that drives the
+   * rank medal. Optional for back-compat.
    */
-  XP?: number;
+  competitionXP?: number;
   currentStreak: {
     type: string | null;
     count: number;
@@ -51,7 +52,9 @@ export interface LeagueTournamentStats {
   fourth: number;
 }
 
-export interface ProfileDetail extends ScoreboardProfile {
+// The global profile carries its own `XP` (the rank-medal value), so it omits
+// the per-competition `competitionXP` it would otherwise inherit.
+export interface ProfileDetail extends Omit<ScoreboardProfile, "competitionXP"> {
   XP: number;
   memberSince: string;
   leagueStats: LeagueTournamentStats;
