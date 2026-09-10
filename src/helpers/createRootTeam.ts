@@ -5,9 +5,6 @@ const memberDisplayName = (member: TeamMember): string =>
   [member.firstName, member.lastName].filter(Boolean).join(" ").trim() ||
   member.username;
 
-// Seed a root `teams/{teamKey}` doc — a reusable doubles team roster with
-// zeroed lifetime stats. teamKey is the normalized sorted member userIds, so
-// the same pairing always maps to the same team.
 export const createRootTeam = ({
   players,
   createdBy,
@@ -45,7 +42,6 @@ export const createRootTeam = ({
     XP: 0,
   };
 
-  // Only set teamName when provided — Firestore rejects `undefined` values.
   const trimmed = teamName?.trim();
   if (trimmed) team.teamName = trimmed;
 
