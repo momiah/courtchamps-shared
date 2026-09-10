@@ -65,4 +65,5 @@ export type { LadderCheckInPayload } from "./ladderMatchCheckIn";
 export { generateInitialTeamStats } from "./generateInitialTeamStats";
 export { normalizeTeamKey } from "./generateInitialTeamStats";
 export { createTeam } from "./generateInitialTeamStats";
+export { createRootTeam } from "./createRootTeam";
 export * from "./getRankInCompetition";

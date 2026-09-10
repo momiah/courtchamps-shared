@@ -57,6 +57,15 @@ interface Rival {
   rivalPlayers: string[];
 }
 
+// A member of a reusable doubles team (root `teams/{teamKey}` doc roster).
+export interface TeamMember {
+  userId: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  profileImage?: string;
+}
+
 export interface TeamStats {
   averagePointDifference: number;
   currentStreak: number;
@@ -90,6 +99,16 @@ export interface TeamStats {
    * league/tournament teams, which do not use it.
    */
   XP?: number;
+  // ── Root `teams/{teamKey}` doc metadata (a reusable doubles team roster).
+  //    Optional so per-competition team records stay back-compat. ──
+  /** Member user IDs, for "teams this user is in" queries (array-contains). */
+  playerIds?: string[];
+  /** Full roster for display (names + avatars). */
+  players?: TeamMember[];
+  /** Optional custom team name; falls back to the members' names for display. */
+  teamName?: string;
+  createdBy?: string;
+  createdAt?: string | Date;
 }
 
 export interface League {
