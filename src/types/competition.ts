@@ -73,11 +73,6 @@ export interface TeamStats {
   numberOfWins: number;
   pointDifferenceLog: number[];
   resultLog: string[];
-  /**
-   * Per-MATCH results ("W"/"L") for the team, distinct from the per-game
-   * `resultLog`. Used on doubles ladders where a match is a set of games.
-   * Optional/back-compat.
-   */
   matchResultLog?: string[];
   rival: Rival | null;
   team: string[];
@@ -86,13 +81,6 @@ export interface TeamStats {
   winStreak3: number;
   winStreak5: number;
   winStreak7: number;
-  /**
-   * Court Points (displayed as "CP") for the team. On a ladder team record this
-   * is the CP earned in that ladder alone (the per-ladder standing / playoff
-   * tiebreaker); on the root `teams/{teamKey}` doc it is the lifetime aggregate
-   * across every ladder the team has played. Optional for back-compat with
-   * league/tournament teams, which do not use it.
-   */
   XP?: number;
   playerIds?: string[];
   players?: TeamMember[];
