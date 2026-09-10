@@ -45,6 +45,13 @@ describe("createRootTeam", () => {
     ).toBeUndefined();
   });
 
+  it("sets status only when provided", () => {
+    expect(createRootTeam({ players, createdBy: "zeta" }).status).toBeUndefined();
+    expect(
+      createRootTeam({ players, createdBy: "zeta", status: "pending" }).status,
+    ).toBe("pending");
+  });
+
   it("zeroes lifetime stats and records the creator", () => {
     const team = createRootTeam({ players, createdBy: "zeta" });
     expect(team.numberOfWins).toBe(0);

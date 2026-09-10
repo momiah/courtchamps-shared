@@ -61,6 +61,13 @@ export interface TeamMember extends Player {
   profileImage?: string;
 }
 
+export const TEAM_STATUS = {
+  PENDING: "pending",
+  ACTIVE: "active",
+} as const;
+
+export type TeamStatus = (typeof TEAM_STATUS)[keyof typeof TEAM_STATUS];
+
 export interface TeamStats {
   averagePointDifference: number;
   currentStreak: number;
@@ -85,6 +92,7 @@ export interface TeamStats {
   playerIds?: string[];
   players?: TeamMember[];
   teamName?: string;
+  status?: TeamStatus;
   createdBy?: string;
   createdAt?: string | Date;
 }

@@ -1,4 +1,4 @@
-import { TeamMember, TeamStats } from "../types";
+import { TeamMember, TeamStats, TeamStatus } from "../types";
 import { normalizeTeamKey } from "./generateInitialTeamStats";
 
 const memberDisplayName = (member: TeamMember): string =>
@@ -9,10 +9,12 @@ export const createRootTeam = ({
   players,
   createdBy,
   teamName,
+  status,
 }: {
   players: TeamMember[];
   createdBy: string;
   teamName?: string;
+  status?: TeamStatus;
 }): TeamStats => {
   const playerIds = players.map((player) => player.userId);
   const team: TeamStats = {
@@ -44,6 +46,7 @@ export const createRootTeam = ({
 
   const trimmed = teamName?.trim();
   if (trimmed) team.teamName = trimmed;
+  if (status) team.status = status;
 
   return team;
 };
