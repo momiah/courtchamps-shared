@@ -45,6 +45,30 @@ describe("createRootTeam", () => {
     ).toBeUndefined();
   });
 
+  it("sets a stable teamId only when provided", () => {
+    expect(createRootTeam({ players, createdBy: "zeta" }).teamId).toBeUndefined();
+    expect(
+      createRootTeam({ players, createdBy: "zeta", teamId: "team_123" }).teamId,
+    ).toBe("team_123");
+  });
+
+  it("sets a trimmed teamProfilePic only when provided", () => {
+    expect(
+      createRootTeam({ players, createdBy: "zeta" }).teamProfilePic,
+    ).toBeUndefined();
+    expect(
+      createRootTeam({
+        players,
+        createdBy: "zeta",
+        teamProfilePic: "  https://img/pic.png  ",
+      }).teamProfilePic,
+    ).toBe("https://img/pic.png");
+    expect(
+      createRootTeam({ players, createdBy: "zeta", teamProfilePic: "   " })
+        .teamProfilePic,
+    ).toBeUndefined();
+  });
+
   it("sets status only when provided", () => {
     expect(createRootTeam({ players, createdBy: "zeta" }).status).toBeUndefined();
     expect(

@@ -8,12 +8,16 @@ const memberDisplayName = (member: TeamMember): string =>
 export const createRootTeam = ({
   players,
   createdBy,
+  teamId,
   teamName,
+  teamProfilePic,
   status,
 }: {
   players: TeamMember[];
   createdBy: string;
+  teamId?: string;
   teamName?: string;
+  teamProfilePic?: string;
   status?: TeamStatus;
 }): TeamStats => {
   const playerIds = players.map((player) => player.userId);
@@ -44,8 +48,11 @@ export const createRootTeam = ({
     XP: 0,
   };
 
+  if (teamId) team.teamId = teamId;
   const trimmed = teamName?.trim();
   if (trimmed) team.teamName = trimmed;
+  const trimmedPic = teamProfilePic?.trim();
+  if (trimmedPic) team.teamProfilePic = trimmedPic;
   if (status) team.status = status;
 
   return team;

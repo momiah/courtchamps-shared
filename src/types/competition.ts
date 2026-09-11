@@ -89,12 +89,21 @@ export interface TeamStats {
   winStreak5: number;
   winStreak7: number;
   XP?: number;
+  teamId?: string;
   playerIds?: string[];
   players?: TeamMember[];
   teamName?: string;
+  teamProfilePic?: string;
   status?: TeamStatus;
   createdBy?: string;
   createdAt?: string | Date;
+}
+
+export interface TeamDetails extends TeamStats {
+  teamId: string;
+  createdBy: string;
+  teamName: string;
+  teamProfilePic?: string;
 }
 
 export interface League {
