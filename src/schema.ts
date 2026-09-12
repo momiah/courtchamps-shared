@@ -424,6 +424,7 @@ export const notificationTypes = {
       LEAGUE: "join-league-request",
       TOURNAMENT: "join-tournament-request",
       CLUB: "join-club-request",
+      TEAM: "join-team-request",
     },
     // Shows game modal
     ADD_GAME: {

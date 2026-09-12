@@ -98,6 +98,7 @@ export interface TeamStats {
   status?: TeamStatus;
   createdBy?: string;
   createdAt?: string | Date;
+  ladderIds?: string[];
 }
 
 export interface TeamDetails extends TeamStats {
