@@ -80,6 +80,7 @@ describe("createRootTeam", () => {
     const team = createRootTeam({ players, createdBy: "zeta" });
     expect(team.numberOfWins).toBe(0);
     expect(team.XP).toBe(0);
+    expect(team.prevGameXP).toBe(0);
     expect(team.createdBy).toBe("zeta");
     expect(team.createdAt).toBeInstanceOf(Date);
   });

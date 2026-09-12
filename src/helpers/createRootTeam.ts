@@ -46,6 +46,7 @@ export const createRootTeam = ({
     lossesTo: {},
     rival: null,
     XP: 0,
+    prevGameXP: 0,
   };
 
   if (teamId) team.teamId = teamId;
