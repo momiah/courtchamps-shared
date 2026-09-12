@@ -89,6 +89,7 @@ export interface TeamStats {
   winStreak5: number;
   winStreak7: number;
   XP?: number;
+  prevGameXP?: number;
   teamId?: string;
   playerIds?: string[];
   players?: TeamMember[];
