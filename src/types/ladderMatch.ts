@@ -1,5 +1,6 @@
 import type { Court } from "./court";
 import type { Game } from "./game";
+import type { LadderType } from "./ladder";
 
 export const SHUTTLE_TYPE = {
   FEATHER: "Feather",
@@ -48,6 +49,18 @@ export interface LadderMatchCheckIn {
 }
 
 /**
+ * One side of a doubles ladder match. Captured at post time for the poster's
+ * team and on accept for the opponent's, so score entry can group each game's
+ * players into their team and scoring can update the right team docs. Absent on
+ * singles matches.
+ */
+export interface MatchTeam {
+  teamId: string;
+  teamKey: string;
+  playerIds: string[];
+}
+
+/**
  * A ladder match: a single fixture between players that contains `bestOf`
  * individual {@link Game} shells.
  */
@@ -76,6 +89,13 @@ export interface LadderMatch {
   acceptedAt?: Date;
   /** Persisted check-in handshake state (set on a successful QR scan). */
   checkIn?: LadderMatchCheckIn;
+  /**
+   * Doubles only: the two teams in this fixture. teams[0] is the poster's team
+   * (set on post), teams[1] the accepter's (set on accept). Absent on singles.
+   */
+  teams?: MatchTeam[];
+  /** Copied from the ladder so match consumers need not refetch it. */
+  ladderType?: LadderType;
 }
 
 export type LadderMatchInput = Pick<
