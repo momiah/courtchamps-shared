@@ -46,14 +46,9 @@ export { createLadderMatchGames } from "./createLadderMatchGames";
 export {
   canAcceptLadderMatch,
   buildAcceptedLadderMatch,
-  canTeamAcceptLadderMatch,
-  buildTeamAcceptedLadderMatch,
   LADDER_SINGLES_MAX_PARTICIPANTS,
 } from "./acceptLadderMatch";
-export type {
-  AcceptedLadderMatchUpdate,
-  TeamAcceptedLadderMatchUpdate,
-} from "./acceptLadderMatch";
+export type { AcceptedLadderMatchUpdate } from "./acceptLadderMatch";
 export {
   LADDER_CHECKIN_REFERENCE_LENGTH,
   getLadderMatchReference,
