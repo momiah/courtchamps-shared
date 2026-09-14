@@ -1,8 +1,6 @@
 import {
   canAcceptLadderMatch,
   buildAcceptedLadderMatch,
-  canTeamAcceptLadderMatch,
-  buildTeamAcceptedLadderMatch,
 } from "../acceptLadderMatch";
 import { LADDER_MATCH_STATUS } from "../../types/ladderMatch";
 
@@ -56,7 +54,12 @@ describe("buildAcceptedLadderMatch", () => {
 
   it("uses the supplied acceptedAt when provided", () => {
     const when = new Date("2026-08-21T10:00:00.000Z");
-    const update = buildAcceptedLadderMatch(makeMatch(), "accepter-2", when);
+    const update = buildAcceptedLadderMatch(
+      makeMatch(),
+      "accepter-2",
+      undefined,
+      when
+    );
     expect(update.acceptedAt).toBe(when);
   });
 
@@ -83,28 +86,36 @@ const opponentTeam = {
   playerIds: ["accepter-3", "accepter-4"],
 };
 
-describe("canTeamAcceptLadderMatch", () => {
+describe("canAcceptLadderMatch (doubles, with team)", () => {
   it("accepts a posted match whose players don't overlap and second slot is open", () => {
     expect(
-      canTeamAcceptLadderMatch(makeDoublesMatch(), opponentTeam.playerIds)
+      canAcceptLadderMatch(makeDoublesMatch(), "accepter-3", opponentTeam)
     ).toBe(true);
   });
 
   it("rejects when any of the team's players is already a participant", () => {
-    expect(canTeamAcceptLadderMatch(makeDoublesMatch(), ["poster-1", "accepter-4"])).toBe(
+    const team = { ...opponentTeam, playerIds: ["poster-1", "accepter-4"] };
+    expect(canAcceptLadderMatch(makeDoublesMatch(), "poster-1", team)).toBe(
       false
     );
   });
 
   it("rejects the poster's own team", () => {
-    expect(
-      canTeamAcceptLadderMatch(makeDoublesMatch(), ["poster-1", "poster-2"])
-    ).toBe(false);
+    const team = {
+      teamId: "team-a",
+      teamKey: "poster-1_poster-2",
+      playerIds: ["poster-1", "poster-2"],
+    };
+    expect(canAcceptLadderMatch(makeDoublesMatch(), "poster-1", team)).toBe(
+      false
+    );
   });
 
   it("rejects when the match is not posted", () => {
     const accepted = makeDoublesMatch({ matchStatus: LADDER_MATCH_STATUS.ACCEPTED });
-    expect(canTeamAcceptLadderMatch(accepted, opponentTeam.playerIds)).toBe(false);
+    expect(canAcceptLadderMatch(accepted, "accepter-3", opponentTeam)).toBe(
+      false
+    );
   });
 
   it("rejects when both team slots are already filled", () => {
@@ -114,16 +125,21 @@ describe("canTeamAcceptLadderMatch", () => {
         opponentTeam,
       ],
     });
-    expect(canTeamAcceptLadderMatch(full, ["accepter-5", "accepter-6"])).toBe(false);
+    const team = {
+      teamId: "team-c",
+      teamKey: "accepter-5_accepter-6",
+      playerIds: ["accepter-5", "accepter-6"],
+    };
+    expect(canAcceptLadderMatch(full, "accepter-5", team)).toBe(false);
   });
 });
 
-describe("buildTeamAcceptedLadderMatch", () => {
+describe("buildAcceptedLadderMatch (doubles, with team)", () => {
   it("appends the team's players and the team, and flips status to accepted", () => {
-    const update = buildTeamAcceptedLadderMatch(
+    const update = buildAcceptedLadderMatch(
       makeDoublesMatch(),
-      opponentTeam,
-      "accepter-3"
+      "accepter-3",
+      opponentTeam
     );
     expect(update.matchStatus).toBe(LADDER_MATCH_STATUS.ACCEPTED);
     expect(update.participants).toEqual([
@@ -138,9 +154,14 @@ describe("buildTeamAcceptedLadderMatch", () => {
     expect(update.acceptedAt).toBeInstanceOf(Date);
   });
 
+  it("singles accept carries no teams field", () => {
+    const update = buildAcceptedLadderMatch(makeMatch(), "accepter-2");
+    expect("teams" in update).toBe(false);
+  });
+
   it("does not mutate the original match arrays", () => {
     const match = makeDoublesMatch();
-    buildTeamAcceptedLadderMatch(match, opponentTeam, "accepter-3");
+    buildAcceptedLadderMatch(match, "accepter-3", opponentTeam);
     expect(match.participants).toEqual(["poster-1", "poster-2"]);
     expect(match.teams).toHaveLength(1);
   });

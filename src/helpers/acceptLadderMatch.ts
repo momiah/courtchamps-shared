@@ -8,99 +8,66 @@ import {
 export const LADDER_SINGLES_MAX_PARTICIPANTS = 2;
 
 /**
- * True only when the match can still be accepted by `userId`: it is currently
- * `POSTED`, the user is not already a participant, and the match is not full
- * (singles: fewer than {@link LADDER_SINGLES_MAX_PARTICIPANTS} participants).
+ * True only when the match can still be accepted: it is currently `POSTED` and
+ * the accepting side is not already in it.
+ *
+ * Singles (no `team`): `userId` is not already a participant and the match has
+ * fewer than {@link LADDER_SINGLES_MAX_PARTICIPANTS} participants.
+ *
+ * Doubles (`team` given): the second team slot is still open and none of the
+ * team's players are already in the match (which also rules out the poster's
+ * own team, since its players are the current participants).
  */
 export const canAcceptLadderMatch = (
   match: LadderMatch,
-  userId: string
+  userId: string,
+  team?: MatchTeam
 ): boolean => {
   if (match.matchStatus !== LADDER_MATCH_STATUS.POSTED) {
     return false;
+  }
+  if (team) {
+    if ((match.teams?.length ?? 0) >= 2) {
+      return false;
+    }
+    return !team.playerIds.some((id) => match.participants.includes(id));
   }
   if (match.participants.includes(userId)) {
     return false;
   }
-  if (match.participants.length >= LADDER_SINGLES_MAX_PARTICIPANTS) {
-    return false;
-  }
-  return true;
+  return match.participants.length < LADDER_SINGLES_MAX_PARTICIPANTS;
 };
 
-/** The subset of {@link LadderMatch} fields written when a match is accepted. */
+/**
+ * The subset of {@link LadderMatch} fields written when a match is accepted.
+ * `teams` is present only for a doubles accept.
+ */
 export interface AcceptedLadderMatchUpdate {
   participants: string[];
+  teams?: MatchTeam[];
   matchStatus: typeof LADDER_MATCH_STATUS.ACCEPTED;
   acceptedBy: string;
   acceptedAt: Date;
 }
 
 /**
- * Build the field update for accepting a match: appends `userId` to
- * `participants`, flips the status to `ACCEPTED`, and records who/when.
- * Pure — the caller persists the result (e.g. via Firestore `updateDoc`).
+ * Build the field update for accepting a match: flips the status to `ACCEPTED`
+ * and records who/when. Singles (no `team`) appends `userId` to `participants`;
+ * doubles (`team` given) appends the team's players to `participants` and the
+ * team to `teams`. Pure — the caller persists the result (e.g. via Firestore
+ * `updateDoc`).
  */
 export const buildAcceptedLadderMatch = (
   match: LadderMatch,
   userId: string,
+  team?: MatchTeam,
   acceptedAt: Date = new Date()
 ): AcceptedLadderMatchUpdate => ({
-  participants: [...match.participants, userId],
+  participants: team
+    ? [...match.participants, ...team.playerIds]
+    : [...match.participants, userId],
+  ...(team ? { teams: [...(match.teams ?? []), team] } : {}),
   matchStatus: LADDER_MATCH_STATUS.ACCEPTED,
   acceptedBy: userId,
-  acceptedAt,
-});
-
-/**
- * Doubles: true only when `team` can still accept the match — it is `POSTED`,
- * the second team slot is still open, and none of the team's players are
- * already in the match (which also rules out the poster's own team, since its
- * players are the current participants).
- */
-export const canTeamAcceptLadderMatch = (
-  match: LadderMatch,
-  playerIds: string[]
-): boolean => {
-  if (match.matchStatus !== LADDER_MATCH_STATUS.POSTED) {
-    return false;
-  }
-  if ((match.teams?.length ?? 0) >= 2) {
-    return false;
-  }
-  if (playerIds.some((id) => match.participants.includes(id))) {
-    return false;
-  }
-  return true;
-};
-
-/**
- * The subset of {@link LadderMatch} fields written when a team accepts a
- * doubles match.
- */
-export interface TeamAcceptedLadderMatchUpdate {
-  participants: string[];
-  teams: MatchTeam[];
-  matchStatus: typeof LADDER_MATCH_STATUS.ACCEPTED;
-  acceptedBy: string;
-  acceptedAt: Date;
-}
-
-/**
- * Doubles: build the field update for a team accepting a match — appends the
- * team's players to `participants`, the team to `teams`, flips the status to
- * `ACCEPTED`, and records the acting player and time. Pure — the caller
- * persists the result.
- */
-export const buildTeamAcceptedLadderMatch = (
-  match: LadderMatch,
-  team: MatchTeam,
-  acceptedBy: string,
-  acceptedAt: Date = new Date()
-): TeamAcceptedLadderMatchUpdate => ({
-  participants: [...match.participants, ...team.playerIds],
-  teams: [...(match.teams ?? []), team],
-  matchStatus: LADDER_MATCH_STATUS.ACCEPTED,
-  acceptedBy,
   acceptedAt,
 });
