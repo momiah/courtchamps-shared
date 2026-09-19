@@ -1,5 +1,8 @@
 import type { MatchTeam } from "./ladderMatch";
 
+/** Top-level Firestore collection holding no-show claims (one doc per match). */
+export const NO_SHOW_CLAIMS_COLLECTION = "noShowClaims";
+
 /** Minutes after the scheduled start before a blocked player may report a no-show. */
 export const NO_SHOW_GRACE_MINUTES = 30;
 
@@ -52,4 +55,13 @@ export interface NoShowClaim {
   createdAt: Date;
   resolvedAt?: Date | null;
   resolvedBy?: string | null;
+}
+
+/**
+ * Outcome of raising a no-show claim from the check-in flow. `reason` is
+ * "exists" when a non-rejected claim is already on file for the match.
+ */
+export interface CreateNoShowClaimOutcome {
+  success: boolean;
+  reason?: "exists" | "invalid" | "error";
 }

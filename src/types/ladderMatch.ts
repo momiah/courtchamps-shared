@@ -96,6 +96,17 @@ export interface LadderMatch {
   teams?: MatchTeam[];
   /** Copied from the ladder so match consumers need not refetch it. */
   ladderType?: LadderType;
+  /**
+   * Set when the match completed as a walkover (e.g. an approved no-show) rather
+   * than being played out. No games are recorded on a walkover.
+   */
+  walkover?: boolean;
+  /** The winning side of a walkover: teamKey (doubles) or userId (singles). */
+  walkoverWinner?: string;
+  /** Why the match was forfeited, e.g. "No show" (extensible to other types). */
+  walkoverReason?: string;
+  /** When the match was completed (played out or by walkover). */
+  completedAt?: Date;
 }
 
 export type LadderMatchInput = Pick<
