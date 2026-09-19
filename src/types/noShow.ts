@@ -3,6 +3,14 @@ import type { MatchTeam } from "./ladderMatch";
 /** Minutes after the scheduled start before a blocked player may report a no-show. */
 export const NO_SHOW_GRACE_MINUTES = 30;
 
+/**
+ * CP awarded to the walkover winner, and deducted from the no-show, when a
+ * no-show claim is approved. Flat and format-independent so match length can't
+ * inflate it, and capped at the no-show's own balance (floored at 0) so it only
+ * ever transfers CP that was genuinely earned — a walkover never mints CP.
+ */
+export const WALKOVER_CP = 50;
+
 export const NO_SHOW_STATUS = {
   /** Raised by the blocked player; awaiting a ladder admin's decision. */
   PENDING: "pending",
@@ -21,9 +29,10 @@ export type NoShowStatus = (typeof NO_SHOW_STATUS)[keyof typeof NO_SHOW_STATUS];
  * admin is the reliability gate, so no co-signing is required.
  *
  * On approval the match completes as a plain walkover win for `claimantTeam`:
- * no games are created (so no game CP, point difference or achievement medals),
- * but the match win/loss still lands in each side's match-result form and
- * counts toward each side's win/loss tally.
+ * no games are created (so no game point difference, achievement medals or
+ * global XP), but the match win/loss lands in each side's match-result form and
+ * win/loss tally, and {@link WALKOVER_CP} ladder CP transfers from the no-show
+ * to the claimant (capped at the no-show's balance, floored at 0).
  */
 export interface NoShowClaim {
   claimId: string;

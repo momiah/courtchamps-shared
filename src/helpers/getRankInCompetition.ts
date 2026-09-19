@@ -38,6 +38,16 @@ export const sortPlayersByPlacement = (
 export const sortTeamsByPlacement = (teams: TeamStats[]): TeamStats[] =>
   sortByPlacement(teams, compareByWinsThenPD);
 
+// Ladder team placement order: per-ladder CP (team XP) first, then wins, then
+// point difference — the doubles counterpart to compareLadderParticipants, so
+// singles and doubles ladders rank on the same headline metric (CP). Leagues
+// and tournaments keep the wins-first compareByWinsThenPD above.
+export const compareLadderTeams = (a: TeamStats, b: TeamStats): number =>
+  (b.XP || 0) - (a.XP || 0) || compareByWinsThenPD(a, b);
+
+export const sortLadderTeamsByPlacement = (teams: TeamStats[]): TeamStats[] =>
+  sortByPlacement(teams, compareLadderTeams);
+
 export const getPlayerRankInCompetition = (
   participants: ScoreboardProfile[],
   userId: string,
