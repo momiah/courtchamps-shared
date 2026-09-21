@@ -67,3 +67,10 @@ export { normalizeTeamKey } from "./generateInitialTeamStats";
 export { createTeam } from "./generateInitialTeamStats";
 export { createRootTeam } from "./createRootTeam";
 export * from "./getRankInCompetition";
+export {
+  applyStrike,
+  getDisqualification,
+  isDisqualified,
+  disqualificationDisclaimer,
+} from "./disqualification";
+export type { Disqualification } from "./disqualification";
