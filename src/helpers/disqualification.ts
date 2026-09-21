@@ -1,10 +1,18 @@
 import {
+  DISQUALIFICATION_REASONS,
   DISQUALIFICATION_REASON_LABELS,
   DISQUALIFICATION_SEVERITY,
   DISQUALIFICATION_THRESHOLDS,
   type DisqualificationReason,
   type StrikeCounts,
 } from "../types/disqualification";
+
+// Rank a reason for display order; any reason missing from the severity list
+// sorts last, so a newly added reason still derives correctly without it.
+const severityRank = (reason: DisqualificationReason): number => {
+  const index = DISQUALIFICATION_SEVERITY.indexOf(reason);
+  return index === -1 ? DISQUALIFICATION_SEVERITY.length : index;
+};
 
 /** Add one strike of `reason` to a tally, returning a new tally. */
 export const applyStrike = (
@@ -32,9 +40,11 @@ export const getDisqualification = (
   strikes: StrikeCounts | undefined,
   thresholds: Record<DisqualificationReason, number> = DISQUALIFICATION_THRESHOLDS,
 ): Disqualification => {
-  const reasons = DISQUALIFICATION_SEVERITY.filter(
-    (reason) => (strikes?.[reason] ?? 0) >= thresholds[reason],
-  );
+  const reasons = (
+    Object.values(DISQUALIFICATION_REASONS) as DisqualificationReason[]
+  )
+    .filter((reason) => (strikes?.[reason] ?? 0) >= thresholds[reason])
+    .sort((a, b) => severityRank(a) - severityRank(b));
   return {
     disqualified: reasons.length > 0,
     reasons,

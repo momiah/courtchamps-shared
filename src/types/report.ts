@@ -24,6 +24,27 @@ export const REPORT_REASONS = {
 export type ReportReason =
   (typeof REPORT_REASONS)[keyof typeof REPORT_REASONS];
 
+/** Display copy for a reason, used by the report modal and the admin queue. */
+export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
+  no_show: "No-show",
+  cheating: "Cheating",
+  abuse: "Abuse (physical or verbal)",
+  harassment: "Harassment",
+  other: "Other",
+};
+
+/** Reasons a user can pick in the match-menu report modal (no-show is its own route). */
+export const CONDUCT_REPORT_REASONS: ReportReason[] = [
+  REPORT_REASONS.CHEATING,
+  REPORT_REASONS.ABUSE,
+  REPORT_REASONS.HARASSMENT,
+  REPORT_REASONS.OTHER,
+];
+
+/** A description is required only when the reason is `other`. */
+export const reportNeedsDescription = (reason: ReportReason): boolean =>
+  reason === REPORT_REASONS.OTHER;
+
 export const REPORT_STATUS = {
   /** Awaiting an admin decision. */
   PENDING: "pending",
