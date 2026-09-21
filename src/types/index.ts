@@ -6,4 +6,5 @@ export * from "./notification";
 export * from "./ladder";
 export * from "./ladderMatch";
 export * from "./noShow";
+export * from "./disqualification";
 export * from "./court";

@@ -1,3 +1,5 @@
+import type { DisqualificationReason } from "./disqualification";
+
 export interface ScoreboardProfile {
   prevGameXP: number;
   highestLossStreak: number;
@@ -27,6 +29,14 @@ export interface ScoreboardProfile {
    * rank medal. Optional for back-compat.
    */
   competitionXP?: number;
+  /**
+   * Per-ladder reliability strikes / disqualification (singles participant
+   * entrant). Scoped to the ladder participant record, never the global profile.
+   */
+  noShowCount?: number;
+  disqualified?: boolean;
+  disqualifiedReason?: DisqualificationReason;
+  disqualifiedAt?: Date | string;
   currentStreak: {
     type: string | null;
     count: number;
