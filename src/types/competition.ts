@@ -1,7 +1,6 @@
 import { Location, ScoreboardProfile } from "./player";
 import { Game, Fixtures, Player } from "./game";
 import type { COMPETITION_TYPES } from "../schema";
-import type { DisqualificationReason } from "./disqualification";
 
 export type CollectionName =
   | "leagues"
@@ -100,11 +99,6 @@ export interface TeamStats {
   createdBy?: string;
   createdAt?: string | Date;
   ladderIds?: string[];
-  /** Per-ladder reliability strikes / disqualification (doubles team entrant). */
-  noShowCount?: number;
-  disqualified?: boolean;
-  disqualifiedReason?: DisqualificationReason;
-  disqualifiedAt?: Date | string;
 }
 
 export interface TeamDetails extends TeamStats {

@@ -1,36 +1,52 @@
 import {
-  DISQUALIFICATION_REASONS,
   DISQUALIFICATION_REASON_LABELS,
-  NO_SHOW_DQ_THRESHOLD,
+  DISQUALIFICATION_SEVERITY,
+  DISQUALIFICATION_THRESHOLDS,
   type DisqualificationReason,
-  type LadderDisqualification,
+  type StrikeCounts,
 } from "../types/disqualification";
 
-/** True once no-show strikes reach the disqualification threshold. */
-export const reachedNoShowLimit = (noShowCount: number): boolean =>
-  noShowCount >= NO_SHOW_DQ_THRESHOLD;
+/** Add one strike of `reason` to a tally, returning a new tally. */
+export const applyStrike = (
+  strikes: StrikeCounts | undefined,
+  reason: DisqualificationReason,
+): StrikeCounts => ({
+  ...strikes,
+  [reason]: (strikes?.[reason] ?? 0) + 1,
+});
+
+export interface Disqualification {
+  disqualified: boolean;
+  /** Every reason whose count has reached its threshold. */
+  reasons: DisqualificationReason[];
+  /** The most serious tripped reason, for a single-line disclaimer. */
+  primaryReason?: DisqualificationReason;
+}
 
 /**
- * The field update for adding one no-show strike to a ladder entrant: bumps
- * `noShowCount`, and once it reaches the threshold also flags the entrant
- * disqualified for `no_show`. Pure, so the same rule drives every caller (the
- * admin no-show approval today, any future path tomorrow).
+ * Derive disqualification from a strike tally — the single source of truth for
+ * whether an entrant is blocked. Never stored, so retuning a threshold (globally
+ * here, or per-ladder via `thresholds`) re-evaluates everyone with no migration.
  */
-export const buildNoShowStrikeUpdate = (
-  currentCount: number,
-  now: Date = new Date(),
-): LadderDisqualification => {
-  const noShowCount = (currentCount ?? 0) + 1;
-  if (reachedNoShowLimit(noShowCount)) {
-    return {
-      noShowCount,
-      disqualified: true,
-      disqualifiedReason: DISQUALIFICATION_REASONS.NO_SHOW,
-      disqualifiedAt: now,
-    };
-  }
-  return { noShowCount };
+export const getDisqualification = (
+  strikes: StrikeCounts | undefined,
+  thresholds: Record<DisqualificationReason, number> = DISQUALIFICATION_THRESHOLDS,
+): Disqualification => {
+  const reasons = DISQUALIFICATION_SEVERITY.filter(
+    (reason) => (strikes?.[reason] ?? 0) >= thresholds[reason],
+  );
+  return {
+    disqualified: reasons.length > 0,
+    reasons,
+    primaryReason: reasons[0],
+  };
 };
+
+/** Convenience boolean for the common "is this entrant blocked?" check. */
+export const isDisqualified = (
+  strikes: StrikeCounts | undefined,
+  thresholds?: Record<DisqualificationReason, number>,
+): boolean => getDisqualification(strikes, thresholds).disqualified;
 
 /**
  * The disclaimer shown when a disqualified entrant opens the post/accept flow,

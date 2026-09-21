@@ -1,22 +1,28 @@
 /**
- * No-show strikes accrued in a single ladder that trigger automatic
- * disqualification from that ladder (never the player's global profile).
- */
-export const NO_SHOW_DQ_THRESHOLD = 5;
-
-/**
- * Why a ladder entrant was disqualified. `no_show` is applied automatically once
- * strikes reach {@link NO_SHOW_DQ_THRESHOLD}; the others are applied manually by
- * an admin. Extensible as new grounds are added.
+ * Reasons a strike can be recorded against a player. `no_show` accrues from
+ * approved no-show reports (raised in the check-in flow); the conduct reasons
+ * accrue from reports an admin upholds. Disqualification is never stored — it is
+ * derived by comparing strike counts to {@link DISQUALIFICATION_THRESHOLDS}, so
+ * retuning a limit re-evaluates everyone with no data migration.
  */
 export const DISQUALIFICATION_REASONS = {
   NO_SHOW: "no_show",
   CHEATING: "cheating",
   ABUSE: "abuse",
+  HARASSMENT: "harassment",
 } as const;
 
 export type DisqualificationReason =
   (typeof DISQUALIFICATION_REASONS)[keyof typeof DISQUALIFICATION_REASONS];
+
+/** Strikes of a reason, accrued in one ladder, that trigger disqualification. */
+export const DISQUALIFICATION_THRESHOLDS: Record<DisqualificationReason, number> =
+  {
+    no_show: 5,
+    cheating: 3,
+    abuse: 3,
+    harassment: 3,
+  };
 
 /**
  * Plural, disclaimer-ready phrasing for each reason, so a message reads
@@ -29,17 +35,19 @@ export const DISQUALIFICATION_REASON_LABELS: Record<
   no_show: "no-shows",
   cheating: "cheating offences",
   abuse: "abuse reports",
+  harassment: "harassment reports",
 };
 
 /**
- * Reliability fields carried by a per-ladder entrant — a singles participant
- * ({@link ScoreboardProfile}) or a doubles team ({@link TeamStats}). Scoped to a
- * single ladder; the player's global profile is never affected.
+ * Order used to pick the single reason shown in a disclaimer when a player has
+ * crossed more than one limit — most serious first.
  */
-export interface LadderDisqualification {
-  /** No-show strikes accrued in this ladder. */
-  noShowCount?: number;
-  disqualified?: boolean;
-  disqualifiedReason?: DisqualificationReason;
-  disqualifiedAt?: Date | string;
-}
+export const DISQUALIFICATION_SEVERITY: DisqualificationReason[] = [
+  DISQUALIFICATION_REASONS.ABUSE,
+  DISQUALIFICATION_REASONS.HARASSMENT,
+  DISQUALIFICATION_REASONS.CHEATING,
+  DISQUALIFICATION_REASONS.NO_SHOW,
+];
+
+/** Strike tally keyed by reason. Stored per-ladder-per-player and globally. */
+export type StrikeCounts = Partial<Record<DisqualificationReason, number>>;
