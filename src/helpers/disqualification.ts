@@ -23,6 +23,22 @@ export const applyStrike = (
   [reason]: (strikes?.[reason] ?? 0) + 1,
 });
 
+/**
+ * Remove one strike of `reason` from a tally, returning a new tally. Drops the
+ * key entirely once it hits zero so a reverted report leaves no trace. The
+ * inverse of `applyStrike`, used when an admin reverts a report.
+ */
+export const removeStrike = (
+  strikes: StrikeCounts | undefined,
+  reason: DisqualificationReason,
+): StrikeCounts => {
+  const next: StrikeCounts = { ...strikes };
+  const value = (next[reason] ?? 0) - 1;
+  if (value > 0) next[reason] = value;
+  else delete next[reason];
+  return next;
+};
+
 export interface Disqualification {
   disqualified: boolean;
   /** Every reason whose count has reached its threshold. */

@@ -1,5 +1,6 @@
 import {
   applyStrike,
+  removeStrike,
   getDisqualification,
   isDisqualified,
   disqualificationDisclaimer,
@@ -17,6 +18,27 @@ describe("applyStrike", () => {
       no_show: 2,
       abuse: 2,
     });
+  });
+});
+
+describe("removeStrike", () => {
+  it("decrements an existing reason and preserves the others", () => {
+    expect(removeStrike({ no_show: 2, abuse: 1 }, "no_show")).toEqual({
+      no_show: 1,
+      abuse: 1,
+    });
+  });
+
+  it("drops the key once it hits zero", () => {
+    expect(removeStrike({ abuse: 1, no_show: 3 }, "abuse")).toEqual({
+      no_show: 3,
+    });
+  });
+
+  it("is a no-op safe inverse of applyStrike", () => {
+    const base = { cheating: 2 };
+    expect(removeStrike(applyStrike(base, "cheating"), "cheating")).toEqual(base);
+    expect(removeStrike(undefined, "no_show")).toEqual({});
   });
 });
 
