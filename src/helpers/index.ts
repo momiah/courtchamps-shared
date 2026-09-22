@@ -69,6 +69,7 @@ export { createRootTeam } from "./createRootTeam";
 export * from "./getRankInCompetition";
 export {
   applyStrike,
+  removeStrike,
   getDisqualification,
   isDisqualified,
   disqualificationDisclaimer,
