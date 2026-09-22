@@ -13,6 +13,8 @@ export const LADDER_MATCH_STATUS = {
   POSTED: "posted",
   ACCEPTED: "accepted",
   COMPLETED: "completed",
+  /** Auto-set when an accepted match goes unattended past its 24h window. */
+  CANCELLED: "cancelled",
 } as const;
 
 export type LadderMatchStatus =
@@ -107,6 +109,15 @@ export interface LadderMatch {
   walkoverReason?: string;
   /** When the match was completed (played out or by walkover). */
   completedAt?: Date;
+  /**
+   * True while a no-show report against this match is pending an admin decision;
+   * check-in is paused until it resolves. Cleared if the report is rejected.
+   */
+  noShowReported?: boolean;
+  /** When the match was auto-cancelled as unattended. */
+  cancelledAt?: Date;
+  /** Why the match was cancelled, e.g. "Unattended". */
+  cancelledReason?: string;
 }
 
 export type LadderMatchInput = Pick<
