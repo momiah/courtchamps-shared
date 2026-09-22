@@ -62,8 +62,8 @@ export interface DisputeEvent {
    * final resolution note). */
   note?: string;
   /** userId of who triggered this transition (the opener or an admin). */
-  by: string;
-  at: Date;
+  createdBy: string;
+  createdAt: Date;
 }
 
 /**
