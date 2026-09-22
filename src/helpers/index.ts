@@ -80,3 +80,22 @@ export {
   getLadderMatchStartMs,
   isLadderMatchUnattended,
 } from "./ladderAutoCancel";
+export {
+  isLadderGameApproved,
+  resolveLadderMatchOutcome,
+  teamUserIds,
+} from "./ladderMatchResult";
+export type { LadderMatchOutcome } from "./ladderMatchResult";
+export { buildLadderParticipant } from "./ladderParticipants";
+export type { LadderJoinUser } from "./ladderParticipants";
+export { applyLadderTeamGameXp } from "./ladderTeamScoring";
+export { scoreSinglesLadderGame } from "./scoreSinglesLadderGame";
+export type {
+  SinglesScoreInput,
+  SinglesScoreResult,
+} from "./scoreSinglesLadderGame";
+export { scoreDoublesLadderGame } from "./scoreDoublesLadderGame";
+export type {
+  DoublesScoreInput,
+  DoublesScoreResult,
+} from "./scoreDoublesLadderGame";

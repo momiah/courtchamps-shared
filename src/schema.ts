@@ -406,6 +406,10 @@ export const notificationTypes = {
       ROUTE: "Ladder",
       TYPE: "ladder",
     },
+    LADDER_DISPUTE: {
+      ROUTE: "GameDisputeScreen",
+      TYPE: "ladder-dispute",
+    },
   },
   WELCOME: {
     TYPE: "welcome",
