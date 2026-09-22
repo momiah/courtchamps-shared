@@ -74,3 +74,8 @@ export {
   disqualificationDisclaimer,
 } from "./disqualification";
 export type { Disqualification } from "./disqualification";
+export {
+  LADDER_MATCH_AUTO_CANCEL_HOURS,
+  getLadderMatchStartMs,
+  isLadderMatchUnattended,
+} from "./ladderAutoCancel";
