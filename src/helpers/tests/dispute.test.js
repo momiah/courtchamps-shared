@@ -4,6 +4,7 @@ import {
   getDisputeEvidenceDueAt,
   isDisputeEvidenceOverdue,
   hasDisputeEvidence,
+  isPlayerEvidenceEvent,
   gameVideoDocId,
 } from "../../types/dispute";
 
@@ -92,6 +93,13 @@ describe("hasDisputeEvidence / gameVideoDocId", () => {
     expect(hasDisputeEvidence({ note: "x" })).toBe(true);
     expect(hasDisputeEvidence({ videoId: "g_u" })).toBe(true);
     expect(hasDisputeEvidence({ courtPositions: positions })).toBe(false);
+  });
+
+  it("only counts player phases as player evidence", () => {
+    expect(isPlayerEvidenceEvent({ type: "opened", note: "x" })).toBe(true);
+    expect(isPlayerEvidenceEvent({ type: "evidence_submitted", videoId: "v" })).toBe(true);
+    expect(isPlayerEvidenceEvent({ type: "evidence_requested", note: "x" })).toBe(false);
+    expect(isPlayerEvidenceEvent({ type: "evidence_submitted" })).toBe(false);
   });
 
   it("matches the gameVideos doc id format", () => {

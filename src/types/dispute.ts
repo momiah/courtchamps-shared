@@ -210,9 +210,18 @@ export const getDisputeEvidenceBlocker = ({
   return null;
 };
 
-/** True when a timeline event carries player evidence (a note or a video). */
+/** True when evidence carries a note or a video. */
 export const hasDisputeEvidence = (event: DisputeEvidence): boolean =>
   Boolean(event.videoId || event.note?.trim());
+
+/**
+ * True for a player's evidence phase (opening the dispute or a later
+ * submission) that carries a note or a video. Admin notes don't count.
+ */
+export const isPlayerEvidenceEvent = (event: DisputeEvent): boolean =>
+  (event.type === DISPUTE_EVENT_TYPE.OPENED ||
+    event.type === DISPUTE_EVENT_TYPE.EVIDENCE_SUBMITTED) &&
+  hasDisputeEvidence(event);
 
 /** True once a dispute has reached its terminal stage. */
 export const isDisputeResolved = (stage: DisputeStage): boolean =>
