@@ -60,6 +60,8 @@ export const DISPUTE_SYSTEM_ACTOR = "system";
 export const DISPUTE_EVENT_TYPE = {
   OPENED: "opened",
   EVIDENCE_SUBMITTED: "evidence_submitted",
+  /** A player sent a note without a video. */
+  NOTES_SUBMITTED: "notes_submitted",
   EVIDENCE_REQUESTED: "evidence_requested",
   RESOLVED: "resolved",
   VOIDED: "voided",
@@ -72,11 +74,19 @@ export type DisputeEventType =
 export const DISPUTE_EVENT_LABELS: Record<DisputeEventType, string> = {
   opened: "Dispute opened",
   evidence_submitted: "Evidence submitted",
+  notes_submitted: "Notes submitted",
   evidence_requested: "Evidence requested",
   resolved: "Resolved",
   voided: "Dispute voided",
   cancelled: "Dispute cancelled",
 };
+
+/** Event types written by a player in the game. */
+export const DISPUTE_PLAYER_EVENT_TYPES: DisputeEventType[] = [
+  DISPUTE_EVENT_TYPE.OPENED,
+  DISPUTE_EVENT_TYPE.EVIDENCE_SUBMITTED,
+  DISPUTE_EVENT_TYPE.NOTES_SUBMITTED,
+];
 
 /** Event types written by an admin (or the system), never by a player. */
 export const DISPUTE_ADMIN_EVENT_TYPES: DisputeEventType[] = [
@@ -93,8 +103,8 @@ export const DISPUTE_ADMIN_EVENT_TYPES: DisputeEventType[] = [
 export interface DisputeEvidence {
   note?: string;
   /**
-   * The `gameVideos` doc this evidence refers to (`${gameId}_${userId}`, see
-   * {@link gameVideoDocId}). The upload may still be in flight when submitted.
+   * The `gameVideos` doc this evidence refers to (see {@link disputeVideoDocId}).
+   * The upload may still be in flight when submitted.
    */
   videoId?: string;
   /** Where each player stood at the start of this video. */
@@ -183,9 +193,19 @@ export interface CreateDisputeOutcome {
   reason?: "exists" | "invalid" | "error";
 }
 
-/** The `gameVideos` doc id for a player's upload of a game (one per player per game). */
+/** The `gameVideos` doc id for a player's match video of a game (one per player per game). */
 export const gameVideoDocId = (gameId: string, userId: string): string =>
   `${gameId}_${userId}`;
+
+/**
+ * A unique `gameVideos` doc id for one dispute evidence upload, so it never
+ * replaces the player's match video or an earlier dispute video.
+ */
+export const disputeVideoDocId = (
+  gameId: string,
+  userId: string,
+  nowMs: number,
+): string => `${gameId}_${userId}_dispute_${nowMs}`;
 
 /** True when at least one court position slot has been assigned. */
 export const hasCourtPositions = (positions?: SelectedPlayers | null): boolean =>
@@ -228,13 +248,69 @@ export const hasDisputeEvidence = (event: DisputeEvidence): boolean =>
   Boolean(event.videoId || event.note?.trim());
 
 /**
- * True for a player's evidence phase (opening the dispute or a later
- * submission) that carries a note or a video. Admin notes don't count.
+ * True for a player's phase (opening the dispute, evidence or notes) that
+ * carries a note or a video. Admin notes don't count.
  */
 export const isPlayerEvidenceEvent = (event: DisputeEvent): boolean =>
-  (event.type === DISPUTE_EVENT_TYPE.OPENED ||
-    event.type === DISPUTE_EVENT_TYPE.EVIDENCE_SUBMITTED) &&
-  hasDisputeEvidence(event);
+  DISPUTE_PLAYER_EVENT_TYPES.includes(event.type) && hasDisputeEvidence(event);
+
+/** A later player submission is "evidence" with a video, otherwise "notes". */
+export const getDisputeSubmissionType = (
+  evidence: DisputeEvidence,
+): DisputeEventType =>
+  evidence.videoId
+    ? DISPUTE_EVENT_TYPE.EVIDENCE_SUBMITTED
+    : DISPUTE_EVENT_TYPE.NOTES_SUBMITTED;
+
+/**
+ * Each player may upload one video per round: before the first admin request,
+ * then one more after each "evidence requested". Notes are always allowed.
+ */
+export const canUploadDisputeVideo = (
+  events: Pick<DisputeEvent, "type" | "createdBy" | "videoId">[],
+  userId: string,
+): boolean => {
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const event = events[i];
+    if (event.type === DISPUTE_EVENT_TYPE.EVIDENCE_REQUESTED) return true;
+    if (event.createdBy === userId && event.videoId) return false;
+  }
+  return true;
+};
+
+export const DISPUTE_UNDER_REVIEW_LABEL = "Under review";
+
+/** One row of the displayed timeline: a stored event or an "Under review" marker. */
+export type DisputeTimelineItem =
+  | { kind: "event"; key: string; event: DisputeEvent; eventIndex: number }
+  | { kind: "under_review"; key: string; createdAt: Date };
+
+/**
+ * The timeline as shown to players and admins: every stored action, with an
+ * "Under review" phase after each player action (the dispute is back with the
+ * admin). Under review is derived here, never stored.
+ */
+export const buildDisputeTimeline = (
+  events: DisputeEvent[],
+): DisputeTimelineItem[] =>
+  events.flatMap((event, eventIndex) => {
+    const item: DisputeTimelineItem = {
+      kind: "event",
+      key: `e${eventIndex}`,
+      event,
+      eventIndex,
+    };
+    return DISPUTE_PLAYER_EVENT_TYPES.includes(event.type)
+      ? [
+          item,
+          {
+            kind: "under_review" as const,
+            key: `r${eventIndex}`,
+            createdAt: event.createdAt,
+          },
+        ]
+      : [item];
+  });
 
 /** True once a dispute has reached its terminal stage. */
 export const isDisputeResolved = (stage: DisputeStage): boolean =>

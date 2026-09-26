@@ -106,3 +106,53 @@ describe("hasDisputeEvidence / gameVideoDocId", () => {
     expect(gameVideoDocId("g1", "u1")).toBe("g1_u1");
   });
 });
+
+describe("notes, video limit and Under review timeline", () => {
+  const {
+    getDisputeSubmissionType,
+    canUploadDisputeVideo,
+    buildDisputeTimeline,
+    disputeVideoDocId,
+    isPlayerEvidenceEvent: isPlayer,
+  } = require("../../types/dispute");
+
+  it("names a note-only submission 'notes' and one with a video 'evidence'", () => {
+    expect(getDisputeSubmissionType({ note: "x" })).toBe("notes_submitted");
+    expect(getDisputeSubmissionType({ videoId: "v", note: "x" })).toBe("evidence_submitted");
+  });
+
+  it("counts notes as player evidence", () => {
+    expect(isPlayer({ type: "notes_submitted", note: "x" })).toBe(true);
+  });
+
+  it("allows one video per player per round", () => {
+    const opened = { type: "opened", createdBy: "ak", note: "x" };
+    const video = (by) => ({ type: "evidence_submitted", createdBy: by, videoId: `v-${by}` });
+    const request = { type: "evidence_requested", createdBy: "admin" };
+    expect(canUploadDisputeVideo([opened], "ak")).toBe(true);
+    expect(canUploadDisputeVideo([opened, video("ak")], "ak")).toBe(false);
+    expect(canUploadDisputeVideo([opened, video("ak")], "jp")).toBe(true);
+    expect(canUploadDisputeVideo([opened, video("ak"), request], "ak")).toBe(true);
+    expect(canUploadDisputeVideo([opened, video("ak"), request, video("ak")], "ak")).toBe(false);
+    expect(canUploadDisputeVideo([{ type: "opened", createdBy: "ak", videoId: "v" }], "ak")).toBe(false);
+  });
+
+  it("adds an Under review phase after every player action only", () => {
+    const at = new Date(5);
+    const timeline = buildDisputeTimeline([
+      { type: "opened", createdBy: "ak", createdAt: at },
+      { type: "evidence_requested", createdBy: "admin", createdAt: at },
+      { type: "notes_submitted", createdBy: "mm", createdAt: at },
+      { type: "resolved", createdBy: "admin", createdAt: at },
+    ]);
+    expect(timeline.map((i) => (i.kind === "event" ? i.event.type : "under_review"))).toEqual([
+      "opened", "under_review", "evidence_requested", "notes_submitted", "under_review", "resolved",
+    ]);
+    expect(new Set(timeline.map((i) => i.key)).size).toBe(timeline.length);
+  });
+
+  it("gives every dispute upload its own video id", () => {
+    expect(disputeVideoDocId("g1", "u1", 1)).not.toBe(disputeVideoDocId("g1", "u1", 2));
+    expect(disputeVideoDocId("g1", "u1", 1)).not.toBe("g1_u1");
+  });
+});

@@ -73,6 +73,15 @@ export interface Game {
   isThirdPlacePlayoff?: boolean;
 }
 
+/** What a `gameVideos` doc is for. Only `game` videos appear in feeds. */
+export const GAME_VIDEO_TYPE = {
+  GAME: "game",
+  DISPUTE: "dispute",
+} as const;
+
+export type GameVideoType =
+  (typeof GAME_VIDEO_TYPE)[keyof typeof GAME_VIDEO_TYPE];
+
 export interface GameVideoUploadPayload {
   gameId: string;
   competitionId: string;
@@ -88,6 +97,10 @@ export interface GameVideoUploadPayload {
   teams: Teams;
   videoLength?: number;
   matchId?: string;
+  /** Defaults to `game`. */
+  videoType?: GameVideoType;
+  /** Doc id to write; required for `dispute` uploads (see disputeVideoDocId). */
+  videoId?: string;
 }
 
 export interface PendingUpload extends Omit<
