@@ -99,3 +99,14 @@ export type {
   DoublesScoreInput,
   DoublesScoreResult,
 } from "./scoreDoublesLadderGame";
+export {
+  DisputeResolutionError,
+  getDisputeFinalGame,
+  getDisputePlayerIds,
+  isDoublesDispute,
+  planDisputeResolution,
+} from "./resolveDispute";
+export type {
+  DisputeResolutionPlan,
+  PlanDisputeResolutionInput,
+} from "./resolveDispute";

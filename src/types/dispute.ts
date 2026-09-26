@@ -36,6 +36,8 @@ export const DISPUTE_RESOLUTION = {
    * admin request, so the original scores stand (scored like `rejected`).
    */
   VOID: "void",
+  /** The opener withdrew the dispute, so the original scores stand. */
+  CANCELLED: "cancelled",
 } as const;
 
 export type DisputeResolution =
@@ -45,6 +47,7 @@ export const DISPUTE_RESOLUTION_LABELS: Record<DisputeResolution, string> = {
   upheld: "Disputed score upheld",
   rejected: "Original score stands",
   void: "Voided",
+  cancelled: "Cancelled by the disputer",
 };
 
 /** Hours players have to respond to an admin's evidence request before the dispute is voided. */
@@ -60,6 +63,7 @@ export const DISPUTE_EVENT_TYPE = {
   EVIDENCE_REQUESTED: "evidence_requested",
   RESOLVED: "resolved",
   VOIDED: "voided",
+  CANCELLED: "cancelled",
 } as const;
 
 export type DisputeEventType =
@@ -68,10 +72,18 @@ export type DisputeEventType =
 export const DISPUTE_EVENT_LABELS: Record<DisputeEventType, string> = {
   opened: "Dispute opened",
   evidence_submitted: "Evidence submitted",
-  evidence_requested: "More evidence requested",
+  evidence_requested: "Evidence requested",
   resolved: "Resolved",
   voided: "Dispute voided",
+  cancelled: "Dispute cancelled",
 };
+
+/** Event types written by an admin (or the system), never by a player. */
+export const DISPUTE_ADMIN_EVENT_TYPES: DisputeEventType[] = [
+  DISPUTE_EVENT_TYPE.EVIDENCE_REQUESTED,
+  DISPUTE_EVENT_TYPE.RESOLVED,
+  DISPUTE_EVENT_TYPE.VOIDED,
+];
 
 /**
  * Evidence attached to a player action. Either a note or a video is required;
@@ -111,7 +123,8 @@ export interface DisputeEvent extends DisputeEvidence {
  * actioned by a website admin. Any participant can add evidence while it is
  * unresolved. On `upheld` the corrected scores are written to the game and
  * scored through the normal ladder game flow; on `rejected` or `void` the
- * original scores stand.
+ * original scores stand. The opener can cancel it, which also keeps the
+ * original scores.
  */
 export interface Dispute {
   disputeId: string;
@@ -147,7 +160,7 @@ export interface Dispute {
   resolution?: DisputeResolution | null;
   /**
    * The final agreed game — the disputer's corrected scores, or the original
-   * game on `rejected` / `void` — written to the match.
+   * game on `rejected` / `void` / `cancelled` — written to the match.
    */
   finalGame?: Game | null;
   /** Final admin notes shown in the resolved phase. */
