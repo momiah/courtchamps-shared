@@ -22,25 +22,38 @@ export const ladderDecider = (bestOf: number): number =>
 /**
  * True once a side has reached the best-of decider counting every game with a
  * reported result (pending, approved or disputed), not just approved ones. The
- * winning side can never exceed the decider, so this locks the remaining empty
- * shells the instant a match is mathematically over — before approvals land.
- * `excludeGameId` drops the game being written, so the genuine decider game and
- * edits to already-reported games stay allowed.
+ * winning side can never exceed the decider, so this locks the remaining shells
+ * the instant a match is mathematically over — before approvals land.
  */
 export const isLadderMatchReportDecided = (
   games: Game[],
   bestOf: number,
-  excludeGameId?: string,
 ): boolean => {
   let team1Wins = 0;
   let team2Wins = 0;
   for (const game of games) {
-    if (excludeGameId && game.gameId === excludeGameId) continue;
     if (game.result?.winner.team === "Team 1") team1Wins += 1;
     else if (game.result?.winner.team === "Team 2") team2Wins += 1;
   }
   const decider = ladderDecider(bestOf);
   return team1Wins >= decider || team2Wins >= decider;
+};
+
+/**
+ * The one shell a player may report next: the first game in play order that has
+ * no result yet, or null once the match is decided (or every game is in). Games
+ * are reported strictly one at a time from game 1, and the decider locks the
+ * rest, so this is the single gate the write path and the lobby both use.
+ */
+export const getReportableLadderGameId = (
+  games: Game[],
+  bestOf: number,
+): string | null => {
+  if (isLadderMatchReportDecided(games, bestOf)) return null;
+  const next = [...games]
+    .sort((a, b) => (a.gameNumber ?? 0) - (b.gameNumber ?? 0))
+    .find((game) => !game.result);
+  return next?.gameId ?? null;
 };
 
 /**
