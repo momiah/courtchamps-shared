@@ -15,6 +15,34 @@ export interface LadderMatchOutcome {
   winnerTeam: TeamLabel | null;
 }
 
+/** Wins needed to clinch a best-of: 3 (bo5), 4 (bo7), 5 (bo9), 6 (bo11). */
+export const ladderDecider = (bestOf: number): number =>
+  Math.floor(bestOf / 2) + 1;
+
+/**
+ * True once a side has reached the best-of decider counting every game with a
+ * reported result (pending, approved or disputed), not just approved ones. The
+ * winning side can never exceed the decider, so this locks the remaining empty
+ * shells the instant a match is mathematically over — before approvals land.
+ * `excludeGameId` drops the game being written, so the genuine decider game and
+ * edits to already-reported games stay allowed.
+ */
+export const isLadderMatchReportDecided = (
+  games: Game[],
+  bestOf: number,
+  excludeGameId?: string,
+): boolean => {
+  let team1Wins = 0;
+  let team2Wins = 0;
+  for (const game of games) {
+    if (excludeGameId && game.gameId === excludeGameId) continue;
+    if (game.result?.winner.team === "Team 1") team1Wins += 1;
+    else if (game.result?.winner.team === "Team 2") team2Wins += 1;
+  }
+  const decider = ladderDecider(bestOf);
+  return team1Wins >= decider || team2Wins >= decider;
+};
+
 /**
  * Resolve a ladder match from its games: tally approved game wins per side and
  * decide once a side reaches the best-of majority. Falls back to the higher
@@ -33,7 +61,7 @@ export const resolveLadderMatchOutcome = (
     else if (game.result?.winner.team === "Team 2") team2Wins += 1;
   }
 
-  const majority = Math.floor(bestOf / 2) + 1;
+  const majority = ladderDecider(bestOf);
   if (team1Wins >= majority) return { decided: true, winnerTeam: "Team 1" };
   if (team2Wins >= majority) return { decided: true, winnerTeam: "Team 2" };
 
