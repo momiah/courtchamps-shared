@@ -58,7 +58,8 @@ export const isLadderMatchUnattended = (
       !!game.result ||
       status === "approved" ||
       status === "pending" ||
-      status === "Pending"
+      status === "Pending" ||
+      status === "disputed"
     );
   });
   if (anyGameTouched) return false;
