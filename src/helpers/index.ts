@@ -85,6 +85,7 @@ export {
   ladderDecider,
   isLadderMatchReportDecided,
   getReportableLadderGameId,
+  hasOpenLadderDispute,
   resolveLadderMatchOutcome,
   teamUserIds,
 } from "./ladderMatchResult";

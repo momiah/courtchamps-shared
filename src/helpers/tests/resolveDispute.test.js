@@ -72,4 +72,39 @@ describe("planDisputeResolution", () => {
     await expect(planDisputeResolution(input("rejected", { match: { ...match(), matchStatus: "completed" } }))).rejects.toBeInstanceOf(DisputeResolutionError);
     await expect(planDisputeResolution(input("rejected", { match: { ...match(), games: [] } }))).rejects.toBeInstanceOf(DisputeResolutionError);
   });
+
+  it("holds completion while another game is still disputed", async () => {
+    const g = (id, status) => ({
+      gameId: id,
+      date: "22-09-2026",
+      approvalStatus: status,
+      team1: { player1: P("mm"), player2: P("sl"), score: 21 },
+      team2: { player1: P("ak"), player2: P("jp"), score: 18 },
+      result: {
+        winner: { team: "Team 1", players: ["mm", "sl"], score: 21 },
+        loser: { team: "Team 2", players: ["ak", "jp"], score: 18 },
+      },
+    });
+    // Resolving g1 (cancelled -> Team 1 win, approved) makes approved wins 2-0,
+    // the decider for a best-of-3 — but g2 is still disputed, so the match holds.
+    const heldMatch = {
+      matchStatus: "accepted",
+      bestOf: 3,
+      games: [g("g1", "pending"), g("g3", "approved"), g("g2", "disputed")],
+      teams: [
+        { teamKey: normalizeTeamKey(["mm", "sl"]) },
+        { teamKey: normalizeTeamKey(["ak", "jp"]) },
+      ],
+    };
+    const held = await planDisputeResolution(input("cancelled", { match: heldMatch }));
+    expect(held.matchUpdate.matchStatus).toBeUndefined();
+
+    // With that game approved instead of disputed, the same resolution completes.
+    const settled = await planDisputeResolution(
+      input("cancelled", {
+        match: { ...heldMatch, games: [g("g1", "pending"), g("g3", "approved"), g("g2", "approved")] },
+      }),
+    );
+    expect(settled.matchUpdate.matchStatus).toBe("completed");
+  });
 });
