@@ -42,7 +42,7 @@ export type ApprovalStatus =
   | "pending"
   | "approved"
   | "declined"
-  | "Disputed";
+  | "disputed";
 
 export type CompetitionTypes = "Singles" | "Doubles";
 export type GenerationType = "Random" | "Balanced";
