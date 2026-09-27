@@ -63,4 +63,9 @@ describe("isLadderMatchUnattended", () => {
     const scored = base({ games: [{ result: { winner: {} } }] });
     expect(isLadderMatchUnattended(scored, hoursAfter(48))).toBe(false);
   });
+
+  it("never cancels while a game is disputed", () => {
+    const match = base({ games: [{ approvalStatus: "Disputed" }] });
+    expect(isLadderMatchUnattended(match, hoursAfter(48))).toBe(false);
+  });
 });
