@@ -16,7 +16,10 @@ import type { LadderMatch } from "../types/ladderMatch";
 import { LADDER_TYPE } from "../types/ladder";
 import type { TeamStats } from "../types/competition";
 import type { ScoreboardProfile, UserProfile } from "../types/player";
-import { resolveLadderMatchOutcome } from "./ladderMatchResult";
+import {
+  resolveLadderMatchOutcome,
+  hasOpenLadderDispute,
+} from "./ladderMatchResult";
 import { scoreDoublesLadderGame } from "./scoreDoublesLadderGame";
 import { scoreSinglesLadderGame } from "./scoreSinglesLadderGame";
 
@@ -126,7 +129,10 @@ export const planDisputeResolution = async ({
     nextGames,
     match.bestOf ?? nextGames.length,
   );
-  const matchDecided = outcome.decided && !!outcome.winnerTeam;
+  // Hold completion while any other game is still disputed — the match is not
+  // truly settled until every dispute resolves.
+  const matchDecided =
+    outcome.decided && !!outcome.winnerTeam && !hasOpenLadderDispute(nextGames);
 
   let scoredParticipants = participants;
   let teams: TeamStats[] = [];

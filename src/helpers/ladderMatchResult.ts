@@ -57,6 +57,14 @@ export const getReportableLadderGameId = (
 };
 
 /**
+ * True while any game is still under dispute. A match must not be treated as
+ * decided or completed until every dispute resolves, since a disputed game's
+ * result is still contested and could change the outcome.
+ */
+export const hasOpenLadderDispute = (games: Game[]): boolean =>
+  games.some((game) => game.approvalStatus === "disputed");
+
+/**
  * Resolve a ladder match from its games: tally approved game wins per side and
  * decide once a side reaches the best-of majority. Falls back to the higher
  * tally when every game is approved but no majority was reached.

@@ -5,6 +5,7 @@ import {
   ladderDecider,
   isLadderMatchReportDecided,
   getReportableLadderGameId,
+  hasOpenLadderDispute,
 } from "../ladderMatchResult";
 
 const approvedGame = (winnerTeam) => ({
@@ -156,5 +157,22 @@ describe("getReportableLadderGameId", () => {
       empty("g2", 2),
     ];
     expect(getReportableLadderGameId(shuffled, 5)).toBe("g2");
+  });
+});
+
+describe("hasOpenLadderDispute", () => {
+  it("is true only when a game is still disputed", () => {
+    expect(
+      hasOpenLadderDispute([
+        { gameId: "g1", approvalStatus: "approved" },
+        { gameId: "g2", approvalStatus: "disputed" },
+      ]),
+    ).toBe(true);
+    expect(
+      hasOpenLadderDispute([
+        { gameId: "g1", approvalStatus: "approved" },
+        { gameId: "g2", approvalStatus: "pending" },
+      ]),
+    ).toBe(false);
   });
 });
