@@ -2,6 +2,9 @@ import {
   resolveLadderMatchOutcome,
   teamUserIds,
   isLadderGameApproved,
+  ladderDecider,
+  isLadderMatchReportDecided,
+  getReportableLadderGameId,
 } from "../ladderMatchResult";
 
 const approvedGame = (winnerTeam) => ({
@@ -62,5 +65,96 @@ describe("isLadderGameApproved", () => {
   it("is true only for approved games", () => {
     expect(isLadderGameApproved(approvedGame("Team 1"))).toBe(true);
     expect(isLadderGameApproved(pendingGame())).toBe(false);
+  });
+});
+
+describe("ladderDecider", () => {
+  it("is the wins needed to clinch each best-of", () => {
+    expect(ladderDecider(5)).toBe(3);
+    expect(ladderDecider(7)).toBe(4);
+    expect(ladderDecider(9)).toBe(5);
+    expect(ladderDecider(11)).toBe(6);
+  });
+});
+
+// A reported (but not yet approved) win, so the lock triggers before approval.
+const reported = (winnerTeam, id, gameNumber) => ({
+  gameId: id,
+  gameNumber,
+  approvalStatus: "Pending",
+  team1: { player1: { userId: "a" }, player2: null },
+  team2: { player1: { userId: "b" }, player2: null },
+  result: { winner: { team: winnerTeam }, loser: {} },
+});
+const empty = (id, gameNumber) => ({
+  gameId: id,
+  gameNumber,
+  approvalStatus: "",
+  result: null,
+});
+
+// Best-of-5 shells reported to a given running score, padded with empties.
+const bo5 = (...winners) =>
+  Array.from({ length: 5 }, (_, i) =>
+    winners[i]
+      ? reported(winners[i], `g${i + 1}`, i + 1)
+      : empty(`g${i + 1}`, i + 1),
+  );
+
+describe("isLadderMatchReportDecided", () => {
+  it("locks a best-of-5 once a side reports the 3rd win (3-0)", () => {
+    expect(isLadderMatchReportDecided(bo5("Team 1", "Team 1", "Team 1"), 5)).toBe(
+      true,
+    );
+  });
+
+  it("is not decided at 2-1", () => {
+    expect(isLadderMatchReportDecided(bo5("Team 1", "Team 2", "Team 1"), 5)).toBe(
+      false,
+    );
+  });
+
+  it("locks at 3-1 but not at 2-2", () => {
+    expect(
+      isLadderMatchReportDecided(bo5("Team 1", "Team 1", "Team 2", "Team 1"), 5),
+    ).toBe(true);
+    expect(
+      isLadderMatchReportDecided(bo5("Team 1", "Team 2", "Team 1", "Team 2"), 5),
+    ).toBe(false);
+  });
+});
+
+describe("getReportableLadderGameId", () => {
+  it("opens game 1 first and then each next shell in order", () => {
+    expect(getReportableLadderGameId(bo5(), 5)).toBe("g1");
+    expect(getReportableLadderGameId(bo5("Team 1"), 5)).toBe("g2");
+    expect(getReportableLadderGameId(bo5("Team 1", "Team 2"), 5)).toBe("g3");
+  });
+
+  it("opens the 4th game at 2-1 and the 5th at 2-2", () => {
+    expect(
+      getReportableLadderGameId(bo5("Team 1", "Team 2", "Team 1"), 5),
+    ).toBe("g4");
+    expect(
+      getReportableLadderGameId(bo5("Team 1", "Team 2", "Team 1", "Team 2"), 5),
+    ).toBe("g5");
+  });
+
+  it("locks every remaining shell once the match is decided", () => {
+    expect(
+      getReportableLadderGameId(bo5("Team 1", "Team 1", "Team 1"), 5),
+    ).toBeNull(); // 3-0, games 4 & 5 dead
+    expect(
+      getReportableLadderGameId(bo5("Team 1", "Team 1", "Team 2", "Team 1"), 5),
+    ).toBeNull(); // 3-1, game 5 dead
+  });
+
+  it("finds the next shell by game order, not array order", () => {
+    const shuffled = [
+      empty("g3", 3),
+      reported("Team 1", "g1", 1),
+      empty("g2", 2),
+    ];
+    expect(getReportableLadderGameId(shuffled, 5)).toBe("g2");
   });
 });

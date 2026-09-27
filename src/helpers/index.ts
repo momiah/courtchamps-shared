@@ -82,6 +82,9 @@ export {
 } from "./ladderAutoCancel";
 export {
   isLadderGameApproved,
+  ladderDecider,
+  isLadderMatchReportDecided,
+  getReportableLadderGameId,
   resolveLadderMatchOutcome,
   teamUserIds,
 } from "./ladderMatchResult";
