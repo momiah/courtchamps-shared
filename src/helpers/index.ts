@@ -77,8 +77,11 @@ export {
 export type { Disqualification } from "./disqualification";
 export {
   LADDER_MATCH_AUTO_CANCEL_HOURS,
+  LADDER_MATCH_EXPIRE_HOURS,
   getLadderMatchStartMs,
   isLadderMatchUnattended,
+  hasLadderMatchActivity,
+  isLadderMatchExpired,
 } from "./ladderAutoCancel";
 export {
   isLadderGameApproved,
