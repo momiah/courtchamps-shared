@@ -13,9 +13,9 @@ export const LADDER_MATCH_STATUS = {
   POSTED: "posted",
   ACCEPTED: "accepted",
   COMPLETED: "completed",
-  /** Auto-set when an accepted match goes entirely unattended past its window. */
+  /** Set when a player cancels the match from the match settings screen. */
   CANCELLED: "cancelled",
-  /** Auto-set when an accepted match was started but then abandoned mid-play. */
+  /** Auto-set when an accepted match sees no activity for the expire window. */
   EXPIRED: "expired",
 } as const;
 
