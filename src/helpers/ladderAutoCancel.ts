@@ -1,16 +1,8 @@
 import { LADDER_MATCH_STATUS } from "../types/ladderMatch";
 import type { LadderMatch } from "../types/ladderMatch";
-import type { Game } from "../types/game";
-import { isLadderMatchCheckedIn } from "./ladderMatchCheckIn";
-import {
-  resolveLadderMatchOutcome,
-  hasOpenLadderDispute,
-} from "./ladderMatchResult";
+import { hasOpenLadderDispute } from "./ladderMatchResult";
 
-/** Hours after the scheduled start before an unattended match auto-cancels. */
-export const LADDER_MATCH_AUTO_CANCEL_HOURS = 48;
-
-/** Hours of silence after activity before an abandoned match auto-expires. */
+/** Hours of inactivity before an accepted match auto-expires. */
 export const LADDER_MATCH_EXPIRE_HOURS = 72;
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -34,24 +26,6 @@ const toMs = (
   return null;
 };
 
-/** A game counts as reported once it carries a result or any non-empty status. */
-const anyGameReported = (games: Game[]): boolean =>
-  games.some(
-    (game) =>
-      !!game.result ||
-      game.approvalStatus === "approved" ||
-      game.approvalStatus === "pending" ||
-      game.approvalStatus === "Pending" ||
-      game.approvalStatus === "disputed",
-  );
-
-/** True once a match has seen any activity — a check-in or a reported game. */
-export const hasLadderMatchActivity = (
-  match: Pick<LadderMatch, "checkIn" | "games">,
-): boolean =>
-  isLadderMatchCheckedIn(match as LadderMatch) ||
-  anyGameReported(match.games ?? []);
-
 /** Parse a "DD-MM-YYYY" date and "HH:MM" start time into epoch ms, or null. */
 export const getLadderMatchStartMs = (
   matchDate?: string,
@@ -73,35 +47,6 @@ export const getLadderMatchStartMs = (
   return Number.isFinite(ms) ? ms : null;
 };
 
-/**
- * True when an accepted match has gone entirely unattended past its cancel
- * window: nobody checked in, played, or reported, and no walkover/no-show is in
- * flight. Such a match is auto-cancelled with no penalty.
- */
-export const isLadderMatchUnattended = (
-  match: Pick<
-    LadderMatch,
-    | "matchStatus"
-    | "walkover"
-    | "noShowReported"
-    | "checkIn"
-    | "participants"
-    | "games"
-    | "matchDate"
-    | "matchTime"
-  >,
-  nowMs: number,
-  windowHours: number = LADDER_MATCH_AUTO_CANCEL_HOURS,
-): boolean => {
-  if (match.matchStatus !== LADDER_MATCH_STATUS.ACCEPTED) return false;
-  if (match.walkover || match.noShowReported) return false;
-  if (hasLadderMatchActivity(match)) return false;
-
-  const startMs = getLadderMatchStartMs(match.matchDate, match.matchTime?.start);
-  if (startMs === null) return false;
-  return nowMs >= startMs + windowHours * HOUR_MS;
-};
-
 /** The most recent activity on a match: its last game report/approval or check-in. */
 const lastLadderActivityMs = (
   match: Pick<LadderMatch, "lastUpdated" | "checkIn">,
@@ -114,11 +59,11 @@ const lastLadderActivityMs = (
 };
 
 /**
- * True when a match that was started (checked in or a game reported) has then
- * gone silent past the expire window without reaching a result. Distinct from
- * {@link isLadderMatchUnattended}: that one never started; this one was
- * abandoned mid-play. A match with an open dispute, or already decided on
- * approved games, is left for the dispute/approval flows instead.
+ * True when an accepted match has gone silent past the expire window with no
+ * activity from any player. The clock starts at the scheduled start and is
+ * reset by any activity (check-in, game report or approval); a match still
+ * under dispute is left for the dispute flow. User-requested cancellations use
+ * the separate `cancelled` status, not this.
  */
 export const isLadderMatchExpired = (
   match: Pick<
@@ -128,7 +73,8 @@ export const isLadderMatchExpired = (
     | "noShowReported"
     | "checkIn"
     | "games"
-    | "bestOf"
+    | "matchDate"
+    | "matchTime"
     | "lastUpdated"
   >,
   nowMs: number,
@@ -136,13 +82,11 @@ export const isLadderMatchExpired = (
 ): boolean => {
   if (match.matchStatus !== LADDER_MATCH_STATUS.ACCEPTED) return false;
   if (match.walkover || match.noShowReported) return false;
-  if (!hasLadderMatchActivity(match)) return false;
-  const games = match.games ?? [];
-  if (hasOpenLadderDispute(games)) return false;
-  if (resolveLadderMatchOutcome(games, match.bestOf ?? games.length).decided) {
-    return false;
-  }
-  const lastMs = lastLadderActivityMs(match);
-  if (lastMs === null) return false;
-  return nowMs >= lastMs + windowHours * HOUR_MS;
+  if (hasOpenLadderDispute(match.games ?? [])) return false;
+
+  const reference =
+    lastLadderActivityMs(match) ??
+    getLadderMatchStartMs(match.matchDate, match.matchTime?.start);
+  if (reference === null) return false;
+  return nowMs >= reference + windowHours * HOUR_MS;
 };
