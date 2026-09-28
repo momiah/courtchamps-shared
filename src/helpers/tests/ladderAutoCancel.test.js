@@ -1,6 +1,8 @@
 import {
   getLadderMatchStartMs,
   isLadderMatchUnattended,
+  hasLadderMatchActivity,
+  isLadderMatchExpired,
   LADDER_MATCH_AUTO_CANCEL_HOURS,
 } from "../ladderAutoCancel";
 
@@ -67,5 +69,72 @@ describe("isLadderMatchUnattended", () => {
   it("never cancels while a game is disputed", () => {
     const match = base({ games: [{ approvalStatus: "disputed" }] });
     expect(isLadderMatchUnattended(match, hoursAfter(48))).toBe(false);
+  });
+});
+
+describe("hasLadderMatchActivity", () => {
+  it("is true only after a check-in or a reported game", () => {
+    expect(hasLadderMatchActivity(base())).toBe(false);
+    expect(hasLadderMatchActivity(base({ checkIn: { completed: true } }))).toBe(
+      true,
+    );
+    expect(
+      hasLadderMatchActivity(base({ games: [{ approvalStatus: "pending" }] })),
+    ).toBe(true);
+  });
+});
+
+describe("isLadderMatchExpired", () => {
+  const LU = new Date(2026, 8, 20, 12, 0);
+  const luMs = LU.getTime();
+  const HOUR = 60 * 60 * 1000;
+  const approved = (team) => ({
+    approvalStatus: "approved",
+    result: { winner: { team } },
+  });
+  const eBase = (over = {}) =>
+    base({
+      checkIn: { completed: true },
+      lastUpdated: LU,
+      bestOf: 5,
+      games: [approved("Team 1"), { approvalStatus: "pending", result: null }],
+      ...over,
+    });
+
+  it("expires an abandoned, undecided match after the window", () => {
+    expect(isLadderMatchExpired(eBase(), luMs + 72 * HOUR)).toBe(true);
+  });
+
+  it("does not expire before the window", () => {
+    expect(isLadderMatchExpired(eBase(), luMs + 71 * HOUR)).toBe(false);
+  });
+
+  it("does not expire a match that never had activity", () => {
+    expect(
+      isLadderMatchExpired(base({ lastUpdated: LU }), luMs + 200 * HOUR),
+    ).toBe(false);
+  });
+
+  it("does not expire a decided match (it should complete instead)", () => {
+    const decided = eBase({
+      games: [approved("Team 1"), approved("Team 1"), approved("Team 1")],
+    });
+    expect(isLadderMatchExpired(decided, luMs + 200 * HOUR)).toBe(false);
+  });
+
+  it("does not expire while a game is disputed", () => {
+    const disputed = eBase({
+      games: [
+        approved("Team 1"),
+        { approvalStatus: "disputed", result: { winner: { team: "Team 2" } } },
+      ],
+    });
+    expect(isLadderMatchExpired(disputed, luMs + 200 * HOUR)).toBe(false);
+  });
+
+  it("does not expire a non-accepted match", () => {
+    expect(
+      isLadderMatchExpired(eBase({ matchStatus: "completed" }), luMs + 200 * HOUR),
+    ).toBe(false);
   });
 });

@@ -13,8 +13,10 @@ export const LADDER_MATCH_STATUS = {
   POSTED: "posted",
   ACCEPTED: "accepted",
   COMPLETED: "completed",
-  /** Auto-set when an accepted match goes unattended past its 24h window. */
+  /** Auto-set when an accepted match goes entirely unattended past its window. */
   CANCELLED: "cancelled",
+  /** Auto-set when an accepted match was started but then abandoned mid-play. */
+  EXPIRED: "expired",
 } as const;
 
 export type LadderMatchStatus =
@@ -118,6 +120,10 @@ export interface LadderMatch {
   cancelledAt?: Date;
   /** Why the match was cancelled, e.g. "Unattended". */
   cancelledReason?: string;
+  /** Last time a game was reported or approved — the match's activity clock. */
+  lastUpdated?: Date;
+  /** When the match was auto-expired after being abandoned mid-play. */
+  expiredAt?: Date;
 }
 
 export type LadderMatchInput = Pick<
