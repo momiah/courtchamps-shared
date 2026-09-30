@@ -43,4 +43,29 @@ describe("buildLadderParticipant", () => {
     expect(participant.profileImage).toBeTruthy();
     expect(participant.memberSince).toBe("");
   });
+
+  it("gives each participant its own resultLog/currentStreak — mutating one must not affect another built from the same schema singleton", () => {
+    // Regression: buildLadderParticipant used to shallow-spread the
+    // module-level scoreboardProfileSchema, so every participant shared the
+    // same currentStreak object and resultLog/pointDifferenceLog/
+    // matchResultLog arrays by reference. Scoring one participant (e.g. the
+    // buildLadderParticipant fallback scoreDoublesLadderGame takes for a
+    // player with no existing doc) then corrupted the next participant's
+    // streak and XP calculation — this is exactly the mutation pattern
+    // calculatePlayerPerformance performs on a real participant during
+    // scoring.
+    const first = buildLadderParticipant(user);
+    const second = buildLadderParticipant({ ...user, userId: "u2" });
+
+    first.resultLog.push("W");
+    first.pointDifferenceLog.push(6);
+    first.matchResultLog.push("W");
+    first.currentStreak.type = "W";
+    first.currentStreak.count = 1;
+
+    expect(second.resultLog).toEqual([]);
+    expect(second.pointDifferenceLog).toEqual([]);
+    expect(second.matchResultLog).toEqual([]);
+    expect(second.currentStreak).toEqual({ type: null, count: 0 });
+  });
 });

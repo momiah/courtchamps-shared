@@ -109,7 +109,9 @@ describe("scoreDoublesLadderGame", () => {
 
     // Player global stats (rank XP + achievement medals) via profileDetail
     const abu = users.find((u) => u.userId === "abu").profileDetail;
+    const sarwar = users.find((u) => u.userId === "sarwar").profileDetail;
     const mohsin = users.find((u) => u.userId === "mohsin").profileDetail;
+    const test = users.find((u) => u.userId === "test").profileDetail;
     expect(abu.XP).toBeGreaterThan(500);
     expect(abu.numberOfWins).toBe(1);
     expect(abu.demonWin).toBe(1); // Assassin medal
@@ -117,6 +119,19 @@ describe("scoreDoublesLadderGame", () => {
     expect(abu.winStreak3).toBe(0); // one win never crosses a 3-streak
     expect(mohsin.numberOfLosses).toBe(1);
     expect(mohsin.demonWin).toBe(0);
+
+    // Regression: with no pre-existing ladderParticipants doc for any of the
+    // 4 players, scoreDoublesLadderGame seeds each one via
+    // buildLadderParticipant — teammates start from identical stats (same
+    // 500 XP, no prior games) and play the exact same game, so they must
+    // come out with identical deltas. buildLadderParticipant used to
+    // shallow-spread a shared schema singleton, so the second player
+    // processed on each side inherited the first's already-mutated
+    // currentStreak/resultLog and got a different (and wrong) XP swing.
+    expect(sarwar.XP).toBe(abu.XP);
+    expect(sarwar.highestWinStreak).toBe(abu.highestWinStreak);
+    expect(test.XP).toBe(mohsin.XP);
+    expect(test.highestLossStreak).toBe(mohsin.highestLossStreak);
 
     // A participant doc was seeded per player (streak carrier) — four in all
     expect(scoringParticipants).toHaveLength(4);
