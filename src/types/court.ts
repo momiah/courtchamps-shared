@@ -11,6 +11,31 @@ export interface CourtLocation extends Location {
   longitude: number | null;
 }
 
+export const COURT_SUBMISSION_STATUS = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+} as const;
+
+export type CourtSubmissionStatus =
+  (typeof COURT_SUBMISSION_STATUS)[keyof typeof COURT_SUBMISSION_STATUS];
+
+/**
+ * A player's request to add a court to a ladder. The court stays unverified
+ * and out of the ladder's `courtIds` until an admin adds coordinates, which
+ * approves it and adds it to `ladderId`.
+ */
+export interface CourtSubmission {
+  submittedBy: string;
+  submittedByUsername: string;
+  ladderId: string;
+  ladderName: string;
+  submittedAt: Date;
+  status: CourtSubmissionStatus;
+  reviewedBy: string | null;
+  reviewedAt: Date | null;
+}
+
 /**
  * A single physical court in the `courts` collection — the one shared court
  * shape written by both courtchamps-website and the mobile app.
@@ -31,6 +56,8 @@ export interface Court {
    * ladder-submitted courts be prioritised for admin verification.
    */
   submittedVia?: CompetitionType;
+  /** Present when a player submitted this court for a ladder. */
+  submission?: CourtSubmission;
 }
 
 /** Shape accepted when creating a court — the caller-supplied subset. */
