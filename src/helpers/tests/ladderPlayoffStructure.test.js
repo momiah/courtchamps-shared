@@ -24,30 +24,44 @@ describe("ladder playoff structure", () => {
         playoffSpots: 32,
         inTheMoney: 16,
       });
+      expect(LADDER_PLAYOFF_STRUCTURE[128]).toEqual({
+        playoffSpots: 8,
+        inTheMoney: 8,
+      });
       expect(LADDER_PLAYOFF_STRUCTURE[256]).toEqual({
         playoffSpots: 16,
         inTheMoney: 8,
       });
     });
 
-    it("follows the maxPlayers/16 and maxPlayers/32 pattern for every entry", () => {
-      Object.entries(LADDER_PLAYOFF_STRUCTURE).forEach(([size, structure]) => {
+    it("follows the maxPlayers/16 and maxPlayers/32 pattern from 256 up", () => {
+      Object.entries(LADDER_PLAYOFF_STRUCTURE)
+        .filter(([size]) => Number(size) >= 256)
+        .forEach(([size, structure]) => {
         const maxPlayers = Number(size);
         expect(structure.playoffSpots).toBe(maxPlayers / PLAYOFF_SPOTS_DIVISOR);
         expect(structure.inTheMoney).toBe(maxPlayers / IN_THE_MONEY_DIVISOR);
       });
     });
 
-    it("always advances more players than it pays out (playoffSpots > inTheMoney)", () => {
-      Object.values(LADDER_PLAYOFF_STRUCTURE).forEach((structure) => {
-        expect(structure.playoffSpots).toBeGreaterThan(structure.inTheMoney);
-      });
+    it("advances more players than it pays out from 256 up", () => {
+      Object.entries(LADDER_PLAYOFF_STRUCTURE)
+        .filter(([size]) => Number(size) >= 256)
+        .forEach(([, structure]) => {
+          expect(structure.playoffSpots).toBeGreaterThan(structure.inTheMoney);
+        });
+    });
+
+    it("pays every playoff spot in the 128 tier", () => {
+      expect(LADDER_PLAYOFF_STRUCTURE[128].inTheMoney).toBe(
+        LADDER_PLAYOFF_STRUCTURE[128].playoffSpots,
+      );
     });
   });
 
   describe("LADDER_PLAYOFF_SIZES", () => {
     it("lists the supported sizes largest first", () => {
-      expect(LADDER_PLAYOFF_SIZES).toEqual([2048, 1024, 512, 256]);
+      expect(LADDER_PLAYOFF_SIZES).toEqual([2048, 1024, 512, 256, 128]);
     });
   });
 
@@ -62,9 +76,9 @@ describe("ladder playoff structure", () => {
     });
 
     it("derives the structure from the pattern for an unlisted power-of-two size", () => {
-      expect(getLadderPlayoffStructure(128)).toEqual({
-        playoffSpots: 8,
-        inTheMoney: 4,
+      expect(getLadderPlayoffStructure(4096)).toEqual({
+        playoffSpots: 256,
+        inTheMoney: 128,
       });
     });
 
@@ -99,11 +113,13 @@ describe("ladder playoff structure", () => {
       expect(getEffectiveLadderSize(256)).toBe(256);
       expect(getEffectiveLadderSize(700)).toBe(512);
       expect(getEffectiveLadderSize(511)).toBe(256);
+      expect(getEffectiveLadderSize(128)).toBe(128);
+      expect(getEffectiveLadderSize(255)).toBe(128);
       expect(getEffectiveLadderSize(3000)).toBe(2048);
     });
 
     it("returns 0 below the minimum playoff size", () => {
-      expect(getEffectiveLadderSize(255)).toBe(0);
+      expect(getEffectiveLadderSize(127)).toBe(0);
       expect(getEffectiveLadderSize(LADDER_MIN_PLAYOFF_SIZE - 1)).toBe(0);
       expect(getEffectiveLadderSize(0)).toBe(0);
       expect(getEffectiveLadderSize(-10)).toBe(0);
@@ -133,8 +149,15 @@ describe("ladder playoff structure", () => {
       });
     });
 
-    it("distributes nothing when the minimum tier is not reached", () => {
+    it("gives the 128 tier a top 8, all paid", () => {
       expect(getLadderPlayoffStructureForRegistrations(200, 2048)).toEqual({
+        playoffSpots: 8,
+        inTheMoney: 8,
+      });
+    });
+
+    it("distributes nothing when the minimum tier is not reached", () => {
+      expect(getLadderPlayoffStructureForRegistrations(127, 2048)).toEqual({
         playoffSpots: 0,
         inTheMoney: 0,
       });

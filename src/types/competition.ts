@@ -1,6 +1,7 @@
 import { Location, ScoreboardProfile } from "./player";
 import { Game, Fixtures, Player } from "./game";
 import type { COMPETITION_TYPES } from "../schema";
+import type { LadderHomeCourt } from "./ladder";
 
 export type CollectionName =
   | "leagues"
@@ -99,6 +100,11 @@ export interface TeamStats {
   createdBy?: string;
   createdAt?: string | Date;
   ladderIds?: string[];
+  /** Ladder teams only: when the team joined the ladder. */
+  joinedAt?: Date | string;
+  /** Ladder teams only: the team's home court for this ladder. */
+  homeCourt?: LadderHomeCourt | null;
+  homeCourtChanges?: number;
 }
 
 export interface TeamDetails extends TeamStats {
