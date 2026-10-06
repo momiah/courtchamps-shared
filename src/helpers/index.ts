@@ -133,7 +133,6 @@ export {
   compareLadderPlayoffEntrants,
   rankLadderPlayoffEntrants,
   getLadderPlayoffBracketSize,
-  hasLadderPlayoffHomeCourt,
   getLadderPlayoffQualifiers,
   orderLadderPlayoffEntrantsByProximity,
   ladderPlayoffTieId,

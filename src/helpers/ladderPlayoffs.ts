@@ -99,18 +99,10 @@ const spread = (values: number[]): number =>
   values.length === 0 ? 0 : Math.max(...values) - Math.min(...values);
 
 /**
- * Only entrants with a home court can qualify: it decides round-1 pairing and
- * hosts their home games. A player who never posted or accepted a match has
- * none.
- */
-export const hasLadderPlayoffHomeCourt = (
-  entrant: LadderPlayoffEntrant,
-): boolean => homeCourtPoint(entrant) !== null;
-
-/**
- * The bracket size and its qualifiers in ranking order: entrants with a home
- * court, ranked, cut to the playoff spots for the ladder's registrations (or
- * the largest power of two the eligible entrants can fill).
+ * The bracket size and its qualifiers in ranking order: every entrant ranked
+ * and cut to the playoff spots for the ladder's registrations (or the largest
+ * power of two the entrants can fill). A missing home court never costs a
+ * spot; it only affects pairing.
  */
 export const getLadderPlayoffQualifiers = ({
   entrants,
@@ -121,15 +113,14 @@ export const getLadderPlayoffQualifiers = ({
   registeredCount: number;
   maxPlayers?: number;
 }): { bracketSize: number; qualifiers: LadderPlayoffEntrant[] } => {
-  const eligible = entrants.filter(hasLadderPlayoffHomeCourt);
   const bracketSize = getLadderPlayoffBracketSize({
     registeredCount,
     maxPlayers,
-    entrantCount: eligible.length,
+    entrantCount: entrants.length,
   });
   return {
     bracketSize,
-    qualifiers: rankLadderPlayoffEntrants(eligible).slice(0, bracketSize),
+    qualifiers: rankLadderPlayoffEntrants(entrants).slice(0, bracketSize),
   };
 };
 
@@ -137,8 +128,10 @@ export const getLadderPlayoffQualifiers = ({
  * Orders qualifiers so that round-1 pairs (0 v 1, 2 v 3, ...) are as close as
  * possible and neighbouring pairs are close too, so early rounds stay local.
  * Recursively splits the group in half along whichever axis (north-south or
- * east-west) its home courts are most spread across. Input order breaks ties,
- * so pass qualifiers in ranking order.
+ * east-west) its home courts are most spread across. Qualifiers without a
+ * home court sort to the end of each split, so they are paired with each other
+ * or whoever is left over. Input order breaks ties, so pass qualifiers in
+ * ranking order.
  */
 export const orderLadderPlayoffEntrantsByProximity = (
   entrants: LadderPlayoffEntrant[],
