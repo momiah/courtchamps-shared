@@ -12,6 +12,7 @@ export const LADDER_PLAYOFF_STRUCTURE: Record<number, LadderPlayoffStructure> = 
   1024: { playoffSpots: 64, inTheMoney: 32 },
   512: { playoffSpots: 32, inTheMoney: 16 },
   256: { playoffSpots: 16, inTheMoney: 8 },
+  128: { playoffSpots: 8, inTheMoney: 8 },
 };
 
 export const LADDER_PLAYOFF_SIZES: number[] = Object.keys(
@@ -36,7 +37,7 @@ export const getLadderPlayoffStructure = (
   };
 };
 
-export const LADDER_MIN_PLAYOFF_SIZE = 256;
+export const LADDER_MIN_PLAYOFF_SIZE = 128;
 
 export const getEffectiveLadderSize = (
   registeredCount: number,

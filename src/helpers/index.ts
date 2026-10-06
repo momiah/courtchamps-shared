@@ -120,3 +120,23 @@ export {
   isPendingLadderCourtSubmission,
   isSelectableLadderCourt,
 } from "./courtSubmission";
+export {
+  generateKnockoutBrackets,
+  isKnockoutBracketSize,
+} from "./knockoutBrackets";
+export type {
+  KnockoutBracketTeam,
+  KnockoutBracketMetadata,
+  KnockoutBracketResult,
+} from "./knockoutBrackets";
+export {
+  compareLadderPlayoffEntrants,
+  rankLadderPlayoffEntrants,
+  getLadderPlayoffBracketSize,
+  getLadderPlayoffQualifiers,
+  orderLadderPlayoffEntrantsByProximity,
+  ladderPlayoffTieId,
+  buildLadderPlayoffTies,
+  ladderPlayoffTiesToFixtures,
+} from "./ladderPlayoffs";
+export type { LadderPlayoffEntrant } from "./ladderPlayoffs";

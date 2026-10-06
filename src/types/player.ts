@@ -1,3 +1,5 @@
+import type { LadderHomeCourt } from "./ladder";
+
 export interface ScoreboardProfile {
   prevGameXP: number;
   highestLossStreak: number;
@@ -41,6 +43,11 @@ export interface ScoreboardProfile {
   userId?: string;
   memberSince?: string;
   profileImage?: string;
+  /** Ladder participants only: when the player joined the ladder. */
+  joinedAt?: Date;
+  /** Ladder participants only: the player's home court for this ladder. */
+  homeCourt?: LadderHomeCourt | null;
+  homeCourtChanges?: number;
 }
 
 export type PlayersToUpdate = ScoreboardProfile[];
