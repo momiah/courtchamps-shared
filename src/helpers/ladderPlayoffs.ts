@@ -99,12 +99,46 @@ const spread = (values: number[]): number =>
   values.length === 0 ? 0 : Math.max(...values) - Math.min(...values);
 
 /**
- * Orders entrants so that round-1 pairs (0 v 1, 2 v 3, ...) are as close as
+ * Only entrants with a home court can qualify: it decides round-1 pairing and
+ * hosts their home games. A player who never posted or accepted a match has
+ * none.
+ */
+export const hasLadderPlayoffHomeCourt = (
+  entrant: LadderPlayoffEntrant,
+): boolean => homeCourtPoint(entrant) !== null;
+
+/**
+ * The bracket size and its qualifiers in ranking order: entrants with a home
+ * court, ranked, cut to the playoff spots for the ladder's registrations (or
+ * the largest power of two the eligible entrants can fill).
+ */
+export const getLadderPlayoffQualifiers = ({
+  entrants,
+  registeredCount,
+  maxPlayers,
+}: {
+  entrants: LadderPlayoffEntrant[];
+  registeredCount: number;
+  maxPlayers?: number;
+}): { bracketSize: number; qualifiers: LadderPlayoffEntrant[] } => {
+  const eligible = entrants.filter(hasLadderPlayoffHomeCourt);
+  const bracketSize = getLadderPlayoffBracketSize({
+    registeredCount,
+    maxPlayers,
+    entrantCount: eligible.length,
+  });
+  return {
+    bracketSize,
+    qualifiers: rankLadderPlayoffEntrants(eligible).slice(0, bracketSize),
+  };
+};
+
+/**
+ * Orders qualifiers so that round-1 pairs (0 v 1, 2 v 3, ...) are as close as
  * possible and neighbouring pairs are close too, so early rounds stay local.
  * Recursively splits the group in half along whichever axis (north-south or
- * east-west) its home courts are most spread across. Entrants without a home
- * court sort to the end of each split, so they meet each other or whoever is
- * left over. Input order breaks ties, so pass entrants in ranking order.
+ * east-west) its home courts are most spread across. Input order breaks ties,
+ * so pass qualifiers in ranking order.
  */
 export const orderLadderPlayoffEntrantsByProximity = (
   entrants: LadderPlayoffEntrant[],
@@ -185,7 +219,6 @@ export const buildLadderPlayoffTies = ({
   const placed = orderLadderPlayoffEntrantsByProximity(qualifiers);
   const { fixtures } = generateKnockoutBrackets({
     teams: placed.map(toGameTeam),
-    numberOfCourts: 0,
     createGameId: (existingGames) =>
       `${ladderId}-playoff-${existingGames.length + 1}`,
     now: createdAt,

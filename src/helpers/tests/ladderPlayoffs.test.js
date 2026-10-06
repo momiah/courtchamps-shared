@@ -3,6 +3,7 @@ import {
   buildLadderPlayoffTies,
   compareLadderPlayoffEntrants,
   getLadderPlayoffBracketSize,
+  getLadderPlayoffQualifiers,
   ladderPlayoffTiesToFixtures,
   orderLadderPlayoffEntrantsByProximity,
   rankLadderPlayoffEntrants,
@@ -138,6 +139,66 @@ describe("getLadderPlayoffBracketSize", () => {
   });
 });
 
+describe("getLadderPlayoffQualifiers", () => {
+  const located = (key, overrides = {}) =>
+    entrant(key, { homeCourt: homeCourt("london"), ...overrides });
+
+  it("only qualifies entrants with a home court", () => {
+    const entrants = [
+      entrant("no-court-top", { competitionXP: 1000 }),
+      ...Array.from({ length: 9 }, (_, index) =>
+        located(`p${index}`, { competitionXP: 100 - index }),
+      ),
+    ];
+    const { bracketSize, qualifiers } = getLadderPlayoffQualifiers({
+      entrants,
+      registeredCount: 150,
+      maxPlayers: 256,
+    });
+    expect(bracketSize).toBe(8);
+    expect(keys(qualifiers)).toEqual([
+      "p0",
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "p5",
+      "p6",
+      "p7",
+    ]);
+  });
+
+  it("shrinks the bracket when too few have a home court", () => {
+    const entrants = [
+      ...Array.from({ length: 5 }, (_, index) => located(`p${index}`)),
+      ...Array.from({ length: 200 }, (_, index) => entrant(`none${index}`)),
+    ];
+    const { bracketSize, qualifiers } = getLadderPlayoffQualifiers({
+      entrants,
+      registeredCount: 205,
+      maxPlayers: 256,
+    });
+    expect(bracketSize).toBe(4);
+    expect(qualifiers).toHaveLength(4);
+  });
+
+  it("ignores a home court without map coordinates", () => {
+    const noCoordinates = {
+      ...homeCourt("london"),
+      location: { ...homeCourt("london").location, latitude: null, longitude: null },
+    };
+    const { bracketSize } = getLadderPlayoffQualifiers({
+      entrants: [
+        located("a"),
+        entrant("b", { homeCourt: noCoordinates }),
+      ],
+      registeredCount: 200,
+      maxPlayers: 256,
+    });
+    expect(bracketSize).toBe(0);
+  });
+});
+
 describe("orderLadderPlayoffEntrantsByProximity", () => {
   const ranked = [
     entrant("london", { homeCourt: homeCourt("london") }),
@@ -180,19 +241,6 @@ describe("orderLadderPlayoffEntrantsByProximity", () => {
       "manchester",
       "salford",
     ]);
-  });
-
-  it("puts entrants without a home court together at the end", () => {
-    const ordered = keys(
-      orderLadderPlayoffEntrantsByProximity([
-        entrant("none-1"),
-        entrant("london", { homeCourt: homeCourt("london") }),
-        entrant("none-2"),
-        entrant("croydon", { homeCourt: homeCourt("croydon") }),
-      ]),
-    );
-    expect(ordered.slice(0, 2).sort()).toEqual(["croydon", "london"]);
-    expect(ordered.slice(2)).toEqual(["none-1", "none-2"]);
   });
 
   it("is deterministic", () => {

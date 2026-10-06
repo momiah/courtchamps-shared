@@ -55,18 +55,19 @@ const buildShellGame = ({
 /**
  * Builds a single-elimination bracket. Round 1 pairs `teams` in the order given
  * (0 v 1, 2 v 3, ...), so callers control placement by ordering `teams`. Later
- * rounds are empty shells filled by advancement. With `numberOfCourts` <= 0 no
+ * rounds are empty shells filled by advancement. `numberOfCourts` is for
+ * tournaments played across numbered courts at one venue; without it no
  * courts are assigned.
  */
 export const generateKnockoutBrackets = ({
   teams,
-  numberOfCourts,
+  numberOfCourts = 0,
   createGameId,
   includeThirdPlacePlayoff = true,
   now = new Date(),
 }: {
   teams: KnockoutBracketTeam[];
-  numberOfCourts: number;
+  numberOfCourts?: number;
   createGameId: (existingGames: Game[]) => string;
   includeThirdPlacePlayoff?: boolean;
   now?: Date;

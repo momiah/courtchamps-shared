@@ -31,7 +31,6 @@ describe("generateKnockoutBrackets", () => {
   it("pairs round 1 in the order given and leaves later rounds empty", () => {
     const { fixtures } = generateKnockoutBrackets({
       teams: teams(8),
-      numberOfCourts: 2,
       createGameId: sequentialId,
       now,
     });
@@ -56,7 +55,6 @@ describe("generateKnockoutBrackets", () => {
   it("adds a 3rd-place playoff after the final", () => {
     const { fixtures } = generateKnockoutBrackets({
       teams: teams(4),
-      numberOfCourts: 1,
       createGameId: sequentialId,
       now,
     });
@@ -70,7 +68,6 @@ describe("generateKnockoutBrackets", () => {
   it("can leave out the 3rd-place playoff", () => {
     const { fixtures, metadata } = generateKnockoutBrackets({
       teams: teams(4),
-      numberOfCourts: 1,
       createGameId: sequentialId,
       includeThirdPlacePlayoff: false,
       now,
@@ -82,7 +79,6 @@ describe("generateKnockoutBrackets", () => {
   it("numbers games and ids in creation order", () => {
     const { fixtures } = generateKnockoutBrackets({
       teams: teams(4),
-      numberOfCourts: 1,
       createGameId: sequentialId,
       now,
     });
@@ -96,7 +92,7 @@ describe("generateKnockoutBrackets", () => {
     ]);
   });
 
-  it("assigns round-1 courts only when courts are given", () => {
+  it("assigns round-1 courts only for tournaments that number them", () => {
     const withCourts = generateKnockoutBrackets({
       teams: teams(8),
       numberOfCourts: 3,
@@ -109,7 +105,6 @@ describe("generateKnockoutBrackets", () => {
 
     const withoutCourts = generateKnockoutBrackets({
       teams: teams(8),
-      numberOfCourts: 0,
       createGameId: sequentialId,
       now,
     });
@@ -123,7 +118,6 @@ describe("generateKnockoutBrackets", () => {
   it("builds a 128-entrant bracket", () => {
     const { fixtures, metadata } = generateKnockoutBrackets({
       teams: teams(128),
-      numberOfCourts: 0,
       createGameId: sequentialId,
       now,
     });
@@ -141,7 +135,6 @@ describe("generateKnockoutBrackets", () => {
   it("stamps shells as scheduled at the given time", () => {
     const { fixtures } = generateKnockoutBrackets({
       teams: teams(2),
-      numberOfCourts: 1,
       createGameId: sequentialId,
       now,
     });
@@ -157,7 +150,6 @@ describe("generateKnockoutBrackets", () => {
     expect(() =>
       generateKnockoutBrackets({
         teams: teams(6),
-        numberOfCourts: 1,
         createGameId: sequentialId,
       }),
     ).toThrow("power-of-two");
