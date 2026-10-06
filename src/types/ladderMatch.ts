@@ -65,6 +65,16 @@ export interface MatchTeam {
 }
 
 /**
+ * A pending request from one side of an accepted match to cancel it. Only the
+ * opposing side can accept (the match is cancelled) or decline (the request is
+ * cleared and the match goes ahead).
+ */
+export interface LadderMatchCancellationRequest {
+  requestedBy: string;
+  requestedAt: Date;
+}
+
+/**
  * A ladder match: a single fixture between players that contains `bestOf`
  * individual {@link Game} shells.
  */
@@ -124,6 +134,8 @@ export interface LadderMatch {
   lastUpdated?: Date;
   /** When the match was auto-expired after being abandoned mid-play. */
   expiredAt?: Date;
+  /** Set while one side of an accepted match has asked to cancel it. */
+  cancellationRequest?: LadderMatchCancellationRequest | null;
 }
 
 export type LadderMatchInput = Pick<
