@@ -6,6 +6,22 @@ import {
 
 describe("calculateLadderPrizePool", () => {
   describe("cash pot (paid ladders only)", () => {
+    it("PAID: reports the gross pot before the platform fee", () => {
+      const { cash, grossCash } = calculateLadderPrizePool({
+        entryFee: 20,
+        participantCount: 2048,
+      });
+
+      expect(grossCash).toBe(40960);
+      expect(cash).toBeCloseTo(40960 * (1 - PLATFORM_FEE), 5);
+    });
+
+    it("FREE: has no gross pot", () => {
+      expect(
+        calculateLadderPrizePool({ entryFee: 0, participantCount: 8 }).grossCash,
+      ).toBe(0);
+    });
+
     it("PAID: returns collected entry fees less the platform fee", () => {
       const { cash } = calculateLadderPrizePool({
         entryFee: 10,
