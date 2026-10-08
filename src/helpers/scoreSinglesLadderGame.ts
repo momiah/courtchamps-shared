@@ -2,6 +2,7 @@ import { COMPETITION_TYPES } from "../schema";
 import { calculatePlayerPerformance } from "./calculatePlayerPerformance";
 import type { Game, ScoreboardProfile, UserProfile } from "../types";
 
+import { roundLadderCp } from "./ladderCp";
 import { teamUserIds } from "./ladderMatchResult";
 
 type TeamLabel = "Team 1" | "Team 2";
@@ -39,7 +40,9 @@ export const scoreSinglesLadderGame = ({
 }: SinglesScoreInput): SinglesScoreResult => {
   calculatePlayerPerformance(game, participants, users, COMPETITION_TYPES.LADDER);
   participants.forEach((p) => {
-    p.competitionXP = Math.max(0, (p.competitionXP ?? 0) + (p.prevGameXP ?? 0));
+    p.competitionXP = roundLadderCp(
+      Math.max(0, (p.competitionXP ?? 0) + (p.prevGameXP ?? 0)),
+    );
   });
 
   let matchCompleted = false;
