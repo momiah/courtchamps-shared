@@ -162,3 +162,15 @@ export type {
   PlanLadderGameApprovalInput,
   PlanLadderGameApprovalResult,
 } from "./planLadderGameApproval";
+export {
+  LADDER_PAYOUT_STRUCTURE,
+  getLadderPayouts,
+  getLadderPayoutForPlace,
+} from "./ladderPayoutStructure";
+export type { LadderPayoutBand, LadderPayout } from "./ladderPayoutStructure";
+export {
+  LADDER_PRE_REGISTRATION_OPTIONS,
+  getLadderPreRegistrationOption,
+  getLadderPreRegistrationId,
+  getLadderPreRegistrationKeyForLadder,
+} from "./ladderPreRegistration";

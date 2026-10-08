@@ -8,6 +8,7 @@ export interface LadderPrizePoolParams {
 
 export interface LadderPrizePool {
   cash: number;
+  grossCash: number;
   xp: number;
 }
 
@@ -16,8 +17,8 @@ export const calculateLadderPrizePool = ({
   participantCount,
 }: LadderPrizePoolParams): LadderPrizePool => {
   const xp = participantCount * LADDER_XP_PER_PLAYER;
-  const cash =
-    entryFee > 0 ? entryFee * participantCount * (1 - PLATFORM_FEE) : 0;
+  const grossCash = entryFee > 0 ? entryFee * participantCount : 0;
+  const cash = grossCash * (1 - PLATFORM_FEE);
 
-  return { cash, xp };
+  return { cash, grossCash, xp };
 };
