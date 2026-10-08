@@ -1,4 +1,5 @@
 import { ScoreboardProfile, TeamStats } from "../types";
+import { roundLadderCp } from "./ladderCp";
 
 interface Placeable {
   numberOfWins?: number;
@@ -24,7 +25,8 @@ const compareByWinsThenPD = (a: Placeable, b: Placeable): number =>
   (b.totalPointDifference || 0) - (a.totalPointDifference || 0);
 
 // Per-ladder CP wherever it lives: participants use competitionXP, teams use XP.
-const ladderCp = (e: Placeable): number => e.competitionXP ?? e.XP ?? 0;
+const ladderCp = (e: Placeable): number =>
+  roundLadderCp(e.competitionXP ?? e.XP ?? 0);
 
 /**
  * The single ladder placement order — per-ladder CP first, then wins, then

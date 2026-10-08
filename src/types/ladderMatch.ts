@@ -130,6 +130,12 @@ export interface LadderMatch {
   cancelledAt?: Date;
   /** Why the match was cancelled, e.g. "Unattended". */
   cancelledReason?: string;
+  /**
+   * Server-assigned report time per game, keyed by gameId. Written with a
+   * server timestamp (the games array can't hold one) so auto-approval ages a
+   * game from a clock the reporter can't set.
+   */
+  gameReportedAt?: Record<string, Date>;
   /** Last time a game was reported or approved — the match's activity clock. */
   lastUpdated?: Date;
   /** When the match was auto-expired after being abandoned mid-play. */

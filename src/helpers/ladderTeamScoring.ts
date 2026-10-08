@@ -1,4 +1,5 @@
 import { computeGameXp } from "./computeGameXp";
+import { roundLadderCp } from "./ladderCp";
 import type { Game, TeamStats } from "../types";
 
 /**
@@ -39,7 +40,7 @@ export const applyLadderTeamGameXp = (
   });
 
   winnerTeam.prevGameXP = winnerXp;
-  winnerTeam.XP = Math.max(0, combinedWinnerXp + winnerXp);
+  winnerTeam.XP = roundLadderCp(Math.max(0, combinedWinnerXp + winnerXp));
   loserTeam.prevGameXP = loserXp;
-  loserTeam.XP = Math.max(0, combinedLoserXp + loserXp);
+  loserTeam.XP = roundLadderCp(Math.max(0, combinedLoserXp + loserXp));
 };
