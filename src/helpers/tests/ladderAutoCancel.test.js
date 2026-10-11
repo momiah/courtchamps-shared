@@ -3,7 +3,7 @@ import {
   isLadderMatchExpired,
 } from "../ladderAutoCancel";
 
-const START = new Date(2026, 8, 18, 18, 30).getTime(); // 18-09-2026 18:30
+const START = Date.UTC(2026, 8, 18, 17, 30); // 18-09-2026 18:30 in London (BST)
 const HOUR = 60 * 60 * 1000;
 const base = (over = {}) => ({
   matchStatus: "accepted",
@@ -15,6 +15,17 @@ const base = (over = {}) => ({
 const after = (h) => START + h * HOUR;
 
 describe("getLadderMatchStartMs", () => {
+  it("reads the time as London time in summer and winter, whatever the machine's zone", () => {
+    expect(getLadderMatchStartMs("11-10-2026", "18:00")).toBe(Date.UTC(2026, 9, 11, 17, 0));
+    expect(getLadderMatchStartMs("15-01-2027", "18:00")).toBe(Date.UTC(2027, 0, 15, 18, 0));
+  });
+
+  it("handles the clock changes", () => {
+    expect(getLadderMatchStartMs("29-03-2026", "00:30")).toBe(Date.UTC(2026, 2, 29, 0, 30));
+    expect(getLadderMatchStartMs("29-03-2026", "03:00")).toBe(Date.UTC(2026, 2, 29, 2, 0));
+    expect(getLadderMatchStartMs("25-10-2026", "03:00")).toBe(Date.UTC(2026, 9, 25, 3, 0));
+  });
+
   it("parses DD-MM-YYYY and HH:MM", () => {
     expect(getLadderMatchStartMs("18-09-2026", "18:30")).toBe(START);
   });

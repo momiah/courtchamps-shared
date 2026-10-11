@@ -26,7 +26,38 @@ const toMs = (
   return null;
 };
 
-/** Parse a "DD-MM-YYYY" date and "HH:MM" start time into epoch ms, or null. */
+/** Ladder match dates and times are UK wall-clock times. */
+export const LADDER_MATCH_TIME_ZONE = "Europe/London";
+
+const londonFormat = new Intl.DateTimeFormat("en-GB", {
+  timeZone: LADDER_MATCH_TIME_ZONE,
+  hourCycle: "h23",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
+
+const londonOffsetMs = (utcMs: number): number => {
+  const parts = Object.fromEntries(
+    londonFormat
+      .formatToParts(new Date(utcMs))
+      .map((part) => [part.type, Number(part.value)]),
+  );
+  const asUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second,
+  );
+  return asUtc - Math.floor(utcMs / 1000) * 1000;
+};
+
+/** Parse a "DD-MM-YYYY" date and "HH:MM" UK start time into epoch ms, or null. */
 export const getLadderMatchStartMs = (
   matchDate?: string,
   matchTime?: string,
@@ -37,14 +68,16 @@ export const getLadderMatchStartMs = (
     return null;
   }
   const [hours, minutes] = (matchTime ?? "00:00").split(":").map(Number);
-  const ms = new Date(
+  const wallClock = Date.UTC(
     year,
     month - 1,
     day,
     Number.isFinite(hours) ? hours : 0,
     Number.isFinite(minutes) ? minutes : 0,
-  ).getTime();
-  return Number.isFinite(ms) ? ms : null;
+  );
+  if (!Number.isFinite(wallClock)) return null;
+  const guess = wallClock - londonOffsetMs(wallClock);
+  return wallClock - londonOffsetMs(guess);
 };
 
 /** The most recent activity on a match: its last game report/approval or check-in. */
