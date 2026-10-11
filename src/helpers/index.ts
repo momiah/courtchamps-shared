@@ -81,6 +81,17 @@ export {
   isLadderMatchExpired,
 } from "./ladderAutoCancel";
 export {
+  LADDER_MATCH_EXTENSION_DAYS,
+  getLadderMatchChangeOption,
+  buildLadderMatchExtension,
+  validateLadderMatchReschedule,
+  getLadderMatchExtensionDaysLeft,
+} from "./ladderMatchChanges";
+export type {
+  LadderMatchChangeOption,
+  LadderMatchRescheduleError,
+} from "./ladderMatchChanges";
+export {
   isLadderGameApproved,
   ladderDecider,
   isLadderMatchReportDecided,

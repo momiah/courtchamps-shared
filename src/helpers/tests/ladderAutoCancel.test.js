@@ -70,3 +70,22 @@ describe("isLadderMatchExpired", () => {
     );
   });
 });
+
+describe("isLadderMatchExpired with an extension", () => {
+  const extended = (h) =>
+    base({ extension: { requestedBy: "u1", requestedAt: new Date(START), expiresAt: new Date(after(h)) } });
+
+  it("does not expire before the extension runs out", () => {
+    expect(isLadderMatchExpired(extended(168), after(167))).toBe(false);
+  });
+
+  it("expires once the extension and the inactivity window have both passed", () => {
+    expect(isLadderMatchExpired(extended(168), after(168))).toBe(true);
+  });
+
+  it("keeps the inactivity window when there was activity late in the extension", () => {
+    const match = { ...extended(168), lastUpdated: new Date(after(160)) };
+    expect(isLadderMatchExpired(match, after(200))).toBe(false);
+    expect(isLadderMatchExpired(match, after(232))).toBe(true);
+  });
+});

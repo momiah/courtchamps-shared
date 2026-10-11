@@ -61,9 +61,10 @@ const lastLadderActivityMs = (
 /**
  * True when an accepted match has gone silent past the expire window with no
  * activity from any player. The clock starts at the scheduled start and is
- * reset by any activity (check-in, game report or approval); a match still
- * under dispute is left for the dispute flow. User-requested cancellations use
- * the separate `cancelled` status, not this.
+ * reset by any activity (check-in, game report or approval). An extension
+ * holds it until the extension runs out, and a match still under dispute is
+ * left for the dispute flow. User-requested cancellations use the separate
+ * `cancelled` status, not this.
  */
 export const isLadderMatchExpired = (
   match: Pick<
@@ -76,6 +77,7 @@ export const isLadderMatchExpired = (
     | "matchDate"
     | "matchTime"
     | "lastUpdated"
+    | "extension"
   >,
   nowMs: number,
   windowHours: number = LADDER_MATCH_EXPIRE_HOURS,
@@ -83,6 +85,8 @@ export const isLadderMatchExpired = (
   if (match.matchStatus !== LADDER_MATCH_STATUS.ACCEPTED) return false;
   if (match.walkover || match.noShowReported) return false;
   if (hasOpenLadderDispute(match.games ?? [])) return false;
+  const extendedUntil = toMs(match.extension?.expiresAt);
+  if (extendedUntil !== null && nowMs < extendedUntil) return false;
 
   const reference =
     lastLadderActivityMs(match) ??
