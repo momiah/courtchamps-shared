@@ -232,4 +232,27 @@ describe("planLadderGameApproval", () => {
     expect(match.matchStatus).toBe("completed");
     expect(participants.find((p) => p.userId === "a").numberOfWins).toBe(3);
   });
+
+  it("lets a playoff match be approved during playoffs without touching ladder standings", async () => {
+    const result = await run(
+      makeMatch([makeGame("g1")], { playoffTieId: "r1-s0", playoffLeg: 1 }),
+      "g1",
+      opponent,
+      { ladderStatus: "playoffs" },
+    );
+    expect(result.ok).toBe(true);
+    expect(result.nextMatch.games[0].approvalStatus).toBe("approved");
+    expect(result.participants).toEqual([]);
+    expect(result.teams).toEqual([]);
+    expect(result.users).toHaveLength(2);
+    const winner = result.users.find((u) => u.userId === "a");
+    expect(winner.profileDetail.XP).not.toBe(500);
+  });
+
+  it("still freezes a regular match during playoffs", async () => {
+    const result = await run(makeMatch([makeGame("g1")]), "g1", opponent, {
+      ladderStatus: "playoffs",
+    });
+    expect(result).toEqual({ ok: false, reason: "ladder_frozen" });
+  });
 });

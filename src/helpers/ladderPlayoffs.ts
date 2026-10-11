@@ -8,6 +8,10 @@ import type { Fixtures, Game, GameTeam, Player } from "../types/game";
 import { compareLadderEntrants } from "./getRankInCompetition";
 import { getLadderPlayoffStructureForRegistrations } from "./ladderPlayoffStructure";
 import { generateKnockoutBrackets } from "./knockoutBrackets";
+import {
+  getLadderPlayoffBestOf,
+  scheduleLadderPlayoffTie,
+} from "./ladderPlayoffSchedule";
 
 /** A ladder player (singles) or team (doubles) competing for a playoff spot. */
 export interface LadderPlayoffEntrant {
@@ -217,16 +221,20 @@ export const buildLadderPlayoffTies = ({
     now: createdAt,
   });
 
+  const totalRounds = fixtures.length;
+  const firstRoundWindow = scheduleLadderPlayoffTie(createdAt);
+
   return fixtures.flatMap(({ round, games }) =>
     games.map((game, slot): LadderPlayoffTie => {
       const isFirstRound = round === 1;
+      const isThirdPlacePlayoff = !!game.isThirdPlacePlayoff;
       return {
         tieId: ladderPlayoffTieId(round, slot),
         ladderId,
         round,
         slot,
         gameNumber: game.gameNumber ?? 0,
-        isThirdPlacePlayoff: !!game.isThirdPlacePlayoff,
+        isThirdPlacePlayoff,
         team1: game.team1,
         team2: game.team2,
         side1: isFirstRound ? toSide(placed[slot * 2]) : null,
@@ -236,6 +244,16 @@ export const buildLadderPlayoffTies = ({
           : LADDER_PLAYOFF_TIE_STATUS.AWAITING_ENTRANTS,
         winner: null,
         createdAt,
+        bestOf: getLadderPlayoffBestOf({ round, totalRounds, isThirdPlacePlayoff }),
+        scheduledAt: isFirstRound ? firstRoundWindow.scheduledAt : null,
+        deadlineAt: isFirstRound ? firstRoundWindow.deadlineAt : null,
+        coinToss: null,
+        leg1MatchId: null,
+        leg2MatchId: null,
+        deciderRequired: false,
+        remindersSentDays: [],
+        outcome: null,
+        completedAt: null,
       };
     }),
   );

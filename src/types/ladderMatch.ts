@@ -142,6 +142,10 @@ export interface LadderMatch {
   expiredAt?: Date;
   /** Set while one side of an accepted match has asked to cancel it. */
   cancellationRequest?: LadderMatchCancellationRequest | null;
+  /** Set on the two matches that make up a playoff tie (see LadderPlayoffTie). */
+  playoffTieId?: string | null;
+  /** 1 = first match (the coin-toss winner hosts), 2 = second match, 3 = the one-game decider when the aggregate is level. */
+  playoffLeg?: 1 | 2 | 3;
 }
 
 export type LadderMatchInput = Pick<
