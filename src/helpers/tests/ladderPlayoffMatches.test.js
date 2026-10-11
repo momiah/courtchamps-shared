@@ -122,15 +122,25 @@ describe("getDueLadderPlayoffReminderDays", () => {
 });
 
 describe("coin toss", () => {
-  it("lets the random draw pick the first host", () => {
-    expect(flipLadderPlayoffCoin({ random: () => 0.2, userId: "a", now })).toEqual({
-      firstHost: "team1",
+  it("puts the flipper at home on the logo and away on the trophy, whatever they called", () => {
+    expect(
+      flipLadderPlayoffCoin({ random: () => 0.2, userId: "a", side: "team2", call: "home", now }),
+    ).toEqual({
+      firstHost: "team2",
       flippedBy: "a",
       flippedAt: now,
+      call: "home",
+      face: "logo",
     });
-    expect(flipLadderPlayoffCoin({ random: () => 0.7, userId: "b", now }).firstHost).toBe(
-      "team2",
-    );
+    expect(
+      flipLadderPlayoffCoin({ random: () => 0.7, userId: "a", side: "team2", call: "home", now }),
+    ).toMatchObject({ firstHost: "team1", face: "trophy" });
+    expect(
+      flipLadderPlayoffCoin({ random: () => 0.7, userId: "b", side: "team1", call: "away", now }),
+    ).toMatchObject({ firstHost: "team2", face: "trophy", call: "away" });
+    expect(
+      flipLadderPlayoffCoin({ random: () => 0.2, userId: "b", side: "team1", call: "away", now }),
+    ).toMatchObject({ firstHost: "team1", face: "logo" });
   });
 
   it("has the other side host match 2 and the decider", () => {
