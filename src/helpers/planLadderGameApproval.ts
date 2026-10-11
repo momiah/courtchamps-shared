@@ -8,7 +8,7 @@ import type {
   UserProfile,
 } from "../types";
 
-import { isLadderMatchPlayFrozen } from "./ladderFreeze";
+import { isLadderMatchPlayFrozen, isPlayoffLadderMatch } from "./ladderFreeze";
 import {
   hasOpenLadderDispute,
   resolveLadderMatchOutcome,
@@ -72,7 +72,7 @@ export const planLadderGameApproval = async ({
   ladderTeams,
   now,
 }: PlanLadderGameApprovalInput): Promise<PlanLadderGameApprovalResult> => {
-  if (isLadderMatchPlayFrozen(ladderStatus)) {
+  if (isLadderMatchPlayFrozen(ladderStatus, match)) {
     return { ok: false, reason: "ladder_frozen" };
   }
 
@@ -184,14 +184,15 @@ export const planLadderGameApproval = async ({
     matchUpdate.completedAt = now;
   }
 
+  const isPlayoff = isPlayoffLadderMatch(match);
   return {
     ok: true,
     fullyApproved,
     matchCompleted,
     nextMatch: { ...match, ...matchUpdate },
     matchUpdate,
-    participants: scoredParticipants,
+    participants: isPlayoff ? [] : scoredParticipants,
     users,
-    teams: scoredTeams,
+    teams: isPlayoff ? [] : scoredTeams,
   };
 };

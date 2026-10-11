@@ -144,7 +144,28 @@ export { roundLadderCp } from "./ladderCp";
 export {
   LADDER_FROZEN_MESSAGE,
   isLadderMatchPlayFrozen,
+  isPlayoffLadderMatch,
 } from "./ladderFreeze";
+export {
+  getLadderPlayoffBestOf,
+  scheduleLadderPlayoffTie,
+} from "./ladderPlayoffSchedule";
+export {
+  LADDER_PLAYOFF_DECIDER_BEST_OF,
+  otherLadderPlayoffSide,
+  getDueLadderPlayoffReminderDays,
+  flipLadderPlayoffCoin,
+  getLadderPlayoffLegHost,
+  tallyLadderPlayoffTie,
+  decideLadderPlayoffTie,
+  decideLadderPlayoffTieAtDeadline,
+  advanceLadderPlayoffBracket,
+  buildLadderPlayoffLegMatch,
+} from "./ladderPlayoffMatches";
+export type {
+  LadderPlayoffTally,
+  LadderPlayoffTieDecision,
+} from "./ladderPlayoffMatches";
 export {
   canApproveDisputedScore,
   canApproveReportedGame,
