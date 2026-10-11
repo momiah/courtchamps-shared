@@ -9,11 +9,13 @@ import type { LadderType } from "../types/ladder";
 import type { LadderPlayoffSide } from "../types/ladderPlayoff";
 import { createLadderMatchGames } from "./createLadderMatchGames";
 import {
+  LADDER_PLAYOFF_COIN_FACE,
   LADDER_PLAYOFF_REMINDER_DAYS,
   LADDER_PLAYOFF_TIE_OUTCOME,
   LADDER_PLAYOFF_TIE_STATUS,
 } from "../types/ladderPlayoff";
 import type {
+  LadderPlayoffCoinCall,
   LadderPlayoffCoinToss,
   LadderPlayoffTie,
   LadderPlayoffTieOutcome,
@@ -55,16 +57,26 @@ export const getDueLadderPlayoffReminderDays = (
 export const flipLadderPlayoffCoin = ({
   random,
   userId,
+  side,
+  call,
   now,
 }: {
   random: () => number;
   userId: string;
+  side: LadderPlayoffTieSide;
+  call: LadderPlayoffCoinCall;
   now: Date;
-}): LadderPlayoffCoinToss => ({
-  firstHost: random() < 0.5 ? "team1" : "team2",
-  flippedBy: userId,
-  flippedAt: now,
-});
+}): LadderPlayoffCoinToss => {
+  const face =
+    random() < 0.5 ? LADDER_PLAYOFF_COIN_FACE.LOGO : LADDER_PLAYOFF_COIN_FACE.TROPHY;
+  return {
+    firstHost: face === LADDER_PLAYOFF_COIN_FACE.LOGO ? side : otherLadderPlayoffSide(side),
+    flippedBy: userId,
+    flippedAt: now,
+    call,
+    face,
+  };
+};
 
 /** Who hosts a leg: the coin-toss winner hosts match 1; the other side hosts match 2 and any decider. */
 export const getLadderPlayoffLegHost = (
