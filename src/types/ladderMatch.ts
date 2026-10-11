@@ -75,6 +75,28 @@ export interface LadderMatchCancellationRequest {
 }
 
 /**
+ * A pending request from one side of an accepted match, before any game is
+ * reported, to move it to a new date and time. Only the opposing side can
+ * accept (the match moves) or decline (the request is cleared).
+ */
+export interface LadderMatchRescheduleRequest {
+  requestedBy: string;
+  requestedAt: Date;
+  matchDate: string;
+  matchTime: MatchTime;
+}
+
+/**
+ * A one-off extension of an accepted match once a game has been reported. It
+ * applies straight away and the match does not expire before `expiresAt`.
+ */
+export interface LadderMatchExtension {
+  requestedBy: string;
+  requestedAt: Date;
+  expiresAt: Date;
+}
+
+/**
  * A ladder match: a single fixture between players that contains `bestOf`
  * individual {@link Game} shells.
  */
@@ -142,6 +164,10 @@ export interface LadderMatch {
   expiredAt?: Date;
   /** Set while one side of an accepted match has asked to cancel it. */
   cancellationRequest?: LadderMatchCancellationRequest | null;
+  /** Set while one side of an accepted match has asked to move it. */
+  rescheduleRequest?: LadderMatchRescheduleRequest | null;
+  /** Set once the match has used its one extension. */
+  extension?: LadderMatchExtension | null;
   /** Set on the two matches that make up a playoff tie (see LadderPlayoffTie). */
   playoffTieId?: string | null;
   /** 1 = first match (the coin-toss winner hosts), 2 = second match, 3 = the one-game decider when the aggregate is level. */
