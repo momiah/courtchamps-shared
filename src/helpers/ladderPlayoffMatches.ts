@@ -30,6 +30,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const LADDER_PLAYOFF_DECIDER_BEST_OF = 1;
 
+/** Times the away side may decline the host's arranged time for one match. */
+export const LADDER_PLAYOFF_MATCH_DECLINE_LIMIT = 1;
+
+/** True while the away side may still decline a posted playoff match's time. */
+export const canDeclineLadderPlayoffMatch = (
+  match: Pick<LadderMatch, "matchStatus" | "playoffTieId" | "scheduleDeclines">,
+): boolean =>
+  !!match.playoffTieId &&
+  match.matchStatus === LADDER_MATCH_STATUS.POSTED &&
+  (match.scheduleDeclines ?? 0) < LADDER_PLAYOFF_MATCH_DECLINE_LIMIT;
+
 type PlayoffLeg = Pick<LadderMatch, "games" | "matchStatus" | "playoffLeg">;
 
 export const otherLadderPlayoffSide = (
