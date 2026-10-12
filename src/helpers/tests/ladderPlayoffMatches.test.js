@@ -123,25 +123,28 @@ describe("getDueLadderPlayoffReminderDays", () => {
 });
 
 describe("coin toss", () => {
-  it("puts the flipper at home on the logo and away on the trophy, whatever they called", () => {
+  it("puts the flipper at home when the coin lands on their call", () => {
     expect(
-      flipLadderPlayoffCoin({ random: () => 0.2, userId: "a", side: "team2", call: "home", now }),
+      flipLadderPlayoffCoin({ random: () => 0.2, userId: "a", side: "team2", call: "logo", now }),
     ).toEqual({
       firstHost: "team2",
       flippedBy: "a",
       flippedAt: now,
-      call: "home",
+      call: "logo",
       face: "logo",
     });
     expect(
-      flipLadderPlayoffCoin({ random: () => 0.7, userId: "a", side: "team2", call: "home", now }),
+      flipLadderPlayoffCoin({ random: () => 0.7, userId: "b", side: "team1", call: "trophy", now }),
+    ).toMatchObject({ firstHost: "team1", face: "trophy", call: "trophy" });
+  });
+
+  it("puts the other side at home when the coin misses the call", () => {
+    expect(
+      flipLadderPlayoffCoin({ random: () => 0.7, userId: "a", side: "team2", call: "logo", now }),
     ).toMatchObject({ firstHost: "team1", face: "trophy" });
     expect(
-      flipLadderPlayoffCoin({ random: () => 0.7, userId: "b", side: "team1", call: "away", now }),
-    ).toMatchObject({ firstHost: "team2", face: "trophy", call: "away" });
-    expect(
-      flipLadderPlayoffCoin({ random: () => 0.2, userId: "b", side: "team1", call: "away", now }),
-    ).toMatchObject({ firstHost: "team1", face: "logo" });
+      flipLadderPlayoffCoin({ random: () => 0.2, userId: "b", side: "team1", call: "trophy", now }),
+    ).toMatchObject({ firstHost: "team2", face: "logo" });
   });
 
   it("has the other side host match 2 and the decider", () => {
