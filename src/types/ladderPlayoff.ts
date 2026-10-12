@@ -25,7 +25,7 @@ export type LadderPlayoffTieOutcome =
 
 export type LadderPlayoffTieSide = "team1" | "team2";
 
-/** The coin's faces: the Court Champs logo means Home, the trophy means Away. */
+/** The coin's faces: heads is the Court Champs logo, tails is the trophy. */
 export const LADDER_PLAYOFF_COIN_FACE = {
   LOGO: "logo",
   TROPHY: "trophy",
@@ -34,13 +34,13 @@ export const LADDER_PLAYOFF_COIN_FACE = {
 export type LadderPlayoffCoinFace =
   (typeof LADDER_PLAYOFF_COIN_FACE)[keyof typeof LADDER_PLAYOFF_COIN_FACE];
 
-/** What the flipper called: to play the first match at home or away. */
-export type LadderPlayoffCoinCall = "home" | "away";
+/** The face the flipper called before the toss. */
+export type LadderPlayoffCoinCall = LadderPlayoffCoinFace;
 
 /**
  * Who hosts the first match, decided by the coin flip on the tie screen. The
- * flipper calls Home (logo) or Away (trophy); the face it lands on decides it:
- * the logo puts the flipper's side at home first, the trophy puts them away.
+ * flipper calls heads (logo) or tails (trophy): if the coin lands on their
+ * call, their side is at home first; otherwise the other side is.
  */
 export interface LadderPlayoffCoinToss {
   firstHost: LadderPlayoffTieSide;

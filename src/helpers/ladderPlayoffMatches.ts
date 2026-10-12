@@ -81,7 +81,7 @@ export const flipLadderPlayoffCoin = ({
   const face =
     random() < 0.5 ? LADDER_PLAYOFF_COIN_FACE.LOGO : LADDER_PLAYOFF_COIN_FACE.TROPHY;
   return {
-    firstHost: face === LADDER_PLAYOFF_COIN_FACE.LOGO ? side : otherLadderPlayoffSide(side),
+    firstHost: face === call ? side : otherLadderPlayoffSide(side),
     flippedBy: userId,
     flippedAt: now,
     call,
