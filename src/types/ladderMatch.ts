@@ -172,6 +172,11 @@ export interface LadderMatch {
   playoffTieId?: string | null;
   /** 1 = first match (the coin-toss winner hosts), 2 = second match, 3 = the one-game decider when the aggregate is level. */
   playoffLeg?: 1 | 2 | 3;
+  /**
+   * Playoff matches only: how many times the away side has declined the host's
+   * arranged time for this match. Carried over when the host arranges again.
+   */
+  scheduleDeclines?: number;
 }
 
 export type LadderMatchInput = Pick<

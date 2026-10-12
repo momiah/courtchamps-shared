@@ -8,6 +8,7 @@ import {
   decideLadderPlayoffTie,
   decideLadderPlayoffTieAtDeadline,
   flipLadderPlayoffCoin,
+  canDeclineLadderPlayoffMatch,
   getDueLadderPlayoffReminderDays,
   getLadderPlayoffLegHost,
   tallyLadderPlayoffTie,
@@ -453,5 +454,20 @@ describe("buildLadderPlayoffLegMatch", () => {
         now,
       }),
     ).toThrow("needs both sides");
+  });
+});
+
+describe("canDeclineLadderPlayoffMatch", () => {
+  const posted = { matchStatus: "posted", playoffTieId: "r1-s0" };
+
+  it("allows one decline of a posted playoff match", () => {
+    expect(canDeclineLadderPlayoffMatch(posted)).toBe(true);
+    expect(canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 0 })).toBe(true);
+    expect(canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 1 })).toBe(false);
+  });
+
+  it("only applies to posted playoff matches", () => {
+    expect(canDeclineLadderPlayoffMatch({ ...posted, matchStatus: "accepted" })).toBe(false);
+    expect(canDeclineLadderPlayoffMatch({ ...posted, playoffTieId: null })).toBe(false);
   });
 });
