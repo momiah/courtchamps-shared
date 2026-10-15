@@ -7,7 +7,7 @@ import {
   buildLadderPlayoffLegMatch,
   decideLadderPlayoffTie,
   decideLadderPlayoffTieAtDeadline,
-  flipLadderPlayoffCoin,
+  isLadderPlayoffLegOrderValid,
   canDeclineLadderPlayoffMatch,
   getDueLadderPlayoffReminderDays,
   getLadderPlayoffLegHost,
@@ -122,36 +122,25 @@ describe("getDueLadderPlayoffReminderDays", () => {
   });
 });
 
-describe("coin toss", () => {
-  it("puts the flipper at home when the coin lands on their call", () => {
-    expect(
-      flipLadderPlayoffCoin({ random: () => 0.2, userId: "a", side: "team2", call: "logo", now }),
-    ).toEqual({
-      firstHost: "team2",
-      flippedBy: "a",
-      flippedAt: now,
-      call: "logo",
-      face: "logo",
-    });
-    expect(
-      flipLadderPlayoffCoin({ random: () => 0.7, userId: "b", side: "team1", call: "trophy", now }),
-    ).toMatchObject({ firstHost: "team1", face: "trophy", call: "trophy" });
+describe("getLadderPlayoffLegHost", () => {
+  it("has the lower-ranked side host match 1 and the higher-ranked side the rest", () => {
+    const ranked = { side1: { rank: 3 }, side2: { rank: 14 } };
+    expect(getLadderPlayoffLegHost(ranked, 1)).toBe("team2");
+    expect(getLadderPlayoffLegHost(ranked, 2)).toBe("team1");
+    expect(getLadderPlayoffLegHost(ranked, 3)).toBe("team1");
+    const flipped = { side1: { rank: 20 }, side2: { rank: 5 } };
+    expect(getLadderPlayoffLegHost(flipped, 1)).toBe("team1");
+    expect(getLadderPlayoffLegHost(flipped, 3)).toBe("team2");
   });
+});
 
-  it("puts the other side at home when the coin misses the call", () => {
-    expect(
-      flipLadderPlayoffCoin({ random: () => 0.7, userId: "a", side: "team2", call: "logo", now }),
-    ).toMatchObject({ firstHost: "team1", face: "trophy" });
-    expect(
-      flipLadderPlayoffCoin({ random: () => 0.2, userId: "b", side: "team1", call: "trophy", now }),
-    ).toMatchObject({ firstHost: "team2", face: "logo" });
-  });
-
-  it("has the other side host match 2 and the decider", () => {
-    const coinToss = { firstHost: "team2" };
-    expect(getLadderPlayoffLegHost(coinToss, 1)).toBe("team2");
-    expect(getLadderPlayoffLegHost(coinToss, 2)).toBe("team1");
-    expect(getLadderPlayoffLegHost(coinToss, 3)).toBe("team1");
+describe("isLadderPlayoffLegOrderValid", () => {
+  it("keeps match 1 before match 2", () => {
+    expect(isLadderPlayoffLegOrderValid({ leg: 1, startMs: 100, otherLegStartMs: 200 })).toBe(true);
+    expect(isLadderPlayoffLegOrderValid({ leg: 1, startMs: 300, otherLegStartMs: 200 })).toBe(false);
+    expect(isLadderPlayoffLegOrderValid({ leg: 2, startMs: 300, otherLegStartMs: 200 })).toBe(true);
+    expect(isLadderPlayoffLegOrderValid({ leg: 2, startMs: 200, otherLegStartMs: 200 })).toBe(false);
+    expect(isLadderPlayoffLegOrderValid({ leg: 2, startMs: 1, otherLegStartMs: null })).toBe(true);
   });
 });
 
@@ -467,6 +456,9 @@ describe("canDeclineLadderPlayoffMatch", () => {
     expect(canDeclineLadderPlayoffMatch(posted)).toBe(true);
     expect(canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 0 })).toBe(true);
     expect(canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 1 })).toBe(false);
+    expect(
+      canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 1, playNow: true }),
+    ).toBe(true);
   });
 
   it("only applies to posted playoff matches", () => {

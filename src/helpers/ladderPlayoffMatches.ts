@@ -9,14 +9,11 @@ import type { LadderType } from "../types/ladder";
 import type { LadderPlayoffSide } from "../types/ladderPlayoff";
 import { createLadderMatchGames } from "./createLadderMatchGames";
 import {
-  LADDER_PLAYOFF_COIN_FACE,
   LADDER_PLAYOFF_REMINDER_DAYS,
   LADDER_PLAYOFF_TIE_OUTCOME,
   LADDER_PLAYOFF_TIE_STATUS,
 } from "../types/ladderPlayoff";
 import type {
-  LadderPlayoffCoinCall,
-  LadderPlayoffCoinToss,
   LadderPlayoffTie,
   LadderPlayoffTieOutcome,
   LadderPlayoffTieSide,
@@ -33,13 +30,16 @@ export const LADDER_PLAYOFF_DECIDER_BEST_OF = 1;
 /** Times the away side may decline the host's arranged time for one match. */
 export const LADDER_PLAYOFF_MATCH_DECLINE_LIMIT = 1;
 
-/** True while the away side may still decline a posted playoff match's time. */
+/**
+ * True while the away side may still decline a posted playoff match's time. A
+ * "play now" offer can always be declined and doesn't count towards the limit.
+ */
 export const canDeclineLadderPlayoffMatch = (
-  match: Pick<LadderMatch, "matchStatus" | "playoffTieId" | "scheduleDeclines">,
+  match: Pick<LadderMatch, "matchStatus" | "playoffTieId" | "scheduleDeclines" | "playNow">,
 ): boolean =>
   !!match.playoffTieId &&
   match.matchStatus === LADDER_MATCH_STATUS.POSTED &&
-  (match.scheduleDeclines ?? 0) < LADDER_PLAYOFF_MATCH_DECLINE_LIMIT;
+  (!!match.playNow || (match.scheduleDeclines ?? 0) < LADDER_PLAYOFF_MATCH_DECLINE_LIMIT);
 
 type PlayoffLeg = Pick<LadderMatch, "games" | "matchStatus" | "playoffLeg">;
 
@@ -65,36 +65,32 @@ export const getDueLadderPlayoffReminderDays = (
   );
 };
 
-export const flipLadderPlayoffCoin = ({
-  random,
-  userId,
-  side,
-  call,
-  now,
-}: {
-  random: () => number;
-  userId: string;
-  side: LadderPlayoffTieSide;
-  call: LadderPlayoffCoinCall;
-  now: Date;
-}): LadderPlayoffCoinToss => {
-  const face =
-    random() < 0.5 ? LADDER_PLAYOFF_COIN_FACE.LOGO : LADDER_PLAYOFF_COIN_FACE.TROPHY;
-  return {
-    firstHost: face === call ? side : otherLadderPlayoffSide(side),
-    flippedBy: userId,
-    flippedAt: now,
-    call,
-    face,
-  };
+/**
+ * Who hosts a leg: the lower-ranked side (by ladder rank, a higher number)
+ * hosts match 1; the higher-ranked side hosts match 2 and any decider.
+ */
+export const getLadderPlayoffLegHost = (
+  tie: Pick<LadderPlayoffTie, "side1" | "side2">,
+  leg: 1 | 2 | 3,
+): LadderPlayoffTieSide => {
+  const rank1 = tie.side1?.rank ?? 0;
+  const rank2 = tie.side2?.rank ?? Number.MAX_SAFE_INTEGER;
+  const lowerRanked: LadderPlayoffTieSide = rank1 > rank2 ? "team1" : "team2";
+  return leg === 1 ? lowerRanked : otherLadderPlayoffSide(lowerRanked);
 };
 
-/** Who hosts a leg: the coin-toss winner hosts match 1; the other side hosts match 2 and any decider. */
-export const getLadderPlayoffLegHost = (
-  coinToss: Pick<LadderPlayoffCoinToss, "firstHost">,
-  leg: 1 | 2 | 3,
-): LadderPlayoffTieSide =>
-  leg === 1 ? coinToss.firstHost : otherLadderPlayoffSide(coinToss.firstHost);
+/** True when match 1 starts before match 2, the order a tie is played in. */
+export const isLadderPlayoffLegOrderValid = ({
+  leg,
+  startMs,
+  otherLegStartMs,
+}: {
+  leg: 1 | 2;
+  startMs: number;
+  otherLegStartMs: number | null;
+}): boolean =>
+  otherLegStartMs === null ||
+  (leg === 1 ? startMs < otherLegStartMs : startMs > otherLegStartMs);
 
 const sideOfPlayers = (
   tie: Pick<LadderPlayoffTie, "side1" | "side2">,
