@@ -25,31 +25,6 @@ export type LadderPlayoffTieOutcome =
 
 export type LadderPlayoffTieSide = "team1" | "team2";
 
-/** The coin's faces: heads is the Court Champs logo, tails is the trophy. */
-export const LADDER_PLAYOFF_COIN_FACE = {
-  LOGO: "logo",
-  TROPHY: "trophy",
-} as const;
-
-export type LadderPlayoffCoinFace =
-  (typeof LADDER_PLAYOFF_COIN_FACE)[keyof typeof LADDER_PLAYOFF_COIN_FACE];
-
-/** The face the flipper called before the toss. */
-export type LadderPlayoffCoinCall = LadderPlayoffCoinFace;
-
-/**
- * Who hosts the first match, decided by the coin flip on the tie screen. The
- * flipper calls heads (logo) or tails (trophy): if the coin lands on their
- * call, their side is at home first; otherwise the other side is.
- */
-export interface LadderPlayoffCoinToss {
-  firstHost: LadderPlayoffTieSide;
-  flippedBy: string;
-  flippedAt: Date;
-  call?: LadderPlayoffCoinCall;
-  face?: LadderPlayoffCoinFace;
-}
-
 export const LADDER_PLAYOFF_TIE_STATUS = {
   /** Both sides known; waiting to be played. */
   SCHEDULED: "scheduled",
@@ -100,7 +75,6 @@ export interface LadderPlayoffTie {
   scheduledAt?: Date | null;
   /** scheduledAt + LADDER_PLAYOFF_TIE_DAYS. */
   deadlineAt?: Date | null;
-  coinToss?: LadderPlayoffCoinToss | null;
   leg1MatchId?: string | null;
   leg2MatchId?: string | null;
   /** True once the aggregate is level after both matches: one deciding game. */

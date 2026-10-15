@@ -247,7 +247,6 @@ export const buildLadderPlayoffTies = ({
         bestOf: getLadderPlayoffBestOf({ round, totalRounds, isThirdPlacePlayoff }),
         scheduledAt: isFirstRound ? firstRoundWindow.scheduledAt : null,
         deadlineAt: isFirstRound ? firstRoundWindow.deadlineAt : null,
-        coinToss: null,
         leg1MatchId: null,
         leg2MatchId: null,
         deciderRequired: false,

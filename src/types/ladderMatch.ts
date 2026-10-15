@@ -177,6 +177,12 @@ export interface LadderMatch {
    * arranged time for this match. Carried over when the host arranges again.
    */
   scheduleDeclines?: number;
+  /**
+   * Playoff match 2 offered on the spot after match 1, at match 1's court:
+   * accepting carries match 1's check-in over; declining doesn't count as one
+   * of the away side's declines.
+   */
+  playNow?: boolean;
 }
 
 export type LadderMatchInput = Pick<
