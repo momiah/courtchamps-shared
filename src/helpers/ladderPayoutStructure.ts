@@ -49,12 +49,20 @@ export const LADDER_PAYOUT_STRUCTURE: Record<number, LadderPayoutBand[]> = {
 export const getLadderPayouts = (
   prizePool: number,
   ladderSize: number,
-): LadderPayout[] =>
-  (LADDER_PAYOUT_STRUCTURE[ladderSize] ?? []).map((band) => {
+): LadderPayout[] => {
+  const pool = Math.floor(prizePool);
+  const payouts = (LADDER_PAYOUT_STRUCTURE[ladderSize] ?? []).map((band) => {
     const places = band.toPlace - band.fromPlace + 1;
-    const total = prizePool * band.share;
-    return { ...band, places, total, each: total / places };
+    const each = Math.floor((pool * band.share) / places + 1e-9);
+    return { ...band, places, total: each * places, each };
   });
+  if (payouts.length === 0) return payouts;
+  const paid = payouts.reduce((sum, payout) => sum + payout.total, 0);
+  const champion = payouts[0];
+  champion.each += pool - paid;
+  champion.total = champion.each * champion.places;
+  return payouts;
+};
 
 export const getLadderPayoutForPlace = (
   prizePool: number,
