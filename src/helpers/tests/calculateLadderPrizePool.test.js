@@ -1,35 +1,19 @@
 import {
   calculateLadderPrizePool,
+  getLadderEntryPrice,
   PLATFORM_FEE,
   LADDER_XP_PER_PLAYER,
 } from "../calculateLadderPrizePool";
 
 describe("calculateLadderPrizePool", () => {
   describe("cash pot (paid ladders only)", () => {
-    it("PAID: reports the gross pot before the platform fee", () => {
-      const { cash, grossCash } = calculateLadderPrizePool({
+    it("PAID: the whole entry fee goes into the pot", () => {
+      const { cash } = calculateLadderPrizePool({
         entryFee: 20,
         participantCount: 2048,
       });
 
-      expect(grossCash).toBe(40960);
-      expect(cash).toBeCloseTo(40960 * (1 - PLATFORM_FEE), 5);
-    });
-
-    it("FREE: has no gross pot", () => {
-      expect(
-        calculateLadderPrizePool({ entryFee: 0, participantCount: 8 }).grossCash,
-      ).toBe(0);
-    });
-
-    it("PAID: returns collected entry fees less the platform fee", () => {
-      const { cash } = calculateLadderPrizePool({
-        entryFee: 10,
-        participantCount: 8,
-      });
-
-      expect(cash).toBeCloseTo(72, 5);
-      expect(cash).toBeCloseTo(80 * (1 - PLATFORM_FEE), 5);
+      expect(cash).toBe(40960);
     });
 
     it("PAID: matches the worked £20 / 1024-player example", () => {
@@ -38,7 +22,7 @@ describe("calculateLadderPrizePool", () => {
         participantCount: 1024,
       });
 
-      expect(cash).toBeCloseTo(18432, 5);
+      expect(cash).toBe(20480);
     });
 
     it("FREE: cash pot is 0", () => {
@@ -57,6 +41,24 @@ describe("calculateLadderPrizePool", () => {
       });
 
       expect(cash).toBe(0);
+    });
+  });
+
+  describe("entry price", () => {
+    it("adds the platform fee on top of the entry fee", () => {
+      expect(getLadderEntryPrice(20)).toEqual({
+        entryFee: 20,
+        platformFee: 20 * PLATFORM_FEE,
+        total: 20 + 20 * PLATFORM_FEE,
+      });
+    });
+
+    it("is free with no fee on a free ladder", () => {
+      expect(getLadderEntryPrice(0)).toEqual({
+        entryFee: 0,
+        platformFee: 0,
+        total: 0,
+      });
     });
   });
 

@@ -9,12 +9,14 @@ export { transformDate } from "./dateTransform";
 export { calculateTournamentPrizePool } from "./calculateTournamentPrizePool";
 export {
   calculateLadderPrizePool,
+  getLadderEntryPrice,
   PLATFORM_FEE,
   LADDER_XP_PER_PLAYER,
 } from "./calculateLadderPrizePool";
 export type {
   LadderPrizePoolParams,
   LadderPrizePool,
+  LadderEntryPrice,
 } from "./calculateLadderPrizePool";
 export {
   LADDER_STATUS_SEQUENCE,

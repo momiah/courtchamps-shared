@@ -23,13 +23,13 @@ describe("ladder pre-registration", () => {
     ]);
   });
 
-  it("advertises a £40,960 cash ladder pot before the platform fee", () => {
+  it("advertises a £40,960 cash ladder pot", () => {
     const option = getLadderPreRegistrationOption("cash-mens-singles");
-    const { grossCash } = calculateLadderPrizePool({
+    const { cash } = calculateLadderPrizePool({
       entryFee: option.entryFee,
       participantCount: option.maxPlayers,
     });
-    expect(grossCash).toBe(40960);
+    expect(cash).toBe(40960);
   });
 
   it("keys a pre-registration per user and ladder", () => {
