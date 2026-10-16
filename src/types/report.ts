@@ -152,7 +152,7 @@ export interface ConductRecord {
 /** Outcome of raising a report from the app. */
 export interface CreateReportOutcome {
   success: boolean;
-  reason?: "exists" | "invalid" | "error";
+  reason?: "exists" | "invalid" | "error" | "results_closed";
 }
 
 /** Reasons that add a strike (everything except `other`). */

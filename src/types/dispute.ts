@@ -38,6 +38,11 @@ export const DISPUTE_RESOLUTION = {
   VOID: "void",
   /** The opener withdrew the dispute, so the original scores stand. */
   CANCELLED: "cancelled",
+  /**
+   * Still undecided when the ladder's standings became final before playoffs:
+   * the game is discarded and neither side scores it.
+   */
+  DISCARDED: "discarded",
 } as const;
 
 export type DisputeResolution =
@@ -48,6 +53,7 @@ export const DISPUTE_RESOLUTION_LABELS: Record<DisputeResolution, string> = {
   rejected: "Original score stands",
   void: "Voided",
   cancelled: "Cancelled by the disputer",
+  discarded: "Game discarded",
 };
 
 /** Hours players have to respond to an admin's evidence request before the dispute is voided. */
@@ -66,6 +72,7 @@ export const DISPUTE_EVENT_TYPE = {
   RESOLVED: "resolved",
   VOIDED: "voided",
   CANCELLED: "cancelled",
+  DISCARDED: "discarded",
 } as const;
 
 export type DisputeEventType =
@@ -79,6 +86,7 @@ export const DISPUTE_EVENT_LABELS: Record<DisputeEventType, string> = {
   resolved: "Resolved",
   voided: "Dispute voided",
   cancelled: "Dispute cancelled",
+  discarded: "Game discarded",
 };
 
 /** Event types written by a player in the game. */

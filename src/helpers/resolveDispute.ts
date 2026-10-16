@@ -28,7 +28,10 @@ const RESOLUTION_EVENT: Record<DisputeResolution, DisputeEventType> = {
   rejected: DISPUTE_EVENT_TYPE.RESOLVED,
   void: DISPUTE_EVENT_TYPE.VOIDED,
   cancelled: DISPUTE_EVENT_TYPE.CANCELLED,
+  discarded: DISPUTE_EVENT_TYPE.DISCARDED,
 };
+
+export const DISCARDED_GAME_STATUS = "discarded" as const;
 
 export class DisputeResolutionError extends Error {}
 
@@ -46,7 +49,10 @@ export const getDisputeFinalGame = (
     ...(resolution === DISPUTE_RESOLUTION.UPHELD
       ? dispute.disputedGame
       : dispute.originalGame),
-    approvalStatus: notificationTypes.RESPONSE.APPROVED_GAME,
+    approvalStatus:
+      resolution === DISPUTE_RESOLUTION.DISCARDED
+        ? DISCARDED_GAME_STATUS
+        : notificationTypes.RESPONSE.APPROVED_GAME,
   });
 
 /** userIds whose ladder participant and user docs a resolution rescores. */
@@ -136,7 +142,9 @@ export const planDisputeResolution = async ({
 
   let scoredParticipants = participants;
   let teams: TeamStats[] = [];
-  if (isDoublesDispute(dispute, match)) {
+  if (resolution === DISPUTE_RESOLUTION.DISCARDED) {
+    scoredParticipants = [];
+  } else if (isDoublesDispute(dispute, match)) {
     const scored = await scoreDoublesLadderGame({
       game: finalGame,
       participants,
@@ -178,7 +186,10 @@ export const planDisputeResolution = async ({
     finalGame,
     matchUpdate,
     participants: scoredParticipants.filter((p) => Boolean(p.userId)),
-    users: users.filter((u) => Boolean(u.userId)),
+    users:
+      resolution === DISPUTE_RESOLUTION.DISCARDED
+        ? []
+        : users.filter((u) => Boolean(u.userId)),
     teams,
     disputeUpdate: {
       stage: DISPUTE_STAGE.RESOLVED,

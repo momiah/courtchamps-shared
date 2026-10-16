@@ -48,6 +48,12 @@ export interface Ladder {
   maxPlayers: number;
   participantCount: number;
   prizesDistributed: boolean;
+  /**
+   * Set by processLadderPhases once the standings are final before playoffs:
+   * every undecided dispute and no-show claim closed and unfinished matches
+   * expired.
+   */
+  standingsFinalisedAt?: Date;
   /** Set by processLadderPhases when the playoff bracket is created. */
   playoffsGeneratedAt?: Date;
   /** Number of bracket spots (a power of two). */

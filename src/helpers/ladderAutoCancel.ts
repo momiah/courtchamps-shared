@@ -7,7 +7,7 @@ export const LADDER_MATCH_EXPIRE_HOURS = 72;
 
 const HOUR_MS = 60 * 60 * 1000;
 
-const toMs = (
+export const toMs = (
   value?: Date | { toDate: () => Date } | string | number | null,
 ): number | null => {
   if (value == null) return null;
