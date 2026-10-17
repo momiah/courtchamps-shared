@@ -96,6 +96,12 @@ export interface LadderMatchExtension {
   expiresAt: Date;
 }
 
+export interface LadderMatchArrival {
+  verifiedAt: Date;
+  distanceMeters: number;
+  accuracyMeters: number | null;
+}
+
 /**
  * A ladder match: a single fixture between players that contains `bestOf`
  * individual {@link Game} shells.
@@ -125,6 +131,11 @@ export interface LadderMatch {
   acceptedAt?: Date;
   /** Persisted check-in handshake state (set on a successful QR scan). */
   checkIn?: LadderMatchCheckIn;
+  /**
+   * Players whose location was confirmed at the match's court, keyed by userId.
+   * Written only by the recordLadderArrival function, with the server's clock.
+   */
+  arrivals?: Record<string, LadderMatchArrival>;
   /**
    * Doubles only: the two teams in this fixture. teams[0] is the poster's team
    * (set on post), teams[1] the accepter's (set on accept). Absent on singles.

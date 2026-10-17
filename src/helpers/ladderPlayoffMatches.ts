@@ -79,19 +79,6 @@ export const getLadderPlayoffLegHost = (
   return leg === 1 ? lowerRanked : otherLadderPlayoffSide(lowerRanked);
 };
 
-/** True when match 1 starts before match 2, the order a tie is played in. */
-export const isLadderPlayoffLegOrderValid = ({
-  leg,
-  startMs,
-  otherLegStartMs,
-}: {
-  leg: 1 | 2;
-  startMs: number;
-  otherLegStartMs: number | null;
-}): boolean =>
-  otherLegStartMs === null ||
-  (leg === 1 ? startMs < otherLegStartMs : startMs > otherLegStartMs);
-
 const sideOfPlayers = (
   tie: Pick<LadderPlayoffTie, "side1" | "side2">,
   userIds: string[],

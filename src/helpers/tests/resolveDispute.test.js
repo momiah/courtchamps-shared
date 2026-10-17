@@ -68,6 +68,18 @@ describe("planDisputeResolution", () => {
     expect(plan.disputeUpdate.evidenceDueAt).toBeNull();
   });
 
+  it("discarding keeps the game on the match unscored, so neither side gets it", async () => {
+    const plan = await planDisputeResolution(input("discarded", { actorId: "system" }));
+    expect(plan.finalGame.approvalStatus).toBe("discarded");
+    expect(plan.matchUpdate.games[0].approvalStatus).toBe("discarded");
+    expect(plan.matchUpdate.matchStatus).toBeUndefined();
+    expect(plan.teams).toEqual([]);
+    expect(plan.participants).toEqual([]);
+    expect(plan.users).toEqual([]);
+    expect(plan.disputeUpdate).toMatchObject({ resolution: "discarded", resolvedBy: "system" });
+    expect(plan.disputeUpdate.events.at(-1)).toMatchObject({ type: "discarded", stage: "resolved" });
+  });
+
   it("refuses a completed match or a missing game", async () => {
     await expect(planDisputeResolution(input("rejected", { match: { ...match(), matchStatus: "completed" } }))).rejects.toBeInstanceOf(DisputeResolutionError);
     await expect(planDisputeResolution(input("rejected", { match: { ...match(), games: [] } }))).rejects.toBeInstanceOf(DisputeResolutionError);
