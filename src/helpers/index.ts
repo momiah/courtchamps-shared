@@ -226,8 +226,10 @@ export {
 } from "./ladderPlayoffSchedule";
 export {
   LADDER_PLAYOFF_DECIDER_BEST_OF,
+  LADDER_PLAYOFF_MATCH_AUTO_ACCEPT_HOURS,
   LADDER_PLAYOFF_MATCH_DECLINE_LIMIT,
   canDeclineLadderPlayoffMatch,
+  isLadderPlayoffMatchAutoAcceptDue,
   otherLadderPlayoffSide,
   getDueLadderPlayoffReminderDays,
   getLadderPlayoffLegHost,
