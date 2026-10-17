@@ -40,6 +40,15 @@ export { recalculateParticipantsFromFixtures } from "./recalculatePerformance";
 export { getOrderedApprovedGames } from "./recalculatePerformance";
 export { advanceBrackets } from "./advanceBrackets";
 export { roundLabel } from "./advanceBrackets";
+export {
+  formatCurrency,
+  formatLadderPrizeWon,
+  getLadderPlacePrize,
+  getLadderPrizeSetup,
+  getLadderTieFinishPlaces,
+  ordinalPlace,
+} from "./ladderPrizes";
+export type { LadderPlacePrize, PrizeLadder } from "./ladderPrizes";
 export { assignCourtForGameIndex } from "./advanceBrackets";
 export { isKnockoutComplete } from "./knockoutTopFour";
 export { getKnockoutTopFour } from "./knockoutTopFour";

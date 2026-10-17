@@ -56,6 +56,8 @@ export interface Ladder {
   standingsFinalisedAt?: Date;
   /** Set by processLadderPhases when the playoff bracket is created. */
   playoffsGeneratedAt?: Date;
+  /** Set when the Final and the 3rd-place tie are both finished. */
+  playoffsCompletedAt?: Date;
   /** Number of bracket spots (a power of two). */
   playoffBracketSize?: number;
   /** Entrants registered when the bracket was created. */
