@@ -20,6 +20,7 @@ import type {
 } from "../types/ladderPlayoff";
 import type { Game } from "../types/game";
 import { isLadderGameApproved, teamUserIds } from "./ladderMatchResult";
+import { toMs } from "./ladderAutoCancel";
 import { ladderPlayoffTieId } from "./ladderPlayoffs";
 import { scheduleLadderPlayoffTie } from "./ladderPlayoffSchedule";
 
@@ -29,6 +30,28 @@ export const LADDER_PLAYOFF_DECIDER_BEST_OF = 1;
 
 /** Times the away side may decline the host's arranged time for one match. */
 export const LADDER_PLAYOFF_MATCH_DECLINE_LIMIT = 1;
+
+/** Hours the away side has to answer a posted playoff match before it is accepted for them. */
+export const LADDER_PLAYOFF_MATCH_AUTO_ACCEPT_HOURS = 24;
+
+/**
+ * True once a posted playoff match has gone unanswered for the auto-accept
+ * window. A "play now" offer is never accepted for anyone.
+ */
+export const isLadderPlayoffMatchAutoAcceptDue = (
+  match: Pick<LadderMatch, "matchStatus" | "playoffTieId" | "playNow" | "createdAt">,
+  now: Date,
+): boolean => {
+  const createdAtMs = toMs(match.createdAt);
+  return (
+    !!match.playoffTieId &&
+    !match.playNow &&
+    match.matchStatus === LADDER_MATCH_STATUS.POSTED &&
+    createdAtMs !== null &&
+    now.getTime() - createdAtMs >=
+      LADDER_PLAYOFF_MATCH_AUTO_ACCEPT_HOURS * 60 * 60 * 1000
+  );
+};
 
 /**
  * True while the away side may still decline a posted playoff match's time. A

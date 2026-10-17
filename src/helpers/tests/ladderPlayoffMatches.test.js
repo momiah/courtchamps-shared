@@ -7,7 +7,9 @@ import {
   buildLadderPlayoffLegMatch,
   decideLadderPlayoffTie,
   decideLadderPlayoffTieAtDeadline,
+  LADDER_PLAYOFF_MATCH_AUTO_ACCEPT_HOURS,
   canDeclineLadderPlayoffMatch,
+  isLadderPlayoffMatchAutoAcceptDue,
   getDueLadderPlayoffReminderDays,
   getLadderPlayoffLegHost,
   tallyLadderPlayoffTie,
@@ -453,5 +455,34 @@ describe("canDeclineLadderPlayoffMatch", () => {
   it("only applies to posted playoff matches", () => {
     expect(canDeclineLadderPlayoffMatch({ ...posted, matchStatus: "accepted" })).toBe(false);
     expect(canDeclineLadderPlayoffMatch({ ...posted, playoffTieId: null })).toBe(false);
+  });
+});
+
+describe("isLadderPlayoffMatchAutoAcceptDue", () => {
+  const HOUR_MS = 60 * 60 * 1000;
+  const posted = (hoursAgo, extra = {}) => ({
+    matchStatus: "posted",
+    playoffTieId: "r1-s0",
+    createdAt: new Date(now.getTime() - hoursAgo * HOUR_MS),
+    ...extra,
+  });
+
+  it("waits 24 hours", () => {
+    expect(LADDER_PLAYOFF_MATCH_AUTO_ACCEPT_HOURS).toBe(24);
+    expect(isLadderPlayoffMatchAutoAcceptDue(posted(23), now)).toBe(false);
+    expect(isLadderPlayoffMatchAutoAcceptDue(posted(24), now)).toBe(true);
+    expect(isLadderPlayoffMatchAutoAcceptDue(posted(80), now)).toBe(true);
+  });
+
+  it("reads a Firestore timestamp", () => {
+    const createdAt = { toDate: () => new Date(now.getTime() - 30 * HOUR_MS) };
+    expect(isLadderPlayoffMatchAutoAcceptDue(posted(0, { createdAt }), now)).toBe(true);
+  });
+
+  it("never accepts a play-now offer, a non-playoff match or one that isn't posted", () => {
+    expect(isLadderPlayoffMatchAutoAcceptDue(posted(48, { playNow: true }), now)).toBe(false);
+    expect(isLadderPlayoffMatchAutoAcceptDue(posted(48, { playoffTieId: undefined }), now)).toBe(false);
+    expect(isLadderPlayoffMatchAutoAcceptDue(posted(48, { matchStatus: "accepted" }), now)).toBe(false);
+    expect(isLadderPlayoffMatchAutoAcceptDue(posted(48, { createdAt: undefined }), now)).toBe(false);
   });
 });
