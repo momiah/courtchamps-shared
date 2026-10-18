@@ -7,6 +7,9 @@ import {
   buildLadderPlayoffLegMatch,
   decideLadderPlayoffTie,
   decideLadderPlayoffTieAtDeadline,
+  getLadderPlayoffActiveSides,
+  isLadderPlayoffHostArrangeOverdue,
+  LADDER_PLAYOFF_HOST_ARRANGE_HOURS,
   LADDER_PLAYOFF_MATCH_AUTO_ACCEPT_HOURS,
   canDeclineLadderPlayoffMatch,
   isLadderPlayoffMatchAutoAcceptDue,
@@ -36,19 +39,45 @@ const tie = {
   side2: side(["b"], 7),
 };
 
-const player = (userId) => ({ userId, firstName: userId, lastName: "", username: userId });
+const player = (userId) => ({
+  userId,
+  firstName: userId,
+  lastName: "",
+  username: userId,
+});
 
-const game = (winnerId, winnerScore, loserScore, { approved = true, flip = false } = {}) => {
+const game = (
+  winnerId,
+  winnerScore,
+  loserScore,
+  { approved = true, flip = false } = {},
+) => {
   const winnerTeam = winnerId === "a" ? "Team 1" : "Team 2";
   const loserId = winnerId === "a" ? "b" : "a";
-  const team1 = { player1: player("a"), player2: null, score: winnerId === "a" ? winnerScore : loserScore };
-  const team2 = { player1: player("b"), player2: null, score: winnerId === "a" ? loserScore : winnerScore };
+  const team1 = {
+    player1: player("a"),
+    player2: null,
+    score: winnerId === "a" ? winnerScore : loserScore,
+  };
+  const team2 = {
+    player1: player("b"),
+    player2: null,
+    score: winnerId === "a" ? loserScore : winnerScore,
+  };
   return {
     approvalStatus: approved ? "approved" : "Pending",
     team1: flip ? team2 : team1,
     team2: flip ? team1 : team2,
     result: {
-      winner: { team: flip ? (winnerTeam === "Team 1" ? "Team 2" : "Team 1") : winnerTeam, players: [winnerId], score: winnerScore },
+      winner: {
+        team: flip
+          ? winnerTeam === "Team 1"
+            ? "Team 2"
+            : "Team 1"
+          : winnerTeam,
+        players: [winnerId],
+        score: winnerScore,
+      },
       loser: { team: "x", players: [loserId], score: loserScore },
     },
   };
@@ -64,18 +93,30 @@ describe("getLadderPlayoffBestOf", () => {
   it("scales from the Final back", () => {
     const totalRounds = 7;
     const formats = [1, 2, 3, 4, 5, 6, 7].map((round) =>
-      getLadderPlayoffBestOf({ round, totalRounds, isThirdPlacePlayoff: false }),
+      getLadderPlayoffBestOf({
+        round,
+        totalRounds,
+        isThirdPlacePlayoff: false,
+      }),
     );
     expect(formats).toEqual([5, 5, 5, 7, 7, 7, 7]);
     expect(
-      getLadderPlayoffBestOf({ round: 7, totalRounds, isThirdPlacePlayoff: true }),
+      getLadderPlayoffBestOf({
+        round: 7,
+        totalRounds,
+        isThirdPlacePlayoff: true,
+      }),
     ).toBe(7);
   });
 
   it("makes an 8-player bracket start at the Quarter-Finals", () => {
     expect(
       [1, 2, 3].map((round) =>
-        getLadderPlayoffBestOf({ round, totalRounds: 3, isThirdPlacePlayoff: false }),
+        getLadderPlayoffBestOf({
+          round,
+          totalRounds: 3,
+          isThirdPlacePlayoff: false,
+        }),
       ),
     ).toEqual([7, 7, 7]);
   });
@@ -92,20 +133,33 @@ describe("scheduleLadderPlayoffTie", () => {
 });
 
 describe("getDueLadderPlayoffReminderDays", () => {
-  const scheduled = { status: STATUS.SCHEDULED, scheduledAt: now, remindersSentDays: [] };
+  const scheduled = {
+    status: STATUS.SCHEDULED,
+    scheduledAt: now,
+    remindersSentDays: [],
+  };
   const at = (days) => new Date(now.getTime() + days * DAY_MS);
 
   it("sends day 3, 6 and 9 once each", () => {
     expect(getDueLadderPlayoffReminderDays(scheduled, at(2))).toEqual([]);
     expect(getDueLadderPlayoffReminderDays(scheduled, at(3))).toEqual([3]);
     expect(
-      getDueLadderPlayoffReminderDays({ ...scheduled, remindersSentDays: [3] }, at(6.5)),
+      getDueLadderPlayoffReminderDays(
+        { ...scheduled, remindersSentDays: [3] },
+        at(6.5),
+      ),
     ).toEqual([6]);
     expect(
-      getDueLadderPlayoffReminderDays({ ...scheduled, remindersSentDays: [3, 6] }, at(9)),
+      getDueLadderPlayoffReminderDays(
+        { ...scheduled, remindersSentDays: [3, 6] },
+        at(9),
+      ),
     ).toEqual([9]);
     expect(
-      getDueLadderPlayoffReminderDays({ ...scheduled, remindersSentDays: [3, 6, 9] }, at(9.5)),
+      getDueLadderPlayoffReminderDays(
+        { ...scheduled, remindersSentDays: [3, 6, 9] },
+        at(9.5),
+      ),
     ).toEqual([]);
   });
 
@@ -115,10 +169,16 @@ describe("getDueLadderPlayoffReminderDays", () => {
 
   it("only reminds scheduled ties", () => {
     expect(
-      getDueLadderPlayoffReminderDays({ ...scheduled, status: STATUS.COMPLETED }, at(5)),
+      getDueLadderPlayoffReminderDays(
+        { ...scheduled, status: STATUS.COMPLETED },
+        at(5),
+      ),
     ).toEqual([]);
     expect(
-      getDueLadderPlayoffReminderDays({ ...scheduled, scheduledAt: null }, at(5)),
+      getDueLadderPlayoffReminderDays(
+        { ...scheduled, scheduledAt: null },
+        at(5),
+      ),
     ).toEqual([]);
   });
 });
@@ -138,7 +198,11 @@ describe("getLadderPlayoffLegHost", () => {
 describe("tallyLadderPlayoffTie", () => {
   it("counts approved games and points per tie side across legs", () => {
     const tally = tallyLadderPlayoffTie(tie, [
-      leg(1, [game("a", 21, 10), game("a", 21, 15), game("b", 21, 19, { approved: false })]),
+      leg(1, [
+        game("a", 21, 10),
+        game("a", 21, 15),
+        game("b", 21, 19, { approved: false }),
+      ]),
       leg(2, [game("b", 21, 5)]),
     ]);
     expect(tally).toEqual({
@@ -151,15 +215,25 @@ describe("tallyLadderPlayoffTie", () => {
   });
 
   it("maps games by player, not by the game's team labels", () => {
-    const tally = tallyLadderPlayoffTie(tie, [leg(2, [game("a", 21, 12, { flip: true })])]);
-    expect(tally).toMatchObject({ team1Games: 1, team2Games: 0, team1Points: 21, team2Points: 12 });
+    const tally = tallyLadderPlayoffTie(tie, [
+      leg(2, [game("a", 21, 12, { flip: true })]),
+    ]);
+    expect(tally).toMatchObject({
+      team1Games: 1,
+      team2Games: 0,
+      team1Points: 21,
+      team2Points: 12,
+    });
   });
 });
 
 describe("decideLadderPlayoffTie", () => {
   it("waits until both matches are complete", () => {
     expect(
-      decideLadderPlayoffTie(tie, [leg(1, [game("a", 21, 10)]), leg(2, [], "accepted")]),
+      decideLadderPlayoffTie(tie, [
+        leg(1, [game("a", 21, 10)]),
+        leg(2, [], "accepted"),
+      ]),
     ).toMatchObject({ decided: false, winner: null, deciderRequired: false });
   });
 
@@ -167,7 +241,12 @@ describe("decideLadderPlayoffTie", () => {
     expect(
       decideLadderPlayoffTie(tie, [
         leg(1, [game("a", 21, 10), game("a", 21, 10), game("a", 21, 10)]),
-        leg(2, [game("b", 21, 10), game("b", 21, 10), game("a", 21, 19), game("b", 21, 10)]),
+        leg(2, [
+          game("b", 21, 10),
+          game("b", 21, 10),
+          game("a", 21, 19),
+          game("b", 21, 10),
+        ]),
       ]),
     ).toMatchObject({ decided: true, winner: "team1", deciderRequired: false });
   });
@@ -205,9 +284,81 @@ describe("decideLadderPlayoffTieAtDeadline", () => {
     });
   });
 
+  describe("nothing played", () => {
+    const posted = (createdBy, extra = {}) => ({
+      ...leg(1, [], "posted"),
+      createdBy,
+      ...extra,
+    });
+
+    it("sends through the only side that arranged a match", () => {
+      expect(decideLadderPlayoffTieAtDeadline(tie, [posted("a")])).toEqual({
+        winner: "team1",
+        outcome: OUTCOME.WALKOVER,
+      });
+      expect(decideLadderPlayoffTieAtDeadline(tie, [posted("b")])).toEqual({
+        winner: "team2",
+        outcome: OUTCOME.WALKOVER,
+      });
+    });
+
+    it("counts a decline as activity, and an auto-accept as none", () => {
+      const declined = posted("a", { scheduleDeclines: 1 });
+      expect(getLadderPlayoffActiveSides(tie, [declined])).toEqual([
+        "team1",
+        "team2",
+      ]);
+      expect(decideLadderPlayoffTieAtDeadline(tie, [declined]).outcome).toBe(
+        OUTCOME.VOID,
+      );
+      const autoAccepted = leg(1, [], "accepted");
+      expect(
+        getLadderPlayoffActiveSides(tie, [
+          {
+            ...autoAccepted,
+            createdBy: "a",
+            acceptedBy: "b",
+            autoAccepted: true,
+          },
+        ]),
+      ).toEqual(["team1"]);
+      expect(
+        getLadderPlayoffActiveSides(tie, [
+          { ...autoAccepted, createdBy: "a", acceptedBy: "b" },
+        ]),
+      ).toEqual(["team1", "team2"]);
+    });
+
+    it("is void when both sides were active, and ignores the decider", () => {
+      expect(
+        decideLadderPlayoffTieAtDeadline(tie, [
+          posted("a"),
+          { ...posted("b"), playoffLeg: 2 },
+        ]),
+      ).toEqual({ winner: null, outcome: OUTCOME.VOID });
+      expect(
+        getLadderPlayoffActiveSides(tie, [{ ...posted("a"), playoffLeg: 3 }]),
+      ).toEqual([]);
+    });
+
+    it("recognises doubles partners as the same side", () => {
+      const doubles = {
+        side1: side(["a", "a2"], 3),
+        side2: side(["b", "b2"], 7),
+      };
+      expect(
+        getLadderPlayoffActiveSides(doubles, [
+          { ...posted("a2"), acceptedBy: "b2" },
+        ]),
+      ).toEqual(["team1", "team2"]);
+    });
+  });
+
   it("uses games, then points, then the higher-ranked side", () => {
     expect(
-      decideLadderPlayoffTieAtDeadline(tie, [leg(1, [game("b", 21, 10)], "accepted")]),
+      decideLadderPlayoffTieAtDeadline(tie, [
+        leg(1, [game("b", 21, 10)], "accepted"),
+      ]),
     ).toEqual({ winner: "team2", outcome: OUTCOME.DEADLINE });
     expect(
       decideLadderPlayoffTieAtDeadline(tie, [
@@ -237,7 +388,9 @@ const entrant = (key) => ({
 const bracket = (size) =>
   buildLadderPlayoffTies({
     ladderId: "L1",
-    qualifiers: Array.from({ length: size }, (_, index) => entrant(`p${index}`)),
+    qualifiers: Array.from({ length: size }, (_, index) =>
+      entrant(`p${index}`),
+    ),
     createdAt: new Date("2026-10-01T00:00:00Z"),
   });
 
@@ -255,11 +408,16 @@ describe("buildLadderPlayoffTies scheduling", () => {
     expect(ties.get("r1-s0")).toMatchObject({
       bestOf: 7,
       status: STATUS.SCHEDULED,
-      deadlineAt: new Date(new Date("2026-10-01T00:00:00Z").getTime() + 10 * DAY_MS),
+      deadlineAt: new Date(
+        new Date("2026-10-01T00:00:00Z").getTime() + 10 * DAY_MS,
+      ),
     });
     expect(ties.get("r2-s0")).toMatchObject({ bestOf: 7, scheduledAt: null });
     expect(ties.get("r3-s0")).toMatchObject({ bestOf: 7 });
-    expect(ties.get("r3-s1")).toMatchObject({ bestOf: 7, isThirdPlacePlayoff: true });
+    expect(ties.get("r3-s1")).toMatchObject({
+      bestOf: 7,
+      isThirdPlacePlayoff: true,
+    });
   });
 });
 
@@ -267,7 +425,13 @@ describe("advanceLadderPlayoffBracket", () => {
   it("fills the winner's next slot and waits for the other feeder", () => {
     const ties = bracket(8);
     const changes = byId(
-      advanceLadderPlayoffBracket({ ties, tieId: "r1-s0", winner: "team2", outcome: OUTCOME.PLAYED, now }),
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s0",
+        winner: "team2",
+        outcome: OUTCOME.PLAYED,
+        now,
+      }),
     );
     expect(changes.get("r1-s0")).toMatchObject({
       status: STATUS.COMPLETED,
@@ -276,44 +440,95 @@ describe("advanceLadderPlayoffBracket", () => {
       completedAt: now,
     });
     const next = changes.get("r2-s0");
-    expect(next.side1.entrantKey).toBe(byId(ties).get("r1-s0").side2.entrantKey);
+    expect(next.side1.entrantKey).toBe(
+      byId(ties).get("r1-s0").side2.entrantKey,
+    );
     expect(next.team1.player1.userId).toBe(next.side1.entrantKey);
     expect(next.status).toBe(STATUS.AWAITING_ENTRANTS);
   });
 
   it("starts the next tie's 10-day window once both feeders finish", () => {
     let ties = bracket(8);
-    ties = apply(ties, advanceLadderPlayoffBracket({ ties, tieId: "r1-s0", winner: "team1", outcome: OUTCOME.PLAYED, now }));
+    ties = apply(
+      ties,
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s0",
+        winner: "team1",
+        outcome: OUTCOME.PLAYED,
+        now,
+      }),
+    );
     const changes = byId(
-      advanceLadderPlayoffBracket({ ties, tieId: "r1-s1", winner: "team1", outcome: OUTCOME.PLAYED, now }),
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s1",
+        winner: "team1",
+        outcome: OUTCOME.PLAYED,
+        now,
+      }),
     );
     expect(changes.get("r2-s0")).toMatchObject({
       status: STATUS.SCHEDULED,
       scheduledAt: now,
       deadlineAt: new Date(now.getTime() + 10 * DAY_MS),
     });
-    expect(changes.get("r2-s0").side2.entrantKey).toBe(byId(ties).get("r1-s1").side1.entrantKey);
+    expect(changes.get("r2-s0").side2.entrantKey).toBe(
+      byId(ties).get("r1-s1").side1.entrantKey,
+    );
   });
 
   it("gives the next-round opponent a walkover when a tie is void", () => {
     let ties = bracket(8);
-    ties = apply(ties, advanceLadderPlayoffBracket({ ties, tieId: "r1-s0", winner: "team1", outcome: OUTCOME.PLAYED, now }));
+    ties = apply(
+      ties,
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s0",
+        winner: "team1",
+        outcome: OUTCOME.PLAYED,
+        now,
+      }),
+    );
     const changes = byId(
-      advanceLadderPlayoffBracket({ ties, tieId: "r1-s1", winner: null, outcome: OUTCOME.VOID, now }),
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s1",
+        winner: null,
+        outcome: OUTCOME.VOID,
+        now,
+      }),
     );
     expect(changes.get("r2-s0")).toMatchObject({
       status: STATUS.COMPLETED,
       winner: "team1",
       outcome: OUTCOME.WALKOVER,
     });
-    expect(changes.get("r3-s0").side1.entrantKey).toBe(byId(ties).get("r1-s0").side1.entrantKey);
+    expect(changes.get("r3-s0").side1.entrantKey).toBe(
+      byId(ties).get("r1-s0").side1.entrantKey,
+    );
   });
 
   it("voids a tie when both feeders are void, and keeps going up", () => {
     let ties = bracket(8);
-    ties = apply(ties, advanceLadderPlayoffBracket({ ties, tieId: "r1-s0", winner: null, outcome: OUTCOME.VOID, now }));
+    ties = apply(
+      ties,
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s0",
+        winner: null,
+        outcome: OUTCOME.VOID,
+        now,
+      }),
+    );
     const changes = byId(
-      advanceLadderPlayoffBracket({ ties, tieId: "r1-s1", winner: null, outcome: OUTCOME.VOID, now }),
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s1",
+        winner: null,
+        outcome: OUTCOME.VOID,
+        now,
+      }),
     );
     expect(changes.get("r2-s0")).toMatchObject({
       status: STATUS.COMPLETED,
@@ -326,34 +541,80 @@ describe("advanceLadderPlayoffBracket", () => {
 
   it("sends semi-final losers to the 3rd-place game and starts both last ties", () => {
     let ties = bracket(4);
-    ties = apply(ties, advanceLadderPlayoffBracket({ ties, tieId: "r1-s0", winner: "team1", outcome: OUTCOME.PLAYED, now }));
+    ties = apply(
+      ties,
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s0",
+        winner: "team1",
+        outcome: OUTCOME.PLAYED,
+        now,
+      }),
+    );
     const changes = byId(
-      advanceLadderPlayoffBracket({ ties, tieId: "r1-s1", winner: "team2", outcome: OUTCOME.PLAYED, now }),
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s1",
+        winner: "team2",
+        outcome: OUTCOME.PLAYED,
+        now,
+      }),
     );
     const original = byId(bracket(4));
     const final = changes.get("r2-s0");
     const thirdPlace = changes.get("r2-s1");
     expect(final.side1.entrantKey).toBe(original.get("r1-s0").side1.entrantKey);
     expect(final.side2.entrantKey).toBe(original.get("r1-s1").side2.entrantKey);
-    expect(thirdPlace.side1.entrantKey).toBe(original.get("r1-s0").side2.entrantKey);
-    expect(thirdPlace.side2.entrantKey).toBe(original.get("r1-s1").side1.entrantKey);
+    expect(thirdPlace.side1.entrantKey).toBe(
+      original.get("r1-s0").side2.entrantKey,
+    );
+    expect(thirdPlace.side2.entrantKey).toBe(
+      original.get("r1-s1").side1.entrantKey,
+    );
     expect(final.status).toBe(STATUS.SCHEDULED);
     expect(thirdPlace.status).toBe(STATUS.SCHEDULED);
   });
 
   it("gives the 3rd-place game a walkover when a semi-final was a walkover", () => {
     let ties = bracket(4);
-    ties = apply(ties, advanceLadderPlayoffBracket({ ties, tieId: "r1-s0", winner: null, outcome: OUTCOME.VOID, now }));
-    const changes = byId(
-      advanceLadderPlayoffBracket({ ties, tieId: "r1-s1", winner: "team1", outcome: OUTCOME.PLAYED, now }),
+    ties = apply(
+      ties,
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s0",
+        winner: null,
+        outcome: OUTCOME.VOID,
+        now,
+      }),
     );
-    expect(changes.get("r2-s0")).toMatchObject({ winner: "team2", outcome: OUTCOME.WALKOVER });
-    expect(changes.get("r2-s1")).toMatchObject({ winner: "team2", outcome: OUTCOME.WALKOVER });
+    const changes = byId(
+      advanceLadderPlayoffBracket({
+        ties,
+        tieId: "r1-s1",
+        winner: "team1",
+        outcome: OUTCOME.PLAYED,
+        now,
+      }),
+    );
+    expect(changes.get("r2-s0")).toMatchObject({
+      winner: "team2",
+      outcome: OUTCOME.WALKOVER,
+    });
+    expect(changes.get("r2-s1")).toMatchObject({
+      winner: "team2",
+      outcome: OUTCOME.WALKOVER,
+    });
   });
 
   it("stops at the Final", () => {
     let ties = bracket(2);
-    const changes = advanceLadderPlayoffBracket({ ties, tieId: "r1-s0", winner: "team1", outcome: OUTCOME.PLAYED, now });
+    const changes = advanceLadderPlayoffBracket({
+      ties,
+      tieId: "r1-s0",
+      winner: "team1",
+      outcome: OUTCOME.PLAYED,
+      now,
+    });
     expect(changes.map((t) => t.tieId)).toEqual(["r1-s0"]);
   });
 });
@@ -370,8 +631,20 @@ describe("buildLadderPlayoffLegMatch", () => {
   const doublesTie = {
     tieId: "r1-s0",
     bestOf: 5,
-    side1: { entrantKey: "a_b", teamId: "t1", playerIds: ["a", "b"], rank: 1, homeCourt: null },
-    side2: { entrantKey: "c_d", teamId: "t2", playerIds: ["c", "d"], rank: 2, homeCourt: null },
+    side1: {
+      entrantKey: "a_b",
+      teamId: "t1",
+      playerIds: ["a", "b"],
+      rank: 1,
+      homeCourt: null,
+    },
+    side2: {
+      entrantKey: "c_d",
+      teamId: "t2",
+      playerIds: ["c", "d"],
+      rank: 2,
+      homeCourt: null,
+    },
   };
 
   it("builds a posted, fee-free match hosted by the given side", () => {
@@ -399,7 +672,13 @@ describe("buildLadderPlayoffLegMatch", () => {
       playoffLeg: 1,
       createdBy: "c",
     });
-    expect(match.games.map((g) => g.gameId)).toEqual(["m1-g1", "m1-g2", "m1-g3", "m1-g4", "m1-g5"]);
+    expect(match.games.map((g) => g.gameId)).toEqual([
+      "m1-g1",
+      "m1-g2",
+      "m1-g3",
+      "m1-g4",
+      "m1-g5",
+    ]);
   });
 
   it("makes the decider a single accepted game with no teams for singles", () => {
@@ -419,7 +698,12 @@ describe("buildLadderPlayoffLegMatch", () => {
       now,
       accepted: true,
     });
-    expect(match).toMatchObject({ bestOf: 1, matchStatus: "accepted", acceptedAt: now, playoffLeg: 3 });
+    expect(match).toMatchObject({
+      bestOf: 1,
+      matchStatus: "accepted",
+      acceptedAt: now,
+      playoffLeg: 3,
+    });
     expect(match.teams).toBeUndefined();
     expect(match.games).toHaveLength(1);
   });
@@ -445,16 +729,28 @@ describe("canDeclineLadderPlayoffMatch", () => {
 
   it("allows one decline of a posted playoff match", () => {
     expect(canDeclineLadderPlayoffMatch(posted)).toBe(true);
-    expect(canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 0 })).toBe(true);
-    expect(canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 1 })).toBe(false);
     expect(
-      canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 1, playNow: true }),
+      canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 0 }),
+    ).toBe(true);
+    expect(
+      canDeclineLadderPlayoffMatch({ ...posted, scheduleDeclines: 1 }),
+    ).toBe(false);
+    expect(
+      canDeclineLadderPlayoffMatch({
+        ...posted,
+        scheduleDeclines: 1,
+        playNow: true,
+      }),
     ).toBe(true);
   });
 
   it("only applies to posted playoff matches", () => {
-    expect(canDeclineLadderPlayoffMatch({ ...posted, matchStatus: "accepted" })).toBe(false);
-    expect(canDeclineLadderPlayoffMatch({ ...posted, playoffTieId: null })).toBe(false);
+    expect(
+      canDeclineLadderPlayoffMatch({ ...posted, matchStatus: "accepted" }),
+    ).toBe(false);
+    expect(
+      canDeclineLadderPlayoffMatch({ ...posted, playoffTieId: null }),
+    ).toBe(false);
   });
 });
 
@@ -476,13 +772,76 @@ describe("isLadderPlayoffMatchAutoAcceptDue", () => {
 
   it("reads a Firestore timestamp", () => {
     const createdAt = { toDate: () => new Date(now.getTime() - 30 * HOUR_MS) };
-    expect(isLadderPlayoffMatchAutoAcceptDue(posted(0, { createdAt }), now)).toBe(true);
+    expect(
+      isLadderPlayoffMatchAutoAcceptDue(posted(0, { createdAt }), now),
+    ).toBe(true);
   });
 
   it("never accepts a play-now offer, a non-playoff match or one that isn't posted", () => {
-    expect(isLadderPlayoffMatchAutoAcceptDue(posted(48, { playNow: true }), now)).toBe(false);
-    expect(isLadderPlayoffMatchAutoAcceptDue(posted(48, { playoffTieId: undefined }), now)).toBe(false);
-    expect(isLadderPlayoffMatchAutoAcceptDue(posted(48, { matchStatus: "accepted" }), now)).toBe(false);
-    expect(isLadderPlayoffMatchAutoAcceptDue(posted(48, { createdAt: undefined }), now)).toBe(false);
+    expect(
+      isLadderPlayoffMatchAutoAcceptDue(posted(48, { playNow: true }), now),
+    ).toBe(false);
+    expect(
+      isLadderPlayoffMatchAutoAcceptDue(
+        posted(48, { playoffTieId: undefined }),
+        now,
+      ),
+    ).toBe(false);
+    expect(
+      isLadderPlayoffMatchAutoAcceptDue(
+        posted(48, { matchStatus: "accepted" }),
+        now,
+      ),
+    ).toBe(false);
+    expect(
+      isLadderPlayoffMatchAutoAcceptDue(
+        posted(48, { createdAt: undefined }),
+        now,
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("isLadderPlayoffHostArrangeOverdue", () => {
+  const HOUR_MS = 60 * 60 * 1000;
+  const started = new Date("2026-10-11T12:00:00Z");
+  const scheduled = { status: STATUS.SCHEDULED, scheduledAt: started };
+
+  it("opens after 48 hours", () => {
+    expect(LADDER_PLAYOFF_HOST_ARRANGE_HOURS).toBe(48);
+    expect(
+      isLadderPlayoffHostArrangeOverdue(
+        scheduled,
+        new Date(started.getTime() + 47 * HOUR_MS),
+      ),
+    ).toBe(false);
+    expect(
+      isLadderPlayoffHostArrangeOverdue(
+        scheduled,
+        new Date(started.getTime() + 48 * HOUR_MS),
+      ),
+    ).toBe(true);
+  });
+
+  it("reads a Firestore timestamp and ignores a tie that isn't scheduled", () => {
+    const later = new Date(started.getTime() + 60 * HOUR_MS);
+    expect(
+      isLadderPlayoffHostArrangeOverdue(
+        { status: STATUS.SCHEDULED, scheduledAt: { toDate: () => started } },
+        later,
+      ),
+    ).toBe(true);
+    expect(
+      isLadderPlayoffHostArrangeOverdue(
+        { ...scheduled, status: STATUS.COMPLETED },
+        later,
+      ),
+    ).toBe(false);
+    expect(
+      isLadderPlayoffHostArrangeOverdue(
+        { status: STATUS.SCHEDULED, scheduledAt: null },
+        later,
+      ),
+    ).toBe(false);
   });
 });

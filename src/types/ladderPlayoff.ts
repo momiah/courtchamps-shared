@@ -23,6 +23,16 @@ export const LADDER_PLAYOFF_TIE_OUTCOME = {
 export type LadderPlayoffTieOutcome =
   (typeof LADDER_PLAYOFF_TIE_OUTCOME)[keyof typeof LADDER_PLAYOFF_TIE_OUTCOME];
 
+export const LADDER_PLAYOFF_WALKOVER_REASON = {
+  /** Only this side arranged, accepted or declined anything before the deadline. */
+  INACTIVE_OPPONENT: "inactiveOpponent",
+  /** The other side was disqualified from the ladder. */
+  DISQUALIFIED_OPPONENT: "disqualifiedOpponent",
+} as const;
+
+export type LadderPlayoffWalkoverReason =
+  (typeof LADDER_PLAYOFF_WALKOVER_REASON)[keyof typeof LADDER_PLAYOFF_WALKOVER_REASON];
+
 export type LadderPlayoffTieSide = "team1" | "team2";
 
 export const LADDER_PLAYOFF_TIE_STATUS = {
@@ -82,5 +92,9 @@ export interface LadderPlayoffTie {
   /** Reminder days (from LADDER_PLAYOFF_REMINDER_DAYS) already sent. */
   remindersSentDays?: number[];
   outcome?: LadderPlayoffTieOutcome | null;
+  /** Why a walkover happened when both sides were known. */
+  walkoverReason?: LadderPlayoffWalkoverReason | null;
+  /** When the "match 1 isn't arranged yet" notice went out. */
+  hostOverdueNoticeSentAt?: Date | null;
   completedAt?: Date | null;
 }
