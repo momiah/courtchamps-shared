@@ -31,6 +31,26 @@ export const LADDER_PLAYOFF_DECIDER_BEST_OF = 1;
 /** Times the away side may decline the host's arranged time for one match. */
 export const LADDER_PLAYOFF_MATCH_DECLINE_LIMIT = 1;
 
+/**
+ * Hours after a tie starts before the higher-ranked side may arrange its home
+ * match without waiting for the lower-ranked side to arrange match 1.
+ */
+export const LADDER_PLAYOFF_HOST_ARRANGE_HOURS = 48;
+
+/** True once match 1's host has had the whole arrange window and match 2 may be arranged without it. */
+export const isLadderPlayoffHostArrangeOverdue = (
+  tie: Pick<LadderPlayoffTie, "status" | "scheduledAt">,
+  now: Date,
+): boolean => {
+  const scheduledAtMs = toMs(tie.scheduledAt);
+  return (
+    tie.status === LADDER_PLAYOFF_TIE_STATUS.SCHEDULED &&
+    scheduledAtMs !== null &&
+    now.getTime() - scheduledAtMs >=
+      LADDER_PLAYOFF_HOST_ARRANGE_HOURS * 60 * 60 * 1000
+  );
+};
+
 /** Hours the away side has to answer a posted playoff match before it is accepted for them. */
 export const LADDER_PLAYOFF_MATCH_AUTO_ACCEPT_HOURS = 24;
 
@@ -64,7 +84,10 @@ export const canDeclineLadderPlayoffMatch = (
   match.matchStatus === LADDER_MATCH_STATUS.POSTED &&
   (!!match.playNow || (match.scheduleDeclines ?? 0) < LADDER_PLAYOFF_MATCH_DECLINE_LIMIT);
 
-type PlayoffLeg = Pick<LadderMatch, "games" | "matchStatus" | "playoffLeg">;
+type PlayoffLeg = Pick<LadderMatch, "games" | "matchStatus" | "playoffLeg"> &
+  Partial<
+    Pick<LadderMatch, "createdBy" | "acceptedBy" | "scheduleDeclines" | "autoAccepted">
+  >;
 
 export const otherLadderPlayoffSide = (
   side: LadderPlayoffTieSide,
@@ -211,8 +234,34 @@ export const decideLadderPlayoffTie = (
 };
 
 /**
+ * The sides that did something in a tie: arranged a match, accepted one
+ * themselves (not the scheduled job accepting for them) or declined a time.
+ */
+export const getLadderPlayoffActiveSides = (
+  tie: Pick<LadderPlayoffTie, "side1" | "side2">,
+  legs: PlayoffLeg[],
+): LadderPlayoffTieSide[] => {
+  const active = new Set<LadderPlayoffTieSide>();
+  legs
+    .filter((leg) => leg.playoffLeg !== 3)
+    .forEach((leg) => {
+      const creator = leg.createdBy ? sideOfPlayers(tie, [leg.createdBy]) : null;
+      if (creator) active.add(creator);
+      if (leg.acceptedBy && !leg.autoAccepted) {
+        const accepter = sideOfPlayers(tie, [leg.acceptedBy]);
+        if (accepter) active.add(accepter);
+      }
+      if ((leg.scheduleDeclines ?? 0) > 0 && creator) {
+        active.add(otherLadderPlayoffSide(creator));
+      }
+    });
+  return (["team1", "team2"] as const).filter((side) => active.has(side));
+};
+
+/**
  * When the window runs out: games won so far, then points, then the
- * higher-ranked side. Nothing played means nobody goes through.
+ * higher-ranked side. Nothing played: the only side that did anything goes
+ * through on a walkover; if both or neither did, nobody goes through.
  */
 export const decideLadderPlayoffTieAtDeadline = (
   tie: Pick<LadderPlayoffTie, "side1" | "side2">,
@@ -220,7 +269,10 @@ export const decideLadderPlayoffTieAtDeadline = (
 ): { winner: LadderPlayoffTieSide | null; outcome: LadderPlayoffTieOutcome } => {
   const tally = tallyLadderPlayoffTie(tie, legs);
   if (tally.gamesPlayed === 0) {
-    return { winner: null, outcome: LADDER_PLAYOFF_TIE_OUTCOME.VOID };
+    const active = getLadderPlayoffActiveSides(tie, legs);
+    return active.length === 1
+      ? { winner: active[0], outcome: LADDER_PLAYOFF_TIE_OUTCOME.WALKOVER }
+      : { winner: null, outcome: LADDER_PLAYOFF_TIE_OUTCOME.VOID };
   }
   const outcome = LADDER_PLAYOFF_TIE_OUTCOME.DEADLINE;
   if (tally.team1Games !== tally.team2Games) {

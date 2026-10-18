@@ -194,6 +194,11 @@ export interface LadderMatch {
    * of the away side's declines.
    */
   playNow?: boolean;
+  /**
+   * True when the scheduled job accepted this playoff match for the away side
+   * after the auto-accept window, so it isn't a sign of activity from them.
+   */
+  autoAccepted?: boolean;
 }
 
 export type LadderMatchInput = Pick<
