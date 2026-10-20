@@ -20,9 +20,15 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   EUR: "€",
 };
 
+const CURRENCY_GROUPING_THRESHOLD = 10000;
+
 export const formatCurrency = (amount: number, currencyType: string): string => {
   const symbol = CURRENCY_SYMBOLS[currencyType] ?? "";
-  const value = Number.isInteger(amount) ? `${amount}` : amount.toFixed(2);
+  const fixed = Number.isInteger(amount) ? `${amount}` : amount.toFixed(2);
+  const value =
+    Math.abs(amount) >= CURRENCY_GROUPING_THRESHOLD
+      ? fixed.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+      : fixed;
   return symbol ? `${symbol}${value}` : `${value} ${currencyType}`;
 };
 
