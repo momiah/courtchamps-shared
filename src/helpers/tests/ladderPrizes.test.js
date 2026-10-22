@@ -22,6 +22,11 @@ describe("ladder prizes", () => {
     expect(formatLadderPrizeWon({ cash: 0, cp: 800 }, "GBP")).toBe("800 CP");
     expect(formatLadderPrizeWon({ cash: 0, cp: 0 }, "GBP")).toBeNull();
     expect(formatCurrency(12.5, "EUR")).toBe("€12.50");
+    expect(formatCurrency(9999, "GBP")).toBe("£9999");
+    expect(formatCurrency(5120, "GBP")).toBe("£5120");
+    expect(formatCurrency(10000, "GBP")).toBe("£10,000");
+    expect(formatCurrency(40960, "GBP")).toBe("£40,960");
+    expect(formatCurrency(1234567.5, "USD")).toBe("$1,234,567.50");
   });
 
   it("names places", () => {
