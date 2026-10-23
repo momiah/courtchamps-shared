@@ -37,11 +37,9 @@ export interface Ladder {
   courtIds: string[];
   status: LadderStatus;
   registrationOpensAt: Date;
-  registrationClosesAt: Date;
   seasonStartsAt: Date;
-  seasonEndsAt: Date;
+  registrationClosesAt: Date;
   playoffStartsAt: Date;
-  playoffEndsAt: Date;
   entryFee: number;
   currencyType: string;
   minRank: number;
@@ -85,7 +83,6 @@ export type LadderInput = Pick<
   | "genderType"
   | "courtIds"
   | "registrationOpensAt"
-  | "seasonStartsAt"
   | "entryFee"
   | "currencyType"
   | "minRank"
