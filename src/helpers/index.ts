@@ -275,3 +275,5 @@ export {
   getLadderPreRegistrationId,
   getLadderPreRegistrationKeyForLadder,
 } from "./ladderPreRegistration";
+export { getPrizeType, normalizePrizeType } from "./prizeType";
+export type { PrizeType } from "./prizeType";
