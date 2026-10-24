@@ -80,11 +80,13 @@ export const ccMedalOutlineEndpoint =
   "https://firebasestorage.googleapis.com/v0/b/scoreboard-app-29148.firebasestorage.app/o/medal-outline.png?alt=media&token=1cbd9ff1-2211-49ec-a9f2-e9253d4f1982";
 
 export const prizeTypes = {
+  CASH: "Cash",
+  COMMUNITY: "Community",
   TROPHY: "Trophy",
   MEDAL: "Medal",
   CASH_TROPHY: "Cash & Trophy",
   CASH_MEDAL: "Cash & Medal",
-};
+} as const;
 export const currencyTypes = ["GBP", "USD", "EUR", "INR"];
 export const daysOfWeek = [
   "Monday",
