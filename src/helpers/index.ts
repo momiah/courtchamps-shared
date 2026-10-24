@@ -47,7 +47,7 @@ export {
   getLadderPrizeSetup,
   getLadderTieFinishPlaces,
   getLadderTiePlacings,
-  getLadderPlayoffPayouts,
+  planLadderPlayoffPrizes,
   getLadderPlayoffTotalRounds,
   getPlacementStatKey,
   ordinalPlace,
@@ -56,6 +56,7 @@ export {
 export type {
   LadderPlacePrize,
   LadderPlayoffPayout,
+  LadderPrizePlan,
   LadderPlayoffPlacing,
   PlacementStatKey,
   PrizeLadder,
