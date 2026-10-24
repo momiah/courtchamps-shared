@@ -1,50 +1,64 @@
-import {
-  LADDER_PRE_REGISTRATION_OPTIONS,
-  getLadderPreRegistrationOption,
-  getLadderPreRegistrationId,
-  getLadderPreRegistrationKeyForLadder,
-} from "../ladderPreRegistration";
-import { LADDER_PRE_REGISTRATION_KEY } from "../../types/ladderPreRegistration";
-import { calculateLadderPrizePool } from "../calculateLadderPrizePool";
+import { isLadderPreRegistrationDue } from "../ladderPreRegistration";
+import { LADDER_PRE_REGISTRATION_STATUS } from "../../types/ladderPreRegistration";
+import { LADDER_STATUS } from "../../types/ladder";
 
-describe("ladder pre-registration", () => {
-  it("offers cash men's singles and doubles and free community singles and doubles", () => {
-    expect(
-      LADDER_PRE_REGISTRATION_OPTIONS.map(({ key, entryFee, maxPlayers }) => [
-        key,
-        entryFee,
-        maxPlayers,
-      ]),
-    ).toEqual([
-      ["cash-mens-singles", 20, 2048],
-      ["cash-mens-doubles", 20, 2048],
-      ["community-singles", 0, 2048],
-      ["community-doubles", 0, 2048],
-    ]);
+const now = new Date("2026-11-01T12:00:00Z");
+const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+const launched = {
+  status: LADDER_PRE_REGISTRATION_STATUS.LAUNCHED,
+  ladderId: "ladder-1",
+  notifiedAt: null,
+};
+const openLadder = {
+  status: LADDER_STATUS.REGISTRATION_OPEN,
+  registrationOpensAt: hourAgo,
+};
+
+describe("isLadderPreRegistrationDue", () => {
+  it("is due once its ladder's registration has opened", () => {
+    expect(isLadderPreRegistrationDue(launched, openLadder, now)).toBe(true);
   });
 
-  it("advertises a £40,960 cash ladder pot", () => {
-    const option = getLadderPreRegistrationOption("cash-mens-singles");
-    const { cash } = calculateLadderPrizePool({
-      entryFee: option.entryFee,
-      participantCount: option.maxPlayers,
-    });
-    expect(cash).toBe(40960);
+  it("accepts Firestore timestamps", () => {
+    expect(
+      isLadderPreRegistrationDue(
+        launched,
+        { ...openLadder, registrationOpensAt: { toDate: () => hourAgo } },
+        now,
+      ),
+    ).toBe(true);
   });
 
-  it("keys a pre-registration per user and ladder", () => {
+  it("waits for a ladder created ahead of its registration date", () => {
     expect(
-      getLadderPreRegistrationId("u1", LADDER_PRE_REGISTRATION_KEY.CASH_MENS_DOUBLES),
-    ).toBe("u1_cash-mens-doubles");
+      isLadderPreRegistrationDue(
+        launched,
+        { ...openLadder, registrationOpensAt: tomorrow },
+        now,
+      ),
+    ).toBe(false);
   });
 
   it.each([
-    [{ ladderType: "Singles", genderType: "Mens", entryFee: 20 }, "cash-mens-singles"],
-    [{ ladderType: "Doubles", genderType: "Mens", entryFee: 20 }, "cash-mens-doubles"],
-    [{ ladderType: "Singles", genderType: "Mens", entryFee: 0 }, "community-singles"],
-    [{ ladderType: "Doubles", genderType: "Mixed", entryFee: 0 }, "community-doubles"],
-    [{ ladderType: "Singles", genderType: "Womens", entryFee: 20 }, null],
-  ])("matches a released ladder %o to %s", (ladder, key) => {
-    expect(getLadderPreRegistrationKeyForLadder(ladder)).toBe(key);
+    ["still open", { status: LADDER_PRE_REGISTRATION_STATUS.OPEN }],
+    ["closed", { status: LADDER_PRE_REGISTRATION_STATUS.CLOSED }],
+    ["not linked to a ladder", { ladderId: null }],
+    ["already notified", { notifiedAt: hourAgo }],
+  ])("is not due when %s", (_label, change) => {
+    expect(
+      isLadderPreRegistrationDue({ ...launched, ...change }, openLadder, now),
+    ).toBe(false);
+  });
+
+  it("is not due when the ladder has moved past registration", () => {
+    expect(
+      isLadderPreRegistrationDue(
+        launched,
+        { ...openLadder, status: LADDER_STATUS.CANCELLED },
+        now,
+      ),
+    ).toBe(false);
   });
 });

@@ -1,39 +1,49 @@
-import type { GenderType, LadderType } from "./ladder";
+import type { Ladder } from "./ladder";
 
-export const LADDER_PRE_REGISTRATION_COLLECTION = "ladder-pre-registration";
+export const LADDER_PRE_REGISTRATIONS_COLLECTION = "ladderPreRegistrations";
+export const LADDER_PRE_REGISTRANTS_SUBCOLLECTION = "registrants";
 
-export const LADDER_PRE_REGISTRATION_KEY = {
-  CASH_MENS_SINGLES: "cash-mens-singles",
-  CASH_MENS_DOUBLES: "cash-mens-doubles",
-  COMMUNITY_SINGLES: "community-singles",
-  COMMUNITY_DOUBLES: "community-doubles",
+export const LADDER_PRE_REGISTRATION_STATUS = {
+  OPEN: "open",
+  CLOSED: "closed",
+  LAUNCHED: "launched",
 } as const;
 
-export type LadderPreRegistrationKey =
-  (typeof LADDER_PRE_REGISTRATION_KEY)[keyof typeof LADDER_PRE_REGISTRATION_KEY];
+export type LadderPreRegistrationStatus =
+  (typeof LADDER_PRE_REGISTRATION_STATUS)[keyof typeof LADDER_PRE_REGISTRATION_STATUS];
 
-export const LADDER_TIER = {
-  CASH: "cash",
-  COMMUNITY: "community",
-} as const;
+/** The ladder details a pre-registration advertises, copied into the ladder when it is created. */
+export type LadderPreRegistrationDetails = Pick<
+  Ladder,
+  | "name"
+  | "description"
+  | "image"
+  | "region"
+  | "countryCode"
+  | "ladderType"
+  | "genderType"
+  | "entryFee"
+  | "currencyType"
+  | "maxPlayers"
+>;
 
-export type LadderTier = (typeof LADDER_TIER)[keyof typeof LADDER_TIER];
-
-export interface LadderPreRegistrationOption {
-  key: LadderPreRegistrationKey;
-  name: string;
-  tier: LadderTier;
-  ladderType: LadderType;
-  genderType: GenderType | null;
-  entryFee: number;
-  currencyType: string;
-  maxPlayers: number;
+/** ladderPreRegistrations/{preRegistrationId} */
+export interface LadderPreRegistration extends LadderPreRegistrationDetails {
+  preRegistrationId: string;
+  status: LadderPreRegistrationStatus;
+  expectedOpensAt: Date | null;
+  ladderId: string | null;
+  notifiedAt: Date | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedBy: string;
+  updatedAt: Date;
 }
 
-export interface LadderPreRegistration {
+/** ladderPreRegistrations/{preRegistrationId}/registrants/{userId} */
+export interface LadderPreRegistrant {
   userId: string;
-  ladderKey: LadderPreRegistrationKey;
+  email: string;
   createdAt: Date;
   notifiedAt: Date | null;
-  ladderId: string | null;
 }

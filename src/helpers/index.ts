@@ -269,12 +269,7 @@ export {
   getLadderPayoutForPlace,
 } from "./ladderPayoutStructure";
 export type { LadderPayoutBand, LadderPayout } from "./ladderPayoutStructure";
-export {
-  LADDER_PRE_REGISTRATION_OPTIONS,
-  getLadderPreRegistrationOption,
-  getLadderPreRegistrationId,
-  getLadderPreRegistrationKeyForLadder,
-} from "./ladderPreRegistration";
+export { isLadderPreRegistrationDue } from "./ladderPreRegistration";
 export { getPrizeType, normalizePrizeType } from "./prizeType";
 export type { PrizeType } from "./prizeType";
 export {
