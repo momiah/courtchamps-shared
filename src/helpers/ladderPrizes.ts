@@ -1,5 +1,9 @@
 import type { Ladder } from "../types/ladder";
 import type { LadderPlayoffTie } from "../types/ladderPlayoff";
+import {
+  LADDER_PLAYOFF_TIE_STATUS,
+  LADDER_PLAYOFF_WALKOVER_REASON,
+} from "../types/ladderPlayoff";
 import { calculateLadderPrizePool } from "./calculateLadderPrizePool";
 import { getEffectiveLadderSize } from "./ladderPlayoffStructure";
 import { getLadderPayoutForPlace } from "./ladderPayoutStructure";
@@ -86,3 +90,82 @@ export const getLadderTieFinishPlaces = (
   if (tie.round >= totalRounds) return { winner: 1, loser: 2 };
   return { winner: null, loser: 2 ** (totalRounds - tie.round + 1) };
 };
+
+export const getLadderPlayoffTotalRounds = (
+  ties: Pick<LadderPlayoffTie, "round" | "isThirdPlacePlayoff">[],
+): number =>
+  Math.max(...ties.filter((tie) => !tie.isThirdPlacePlayoff).map((tie) => tie.round));
+
+export const PLACEMENT_STAT_KEYS = ["first", "second", "third", "fourth"] as const;
+
+export type PlacementStatKey = (typeof PLACEMENT_STAT_KEYS)[number];
+
+export const getPlacementStatKey = (place: number): PlacementStatKey | null =>
+  PLACEMENT_STAT_KEYS[place - 1] ?? null;
+
+export interface LadderPlayoffPlacing {
+  tieId: string;
+  playerIds: string[];
+  place: number;
+  decidesMedal: boolean;
+  disqualified: boolean;
+}
+
+/**
+ * The sides a finished tie places: both sides of the Final and the 3rd-place
+ * tie, and the loser of any other tie unless they go on to play for 3rd. A
+ * side that lost on a disqualification walkover is flagged and wins nothing.
+ */
+export const getLadderTiePlacings = (
+  tie: LadderPlayoffTie,
+  ties: LadderPlayoffTie[],
+): LadderPlayoffPlacing[] => {
+  if (tie.status !== LADDER_PLAYOFF_TIE_STATUS.COMPLETED || !tie.winner) return [];
+  const totalRounds = getLadderPlayoffTotalRounds(ties);
+  const places = getLadderTieFinishPlaces(tie, totalRounds);
+  const winnerKey = tie.winner === "team1" ? "side1" : "side2";
+  const loserKey = winnerKey === "side1" ? "side2" : "side1";
+  const decidesMedal = places.winner !== null;
+  const placings: LadderPlayoffPlacing[] = [];
+  const winnerSide = tie[winnerKey];
+  if (places.winner !== null && winnerSide) {
+    placings.push({
+      tieId: tie.tieId,
+      playerIds: winnerSide.playerIds,
+      place: places.winner,
+      decidesMedal,
+      disqualified: false,
+    });
+  }
+  const loserPlaysForThird =
+    !decidesMedal &&
+    tie.round === totalRounds - 1 &&
+    ties.some((other) => other.isThirdPlacePlayoff);
+  const loserSide = tie[loserKey];
+  if (loserSide && !loserPlaysForThird) {
+    placings.push({
+      tieId: tie.tieId,
+      playerIds: loserSide.playerIds,
+      place: places.loser,
+      decidesMedal,
+      disqualified:
+        tie.walkoverReason === LADDER_PLAYOFF_WALKOVER_REASON.DISQUALIFIED_OPPONENT,
+    });
+  }
+  return placings;
+};
+
+export interface LadderPlayoffPayout extends LadderPlayoffPlacing {
+  prize: LadderPlacePrize;
+}
+
+/** Every side the finished playoffs pay, each player of a side paid the side's prize. */
+export const getLadderPlayoffPayouts = (
+  ladder: PrizeLadder,
+  ties: LadderPlayoffTie[],
+): LadderPlayoffPayout[] =>
+  ties
+    .flatMap((tie) => getLadderTiePlacings(tie, ties))
+    .filter((placing) => !placing.disqualified)
+    .map((placing) => ({ ...placing, prize: getLadderPlacePrize(ladder, placing.place) }))
+    .filter((payout) => payout.prize.cp > 0 || payout.prize.cash > 0);

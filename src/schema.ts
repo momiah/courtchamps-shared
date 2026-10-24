@@ -178,6 +178,13 @@ export const profileDetailSchema: ProfileDetail = {
     third: 0,
     fourth: 0,
   },
+  ladderStats: {
+    first: 0,
+    second: 0,
+    third: 0,
+    fourth: 0,
+  },
+  cashWon: 0,
 };
 
 export const userProfileSchema: UserProfile = {

@@ -46,9 +46,21 @@ export {
   getLadderPlacePrize,
   getLadderPrizeSetup,
   getLadderTieFinishPlaces,
+  getLadderTiePlacings,
+  getLadderPlayoffPayouts,
+  getLadderPlayoffTotalRounds,
+  getPlacementStatKey,
   ordinalPlace,
+  PLACEMENT_STAT_KEYS,
 } from "./ladderPrizes";
-export type { LadderPlacePrize, PrizeLadder } from "./ladderPrizes";
+export type {
+  LadderPlacePrize,
+  LadderPlayoffPayout,
+  LadderPlayoffPlacing,
+  PlacementStatKey,
+  PrizeLadder,
+} from "./ladderPrizes";
+export { PRO_LEVEL_THRESHOLDS, PRO_LEVEL_MAX, getProLevel } from "./proLevel";
 export { assignCourtForGameIndex } from "./advanceBrackets";
 export { isKnockoutComplete } from "./knockoutTopFour";
 export { getKnockoutTopFour } from "./knockoutTopFour";

@@ -66,6 +66,9 @@ export interface ProfileDetail extends Omit<ScoreboardProfile, "competitionXP"> 
   memberSince: string;
   leagueStats: LeagueTournamentStats;
   tournamentStats: LeagueTournamentStats;
+  ladderStats: LeagueTournamentStats;
+  /** Lifetime cash won across every competition type; drives PROLevel. */
+  cashWon: number;
 }
 
 export interface Location {

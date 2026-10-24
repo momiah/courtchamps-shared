@@ -23,6 +23,7 @@ import { isLadderGameApproved, teamUserIds } from "./ladderMatchResult";
 import { toMs } from "./ladderAutoCancel";
 import { ladderPlayoffTieId } from "./ladderPlayoffs";
 import { scheduleLadderPlayoffTie } from "./ladderPlayoffSchedule";
+import { getLadderPlayoffTotalRounds } from "./ladderPrizes";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -310,9 +311,7 @@ export const advanceLadderPlayoffBracket = ({
 }): LadderPlayoffTie[] => {
   const byId = new Map(ties.map((tie) => [tie.tieId, { ...tie }]));
   const changed = new Set<string>();
-  const totalRounds = Math.max(
-    ...ties.filter((tie) => !tie.isThirdPlacePlayoff).map((tie) => tie.round),
-  );
+  const totalRounds = getLadderPlayoffTotalRounds(ties);
 
   const update = (id: string, fields: Partial<LadderPlayoffTie>) => {
     const tie = byId.get(id);
