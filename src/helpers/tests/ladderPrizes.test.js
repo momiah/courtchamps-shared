@@ -3,12 +3,15 @@ import {
   formatLadderPrizeWon,
   getLadderPlacePrize,
   getLadderTieFinishPlaces,
-  getLadderPlayoffPayouts,
   getLadderPlayoffTotalRounds,
   getLadderTiePlacings,
   getPlacementStatKey,
   ordinalPlace,
+  planLadderPlayoffPrizes,
+  formatLadderSidePrize,
 } from "../ladderPrizes";
+import { buildLadderPlayoffTies } from "../ladderPlayoffs";
+import { advanceLadderPlayoffBracket } from "../ladderPlayoffMatches";
 
 const paid256 = { entryFee: 20, participantCount: 256, maxPlayers: 256 };
 const free256 = { entryFee: 0, participantCount: 256, maxPlayers: 256 };
@@ -72,66 +75,184 @@ const fullBracket = () => [
 ];
 
 const free128 = { entryFee: 0, participantCount: 128, maxPlayers: 128 };
-const paidOf = (payouts) =>
-  Object.fromEntries(payouts.flatMap((payout) => payout.playerIds.map((id) => [id, payout.place])));
+const paid128 = { entryFee: 20, participantCount: 128, maxPlayers: 128 };
+const plan = (ladder, ties, disqualified) => planLadderPlayoffPrizes(ladder, ties, disqualified);
+const byPlayer = (payouts) =>
+  Object.fromEntries(payouts.flatMap((payout) => payout.playerIds.map((id) => [id, payout])));
+const cpOf = (payouts) =>
+  Object.fromEntries(Object.entries(byPlayer(payouts)).map(([id, payout]) => [id, payout.prize.cp]));
+const sum = (payouts, key) => payouts.reduce((total, payout) => total + payout.prize[key], 0);
 
-describe("ladder playoff payouts", () => {
+describe("ladder playoff prizes", () => {
   it("counts rounds without the 3rd-place tie", () => {
     expect(getLadderPlayoffTotalRounds(fullBracket())).toBe(3);
   });
 
-  it("pays the Final, the 3rd-place tie and the Quarter-Final losers, not the Semi-Final losers twice", () => {
-    const payouts = getLadderPlayoffPayouts(free128, fullBracket());
-    expect(paidOf(payouts)).toEqual({
-      qf1w: 1, qf3w: 2, qf4w: 3, qf2w: 4,
-      qf1l: 8, qf2l: 8, qf3l: 8, qf4l: 8,
+  it("pays every place once, with nothing left unclaimed when every tie was played", () => {
+    const { payouts, unclaimed, kept } = plan(free128, fullBracket());
+    expect(cpOf(payouts)).toEqual({
+      qf1w: 2240, qf3w: 1280, qf4w: 768, qf2w: 512,
+      qf1l: 400, qf2l: 400, qf3l: 400, qf4l: 400,
     });
+    expect(unclaimed).toEqual({ cash: 0, cp: 0 });
+    expect(kept).toEqual({ cash: 0, cp: 0 });
     payouts.forEach((payout) => {
-      expect(payout.prize).toEqual(getLadderPlacePrize(free128, payout.place));
+      expect(payout.placePrize).toEqual(getLadderPlacePrize(free128, payout.place));
+      expect(payout.potShare).toEqual({ cash: 0, cp: 0 });
     });
-    expect(payouts.find((payout) => payout.place === 1).prize).toEqual({ cash: 0, cp: 2240 });
+    expect(sum(payouts, "cp")).toBe(6400);
   });
 
-  it("pays both players of a doubles side the side's prize", () => {
+  it("splits a doubles side's prize equally between both players, 50p included", () => {
     const ties = fullBracket();
     ties[6] = { ...ties[6], side1: side("user", "partner"), side2: side("opponent", "opponentPartner") };
-    const payouts = getLadderPlayoffPayouts(free128, ties);
-    expect(payouts.find((payout) => payout.place === 1).playerIds).toEqual(["user", "partner"]);
-    expect(payouts.find((payout) => payout.place === 2).playerIds).toEqual(["opponent", "opponentPartner"]);
+    const champion = byPlayer(plan(paid128, ties).payouts).user;
+    expect(champion.prize).toEqual({ cash: 897, cp: 2240 });
+    expect(champion.perPlayer.prize).toEqual({ cash: 448.5, cp: 1120 });
+    expect(byPlayer(plan(paid128, ties).payouts).opponent.perPlayer.prize).toEqual({ cash: 256, cp: 640 });
   });
 
-  it("pays nobody for a void Final and only the side through for a one-sided walkover", () => {
+  it("places both sides of a void Final joint 2nd and shares the 1st prize equally with everyone else in the money", () => {
+    const ties = fullBracket();
+    ties[6] = { ...ties[6], winner: null, outcome: "void" };
+    const { payouts, unclaimed } = plan(paid128, ties);
+    const paid = byPlayer(payouts);
+    expect(unclaimed).toEqual({ cash: 385, cp: 960 });
+    expect(paid.qf1w).toMatchObject({ place: 2, voided: true, potShare: { cash: 0, cp: 0 }, prize: { cash: 512, cp: 1280 } });
+    expect(paid.qf3w).toMatchObject({ place: 2, voided: true, prize: { cash: 512, cp: 1280 } });
+    expect(paid.qf4w.prize).toEqual({ cash: 307 + 65, cp: 768 + 160 });
+    expect(paid.qf2w.prize).toEqual({ cash: 204 + 64, cp: 512 + 160 });
+    expect(paid.qf1l.prize).toEqual({ cash: 160 + 64, cp: 400 + 160 });
+    expect(sum(payouts, "cash")).toBe(2560);
+    expect(sum(payouts, "cp")).toBe(6400);
+  });
+
+  it("places both sides of a void Semi-Final joint 4th and shares the empty 2nd", () => {
+    const ties = fullBracket();
+    ties[4] = { ...ties[4], winner: null, outcome: "void" };
+    ties[6] = { ...ties[6], side1: null, side2: side("qf3w"), winner: "team2", outcome: "walkover" };
+    ties[7] = { ...ties[7], side1: null, side2: side("qf4w"), winner: "team2", outcome: "walkover" };
+    const { payouts, unclaimed } = plan(free128, ties);
+    const paid = byPlayer(payouts);
+    expect([paid.qf1w.place, paid.qf2w.place, paid.qf1w.voided]).toEqual([4, 4, true]);
+    expect(unclaimed.cp).toBe(768);
+    expect(cpOf(payouts)).toEqual({
+      qf3w: 2240 + 128, qf4w: 768 + 128, qf1w: 512, qf2w: 512,
+      qf1l: 528, qf2l: 528, qf3l: 528, qf4l: 528,
+    });
+    expect(sum(payouts, "cp")).toBe(6400);
+  });
+
+  it("gives the rounding left over to the highest finisher", () => {
+    const ties = fullBracket();
+    ties[6] = { ...ties[6], side2: null, outcome: "walkover" };
+    const { payouts } = plan(free128, ties);
+    const paid = byPlayer(payouts);
+    expect(paid.qf1w.potShare.cp).toBe(182 + 6);
+    expect(paid.qf4w.potShare.cp).toBe(182);
+    expect(sum(payouts, "cp")).toBe(6400);
+  });
+
+  it("keeps a disqualified side's place and prize for review and leaves it out of the share", () => {
+    const ties = fullBracket();
+    ties[6] = { ...ties[6], outcome: "walkover", walkoverReason: "disqualifiedOpponent" };
+    const finalist = byPlayer(plan(free128, ties).payouts).qf3w;
+    expect(finalist).toMatchObject({ place: 2, disqualified: true, prize: { cash: 0, cp: 1280 } });
+
     const voidFinal = fullBracket();
     voidFinal[6] = { ...voidFinal[6], winner: null, outcome: "void" };
-    expect(getLadderPlayoffPayouts(free128, voidFinal).map((payout) => payout.place)).not.toContain(1);
-    expect(getLadderPlayoffPayouts(free128, voidFinal).map((payout) => payout.place)).not.toContain(2);
-
-    const bye = fullBracket();
-    bye[6] = { ...bye[6], side2: null, outcome: "walkover" };
-    const places = getLadderPlayoffPayouts(free128, bye).map((payout) => payout.place);
-    expect(places).toContain(1);
-    expect(places).not.toContain(2);
+    const paid = byPlayer(plan(free128, voidFinal, ["qf4w"]).payouts);
+    expect(paid.qf4w).toMatchObject({ disqualified: true, potShare: { cash: 0, cp: 0 } });
+    expect(paid.qf2w.potShare.cp).toBe(192);
   });
 
-  it("pays a disqualified finalist nothing and pays the inactive one", () => {
-    const disqualified = fullBracket();
-    disqualified[6] = { ...disqualified[6], outcome: "walkover", walkoverReason: "disqualifiedOpponent" };
-    const placings = getLadderTiePlacings(disqualified[6], disqualified);
-    expect(placings.find((placing) => placing.place === 2).disqualified).toBe(true);
-    expect(paidOf(getLadderPlayoffPayouts(free128, disqualified)).qf3w).toBeUndefined();
+  it("pays an inactive loser their place as normal", () => {
+    const ties = fullBracket();
+    ties[6] = { ...ties[6], outcome: "walkover", walkoverReason: "inactiveOpponent" };
+    expect(byPlayer(plan(free128, ties).payouts).qf3w).toMatchObject({ place: 2, disqualified: false });
+  });
 
-    const inactive = fullBracket();
-    inactive[6] = { ...inactive[6], outcome: "walkover", walkoverReason: "inactiveOpponent" };
-    expect(paidOf(getLadderPlayoffPayouts(free128, inactive)).qf3w).toBe(2);
+  it("keeps the unclaimed money when nobody else is in the money", () => {
+    const final = tie(1, 0, { side1: side("user"), side2: side("opponent"), winner: null, outcome: "void" });
+    const { payouts, unclaimed, kept } = plan(free128, [final]);
+    expect(payouts.map((payout) => payout.place)).toEqual([2, 2]);
+    expect(unclaimed.cp).toBe(6400 - 2560);
+    expect(kept).toEqual(unclaimed);
   });
 
   it("places nothing for a tie still being played", () => {
     const ties = fullBracket();
-    ties[6] = { ...ties[6], status: "scheduled", winner: null };
+    ties[6] = { ...ties[6], status: "scheduled", winner: null, outcome: null };
     expect(getLadderTiePlacings(ties[6], ties)).toEqual([]);
+  });
+
+  it("describes a pair's prize as the team's with each player's half", () => {
+    expect(formatLadderSidePrize({ cash: 897, cp: 2240 }, 2, "GBP")).toBe("£897 and 2,240 CP for your team (£448.50 and 1,120 CP each)");
+    expect(formatLadderSidePrize({ cash: 0, cp: 2240 }, 1, "GBP")).toBe("2,240 CP");
+    expect(formatLadderSidePrize({ cash: 0, cp: 0 }, 2, "GBP")).toBeNull();
   });
 
   it("maps the top four places to their stat keys", () => {
     expect([1, 2, 3, 4, 5, 8].map(getPlacementStatKey)).toEqual(["first", "second", "third", "fourth", null, null]);
   });
+});
+
+describe("ladder playoff prizes never pay more than the pot", () => {
+  const entrant = (key) => ({
+    entrantKey: key,
+    teamId: null,
+    players: [{ userId: key, firstName: key, lastName: "", username: key }],
+    competitionXP: 0,
+    numberOfWins: 0,
+    totalPointDifference: 0,
+    globalXp: 0,
+    joinedAt: null,
+    homeCourt: null,
+  });
+
+  const seeded = (seed) => () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+
+  const playOut = (spots, random) => {
+    const now = new Date("2026-10-01T09:00:00Z");
+    let ties = buildLadderPlayoffTies({
+      ladderId: "ladder",
+      qualifiers: Array.from({ length: spots }, (_, i) => entrant(`p${i}`)),
+      createdAt: now,
+    });
+    for (;;) {
+      const open = ties.find((candidate) => candidate.status === "scheduled");
+      if (!open) return ties;
+      const roll = random();
+      const voided = roll < 0.25;
+      const changed = advanceLadderPlayoffBracket({
+        ties,
+        tieId: open.tieId,
+        winner: voided ? null : roll < 0.6 ? "team1" : "team2",
+        outcome: voided ? "void" : "played",
+        now,
+      });
+      const byId = new Map(ties.map((candidate) => [candidate.tieId, candidate]));
+      changed.forEach((candidate) => byId.set(candidate.tieId, candidate));
+      ties = [...byId.values()];
+    }
+  };
+
+  it.each([[128, 8], [256, 16], [512, 32], [1024, 64], [2048, 128]])(
+    "a %i ladder with random void ties pays exactly its pot",
+    (players, spots) => {
+      const ladder = { entryFee: 20, participantCount: players, maxPlayers: players };
+      const random = seeded(players);
+      for (let run = 0; run < 40; run += 1) {
+        const ties = playOut(spots, random);
+        const { payouts, kept } = plan(ladder, ties);
+        const claimed = payouts.reduce((total, payout) => total + payout.placePrize.cash, 0);
+        expect(claimed).toBeLessThanOrEqual(players * 20);
+        expect(sum(payouts, "cash") + kept.cash).toBe(players * 20);
+        expect(sum(payouts, "cp") + kept.cp).toBe(players * 50);
+      }
+    },
+  );
 });

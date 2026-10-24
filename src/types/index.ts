@@ -12,3 +12,4 @@ export * from "./dispute";
 export * from "./court";
 export * from "./ladderPlayoff";
 export * from "./ladderPreRegistration";
+export * from "./ladderPrizePayout";
