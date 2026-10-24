@@ -1,5 +1,5 @@
 /** Lifetime cash won (GBP) a player must exceed to reach each PROLevel. */
-export const PRO_LEVEL_THRESHOLDS = [5000, 10000, 30000, 50000, 100000] as const;
+export const PRO_LEVEL_THRESHOLDS = [1000, 5000, 10000, 30000, 50000] as const;
 
 export const PRO_LEVEL_MAX = PRO_LEVEL_THRESHOLDS.length;
 
