@@ -48,6 +48,8 @@ export {
   getLadderTieFinishPlaces,
   getLadderTiePlacings,
   planLadderPlayoffPrizes,
+  splitLadderPrize,
+  formatLadderSidePrize,
   getLadderPlayoffTotalRounds,
   getPlacementStatKey,
   ordinalPlace,

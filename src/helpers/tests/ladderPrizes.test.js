@@ -8,6 +8,7 @@ import {
   getPlacementStatKey,
   ordinalPlace,
   planLadderPlayoffPrizes,
+  formatLadderSidePrize,
 } from "../ladderPrizes";
 import { buildLadderPlayoffTies } from "../ladderPlayoffs";
 import { advanceLadderPlayoffBracket } from "../ladderPlayoffMatches";
@@ -183,6 +184,12 @@ describe("ladder playoff prizes", () => {
     const ties = fullBracket();
     ties[6] = { ...ties[6], status: "scheduled", winner: null, outcome: null };
     expect(getLadderTiePlacings(ties[6], ties)).toEqual([]);
+  });
+
+  it("describes a pair's prize as the team's with each player's half", () => {
+    expect(formatLadderSidePrize({ cash: 897, cp: 2240 }, 2, "GBP")).toBe("£897 and 2,240 CP for your team (£448.50 and 1,120 CP each)");
+    expect(formatLadderSidePrize({ cash: 0, cp: 2240 }, 1, "GBP")).toBe("2,240 CP");
+    expect(formatLadderSidePrize({ cash: 0, cp: 0 }, 2, "GBP")).toBeNull();
   });
 
   it("maps the top four places to their stat keys", () => {

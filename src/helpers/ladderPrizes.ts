@@ -181,10 +181,21 @@ const addPrizes = (a: LadderPlacePrize, b: LadderPlacePrize): LadderPlacePrize =
 
 const hasPrize = (prize: LadderPlacePrize): boolean => prize.cash > 0 || prize.cp > 0;
 
-const splitPrize = (prize: LadderPlacePrize, players: number): LadderPlacePrize => ({
-  cash: Math.round((prize.cash / players) * 100) / 100,
-  cp: Math.floor(prize.cp / players),
+export const splitLadderPrize = (prize: LadderPlacePrize, players: number): LadderPlacePrize => ({
+  cash: Math.round((prize.cash / Math.max(1, players)) * 100) / 100,
+  cp: Math.floor(prize.cp / Math.max(1, players)),
 });
+
+/** "£897 and 2,240 CP", or for a pair "£897 and 2,240 CP for your team (£448.50 and 1,120 CP each)". */
+export const formatLadderSidePrize = (
+  prize: LadderPlacePrize,
+  players: number,
+  currencyType: string,
+): string | null => {
+  const won = formatLadderPrizeWon(prize, currencyType);
+  if (!won || players < 2) return won;
+  return `${won} for your team (${formatLadderPrizeWon(splitLadderPrize(prize, players), currencyType)} each)`;
+};
 
 const potOf = (amount: number, size: number): number =>
   getLadderPayouts(amount, size).reduce((sum, payout) => sum + payout.total, 0);
@@ -262,8 +273,8 @@ export const planLadderPlayoffPrizes = (
       : NO_PRIZE;
     const prize = addPrizes(placing.placePrize, potShare);
     const players = Math.max(1, placing.playerIds.length);
-    const perPlace = splitPrize(placing.placePrize, players);
-    const perShare = splitPrize(potShare, players);
+    const perPlace = splitLadderPrize(placing.placePrize, players);
+    const perShare = splitLadderPrize(potShare, players);
     return {
       ...placing,
       potShare,
