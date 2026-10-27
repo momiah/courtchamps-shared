@@ -1,10 +1,17 @@
 export { calculatePlayerPerformance } from "./calculatePlayerPerformance";
 export { calculateTeamPerformance } from "./calculateTeamPerformance";
-export { computeGameXp } from "./computeGameXp";
-export type {
-  ComputeGameXpParams,
-  GameXpBreakdown,
+export {
+  computeGameXp,
+  GAME_XP_BASE,
+  WIN_STREAK_XP_MULTIPLIERS,
+  LOSS_STREAK_XP_MULTIPLIERS,
+  RANK_GAP_XP,
+  DECISIVE_WIN_MARGIN,
+  DECISIVE_WIN_XP_MULTIPLIER,
+  getWinStreakXpMultiplier,
+  getLossStreakXpMultiplier,
 } from "./computeGameXp";
+export type { ComputeGameXpParams, GameXpBreakdown } from "./computeGameXp";
 export { transformDate } from "./dateTransform";
 export { calculateTournamentPrizePool } from "./calculateTournamentPrizePool";
 export {

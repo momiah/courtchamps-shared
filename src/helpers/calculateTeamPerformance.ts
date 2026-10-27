@@ -1,8 +1,6 @@
 import { Game, TeamStats } from "../types";
-import {
-  normalizeTeamKey,
-  createTeam,
-} from "./generateInitialTeamStats";
+import { normalizeTeamKey, createTeam } from "./generateInitialTeamStats";
+import { DECISIVE_WIN_MARGIN } from "./computeGameXp";
 
 function updateRival(loserTeam: TeamStats, winnerTeam: TeamStats): void {
   const lossesToValues = Object.values(loserTeam.lossesTo) as number[];
@@ -68,7 +66,8 @@ function updateTeamStats(
 
   if (result === "W") {
     team.numberOfWins += 1;
-    if (pointDifference >= 10) team.demonWin = (team.demonWin || 0) + 1;
+    if (pointDifference >= DECISIVE_WIN_MARGIN)
+      team.demonWin = (team.demonWin || 0) + 1;
   } else {
     team.numberOfLosses += 1;
   }
