@@ -7,7 +7,11 @@ import {
   UsersToUpdate,
 } from "../types";
 import { COMPETITION_TYPES } from "../schema";
-import { computeGameXp, DECISIVE_WIN_MARGIN } from "./computeGameXp";
+import {
+  computeGameXp,
+  DECISIVE_WIN_MARGIN,
+  WIN_STREAK_MEDALS,
+} from "./computeGameXp";
 
 export const calculatePlayerPerformance = (
   game: Game,
@@ -92,9 +96,9 @@ export const calculatePlayerPerformance = (
     const lastResult =
       resultLog.length > 1 ? resultLog[resultLog.length - 2] : null;
 
-    let winStreak3 = player.winStreak3 || 0;
-    let winStreak5 = player.winStreak5 || 0;
-    let winStreak7 = player.winStreak7 || 0;
+    const medals = Object.fromEntries(
+      WIN_STREAK_MEDALS.map(({ field }) => [field, player[field] || 0]),
+    ) as Record<(typeof WIN_STREAK_MEDALS)[number]["field"], number>;
 
     let highestWinStreak = player.highestWinStreak || 0;
     let highestLossStreak = player.highestLossStreak || 0;
@@ -107,9 +111,9 @@ export const calculatePlayerPerformance = (
         player.currentStreak.count = 1;
       }
 
-      if (player.currentStreak.count === 3) winStreak3 += 1;
-      if (player.currentStreak.count === 5) winStreak5 += 1;
-      if (player.currentStreak.count === 7) winStreak7 += 1;
+      WIN_STREAK_MEDALS.forEach(({ streak, field }) => {
+        if (player.currentStreak.count === streak) medals[field] += 1;
+      });
 
       highestWinStreak = Math.max(highestWinStreak, player.currentStreak.count);
     } else {
@@ -128,16 +132,12 @@ export const calculatePlayerPerformance = (
 
     player.highestWinStreak = highestWinStreak;
     player.highestLossStreak = Math.abs(highestLossStreak);
-    player.winStreak3 = winStreak3;
-    player.winStreak5 = winStreak5;
-    player.winStreak7 = winStreak7;
+    Object.assign(player, medals);
 
     if (user) {
       user.highestWinStreak = highestWinStreak;
       user.highestLossStreak = Math.abs(highestLossStreak);
-      user.winStreak3 = winStreak3;
-      user.winStreak5 = winStreak5;
-      user.winStreak7 = winStreak7;
+      Object.assign(user, medals);
     }
 
     return { player, user };
