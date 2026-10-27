@@ -8,6 +8,7 @@ export {
   RANK_GAP_XP,
   DECISIVE_WIN_MARGIN,
   DECISIVE_WIN_XP_MULTIPLIER,
+  WIN_STREAK_MEDALS,
   getWinStreakXpMultiplier,
   getLossStreakXpMultiplier,
 } from "./computeGameXp";

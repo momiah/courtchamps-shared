@@ -54,6 +54,16 @@ export const LOSS_STREAK_XP_MULTIPLIERS = [
  */
 export const RANK_GAP_XP = { MIN_RATIO: 2, MAX_MULTIPLIER: 3 } as const;
 
+/**
+ * The win-streak medals: a medal is earned when a run of wins reaches `streak`,
+ * counted on the player, user or team in `field`.
+ */
+export const WIN_STREAK_MEDALS = [
+  { streak: 3, field: "winStreak3" },
+  { streak: 5, field: "winStreak5" },
+  { streak: 7, field: "winStreak7" },
+] as const;
+
 /** Winning a game by at least this many points (an Assassin) doubles its CP swing. */
 export const DECISIVE_WIN_MARGIN = 10;
 

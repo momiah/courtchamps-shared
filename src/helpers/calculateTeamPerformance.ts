@@ -1,6 +1,6 @@
 import { Game, TeamStats } from "../types";
 import { normalizeTeamKey, createTeam } from "./generateInitialTeamStats";
-import { DECISIVE_WIN_MARGIN } from "./computeGameXp";
+import { DECISIVE_WIN_MARGIN, WIN_STREAK_MEDALS } from "./computeGameXp";
 
 function updateRival(loserTeam: TeamStats, winnerTeam: TeamStats): void {
   const lossesToValues = Object.values(loserTeam.lossesTo) as number[];
@@ -52,9 +52,11 @@ function updateWinStreaks(team: TeamStats, previousWinStreak: number): void {
 
   const currentWinStreak = team.currentStreak > 0 ? team.currentStreak : 0;
 
-  if (previousWinStreak < 3 && currentWinStreak >= 3) team.winStreak3 += 1;
-  if (previousWinStreak < 5 && currentWinStreak >= 5) team.winStreak5 += 1;
-  if (previousWinStreak < 7 && currentWinStreak >= 7) team.winStreak7 += 1;
+  WIN_STREAK_MEDALS.forEach(({ streak, field }) => {
+    if (previousWinStreak < streak && currentWinStreak >= streak) {
+      team[field] += 1;
+    }
+  });
 }
 
 function updateTeamStats(

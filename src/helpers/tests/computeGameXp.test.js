@@ -6,6 +6,7 @@ import {
   DECISIVE_WIN_XP_MULTIPLIER,
   getWinStreakXpMultiplier,
   getLossStreakXpMultiplier,
+  WIN_STREAK_MEDALS,
 } from "../computeGameXp";
 
 const base = {
@@ -118,5 +119,15 @@ describe("game XP constants", () => {
       loserScore: 21 - DECISIVE_WIN_MARGIN,
     });
     expect(demonBonus).toBe(streakXp * (DECISIVE_WIN_XP_MULTIPLIER - 1));
+  });
+});
+
+describe("WIN_STREAK_MEDALS", () => {
+  it("lists each medal's streak with the stat field it counts in", () => {
+    expect(WIN_STREAK_MEDALS).toEqual([
+      { streak: 3, field: "winStreak3" },
+      { streak: 5, field: "winStreak5" },
+      { streak: 7, field: "winStreak7" },
+    ]);
   });
 });
