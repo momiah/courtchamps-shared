@@ -7,7 +7,7 @@ import {
   UsersToUpdate,
 } from "../types";
 import { COMPETITION_TYPES } from "../schema";
-import { computeGameXp } from "./computeGameXp";
+import { computeGameXp, DECISIVE_WIN_MARGIN } from "./computeGameXp";
 
 export const calculatePlayerPerformance = (
   game: Game,
@@ -195,7 +195,7 @@ export const calculatePlayerPerformance = (
     loserGameScore: number,
     user: ProfileDetail | undefined,
   ) => {
-    if (winnerGameScore - loserGameScore >= 10) {
+    if (winnerGameScore - loserGameScore >= DECISIVE_WIN_MARGIN) {
       player.demonWin = (player.demonWin || 0) + 1;
       if (user) user.demonWin = (user.demonWin || 0) + 1;
     }
