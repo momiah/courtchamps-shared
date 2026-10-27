@@ -99,6 +99,8 @@ export interface UserProfile {
   showEmail: boolean;
   showPhoneNumber: boolean;
   pushTokens: string[];
+  /** Set by an admin to lift a ladder block: strikes upheld before it stop counting. */
+  ladderBlockLiftedAt?: Date | null;
 }
 
 export type UsersToUpdate = UserProfile[];
