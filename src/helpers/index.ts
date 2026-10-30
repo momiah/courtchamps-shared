@@ -302,3 +302,12 @@ export {
   deriveLadderDates,
 } from "./ladderDates";
 export type { DerivedLadderDates } from "./ladderDates";
+export {
+  EMAIL_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  normaliseEmail,
+  normaliseUsername,
+  getEmailRuleError,
+  getUsernameRuleError,
+} from "./signupFields";
