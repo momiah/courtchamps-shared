@@ -318,6 +318,7 @@ export {
   isCashLadder,
   getLadderEntrantNoun,
   getLadderTitle,
+  getLadderLocation,
   getLadderPrizePoolAtSize,
   formatLadderPrizePool,
   getFullLadderPrizeTable,

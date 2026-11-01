@@ -31,6 +31,8 @@ export interface Ladder {
   description: string;
   image: string;
   region: string;
+  /** The city players see with the country code on ladder cards, e.g. "London". */
+  city?: string;
   countryCode: string;
   ladderType: LadderType;
   genderType: GenderType;
@@ -78,6 +80,7 @@ export type LadderInput = Pick<
   | "description"
   | "image"
   | "region"
+  | "city"
   | "countryCode"
   | "ladderType"
   | "genderType"

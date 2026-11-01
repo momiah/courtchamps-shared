@@ -19,6 +19,7 @@ export type LadderPreRegistrationDetails = Pick<
   | "description"
   | "image"
   | "region"
+  | "city"
   | "countryCode"
   | "ladderType"
   | "genderType"
