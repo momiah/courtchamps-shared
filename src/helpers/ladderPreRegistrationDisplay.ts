@@ -1,5 +1,6 @@
 import { prizeTypes } from "../schema";
-import { LADDER_TYPE } from "../types/ladder";
+import { GENDER_TYPE, LADDER_TYPE } from "../types/ladder";
+import type { Ladder } from "../types/ladder";
 import type { LadderPreRegistrationDetails } from "../types/ladderPreRegistration";
 import { calculateLadderPrizePool } from "./calculateLadderPrizePool";
 import { getLadderPayouts } from "./ladderPayoutStructure";
@@ -23,6 +24,23 @@ export const getLadderPreRegistrationShareUrl = (preRegistrationId: string) =>
 
 export const isCashLadder = (details: Pick<PrizeDetails, "entryFee">) =>
   getPrizeType(details.entryFee) === prizeTypes.CASH;
+
+const LADDER_GENDER_LABELS: Record<string, string> = {
+  [GENDER_TYPE.MENS]: "Men's",
+  [GENDER_TYPE.WOMENS]: "Women's",
+  [GENDER_TYPE.MIXED]: "Mixed",
+};
+
+/** "Men's Doubles", "Women's Singles", "Mixed Doubles". */
+export const getLadderTitle = (
+  details: Partial<Pick<Ladder, "genderType" | "ladderType">>,
+) =>
+  [
+    LADDER_GENDER_LABELS[details.genderType ?? ""] ?? details.genderType,
+    details.ladderType,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
 /** "team" in a doubles ladder, "player" in singles. */
 export const getLadderEntrantNoun = (ladderType?: string): "team" | "player" =>
