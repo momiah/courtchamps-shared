@@ -317,6 +317,7 @@ export {
   getLadderPreRegistrationShareUrl,
   isCashLadder,
   getLadderEntrantNoun,
+  getLadderTitle,
   getLadderPrizePoolAtSize,
   formatLadderPrizePool,
   getFullLadderPrizeTable,
