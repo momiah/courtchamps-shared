@@ -42,6 +42,15 @@ export const getLadderTitle = (
     .filter(Boolean)
     .join(" ");
 
+/** "London, GB": the city and country code, or the region when a ladder has no city yet. */
+export const getLadderLocation = (
+  details: Partial<Pick<Ladder, "city" | "countryCode" | "region">>,
+) => {
+  const city = details.city?.trim();
+  if (!city) return details.region?.trim() ?? "";
+  return details.countryCode ? `${city}, ${details.countryCode}` : city;
+};
+
 /** "team" in a doubles ladder, "player" in singles. */
 export const getLadderEntrantNoun = (ladderType?: string): "team" | "player" =>
   ladderType === LADDER_TYPE.DOUBLES ? "team" : "player";
