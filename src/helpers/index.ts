@@ -15,6 +15,7 @@ export {
 export type { ComputeGameXpParams, GameXpBreakdown } from "./computeGameXp";
 export { transformDate } from "./dateTransform";
 export { calculateTournamentPrizePool } from "./calculateTournamentPrizePool";
+export * from "./tournamentPrizes";
 export {
   calculateLadderPrizePool,
   getLadderEntryPrice,
