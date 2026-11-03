@@ -391,6 +391,10 @@ export const notificationTypes = {
       ROUTE: "Tournament",
       TYPE: "tournament",
     },
+    CLUB: {
+      ROUTE: "Club",
+      TYPE: "club",
+    },
     USER: {
       ROUTE: "UserProfile",
       TYPE: "user",
