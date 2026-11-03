@@ -324,3 +324,10 @@ export {
   getFullLadderPrizeTable,
 } from "./ladderPreRegistrationDisplay";
 export type { LadderPrizeTableRow } from "./ladderPreRegistrationDisplay";
+export {
+  buildClubCreatedEvent,
+  buildPlayerJoinedEvent,
+  buildCompetitionCreatedEvent,
+  buildCompetitionWonEvent,
+} from "./clubFeedEvents";
+export type { ClubFeedEvent } from "./clubFeedEvents";
