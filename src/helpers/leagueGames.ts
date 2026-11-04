@@ -24,6 +24,22 @@ export const getGamePlayerIds = (game: Game): string[] =>
     game.team2?.player2?.userId,
   ].filter((id): id is string => !!id);
 
+const teamIds = (team: Game["team1"] | undefined): string[] =>
+  [team?.player1?.userId, team?.player2?.userId].filter(
+    (id): id is string => !!id,
+  );
+
+// The players on the other team from userId; empty when userId is not playing.
+export const getGameOpponentIds = (game: Game, userId: string): string[] => {
+  if (teamIds(game.team1).includes(userId)) return teamIds(game.team2);
+  if (teamIds(game.team2).includes(userId)) return teamIds(game.team1);
+  return [];
+};
+
+// Only the reporter's opponents approve or decline a reported game.
+export const canRespondToGame = (game: Game, userId: string): boolean =>
+  !!game.reporter && getGameOpponentIds(game, game.reporter).includes(userId);
+
 export interface LeagueGameResultsInput {
   games: Game[];
   participants: ScoreboardProfile[];

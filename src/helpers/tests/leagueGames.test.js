@@ -1,5 +1,7 @@
 import {
   applyLeagueGameResults,
+  canRespondToGame,
+  getGameOpponentIds,
   getGamePlayerIds,
   isLeagueGameApproved,
   isLeagueGamePending,
@@ -41,6 +43,24 @@ describe("league game status", () => {
   it("lists every player id in a game", () => {
     expect(getGamePlayerIds(game("g", ["a", "b"], ["c", "d"], [21, 10]))).toEqual(["a", "b", "c", "d"]);
     expect(getGamePlayerIds(game("g", ["a"], ["c"], [21, 10]))).toEqual(["a", "c"]);
+  });
+});
+
+describe("opponents", () => {
+  const doubles = { ...game("g", ["a", "b"], ["c", "d"], [21, 10]), reporter: "a" };
+
+  it("lists the other team", () => {
+    expect(getGameOpponentIds(doubles, "b")).toEqual(["c", "d"]);
+    expect(getGameOpponentIds(doubles, "d")).toEqual(["a", "b"]);
+    expect(getGameOpponentIds(doubles, "z")).toEqual([]);
+  });
+
+  it("only the reporter's opponents may respond", () => {
+    expect(canRespondToGame(doubles, "c")).toBe(true);
+    expect(canRespondToGame(doubles, "d")).toBe(true);
+    expect(canRespondToGame(doubles, "a")).toBe(false);
+    expect(canRespondToGame(doubles, "b")).toBe(false);
+    expect(canRespondToGame({ ...doubles, reporter: "" }, "c")).toBe(false);
   });
 });
 
