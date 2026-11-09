@@ -222,6 +222,7 @@ export {
   getLadderArrival,
   getLadderNoShowUnlockMs,
   getLadderOpponentIds,
+  getLocationReadingProblem,
   hasArrivedForLadderMatch,
 } from "./ladderArrivals";
 export type {
@@ -230,7 +231,26 @@ export type {
   LadderArrivalRejection,
   LadderArrivalResult,
   LatLng,
+  LocationReadingProblem,
 } from "./ladderArrivals";
+export {
+  LADDER_ELIGIBILITY_COLLECTION,
+  LADDER_ELIGIBILITY_MAX_ACCURACY_METERS,
+  LADDER_ELIGIBILITY_MAX_AGE_MS,
+  LADDER_ELIGIBILITY_RADIUS_MILES,
+  canPreRegisterForLadder,
+  checkLadderEligibilityReading,
+  getLadderEligibilityId,
+  getLadderEligibilityMessage,
+  getLadderEligibilityRadiusMiles,
+  getLadderEligibilityRule,
+  requiresLadderLocationCheck,
+} from "./ladderEligibility";
+export type {
+  LadderEligibility,
+  LadderEligibilityRejection,
+  LadderEligibilityResult,
+} from "./ladderEligibility";
 export {
   LADDER_NO_SHOW_CLAIM_FLAG_COUNT,
   LADDER_SYSTEM_ACTOR,

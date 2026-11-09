@@ -53,11 +53,37 @@ export interface LadderArrivalReading extends LatLng {
   mocked?: boolean;
 }
 
+export type LocationReadingProblem = "mocked" | "stale" | "inaccurate";
+
+/** Why a device reading can't be trusted, or null when it can. */
+export const getLocationReadingProblem = (
+  reading: LadderArrivalReading,
+  {
+    nowMs,
+    maxAgeMs,
+    maxAccuracyMeters,
+  }: { nowMs: number; maxAgeMs: number; maxAccuracyMeters: number },
+): LocationReadingProblem | null => {
+  if (reading.mocked) return "mocked";
+  if (
+    !Number.isFinite(reading.timestamp) ||
+    Math.abs(nowMs - reading.timestamp) > maxAgeMs
+  ) {
+    return "stale";
+  }
+  if (
+    reading.accuracy === null ||
+    !Number.isFinite(reading.accuracy) ||
+    reading.accuracy > maxAccuracyMeters
+  ) {
+    return "inaccurate";
+  }
+  return null;
+};
+
 export type LadderArrivalRejection =
   | "no_court"
-  | "mocked"
-  | "stale"
-  | "inaccurate"
+  | LocationReadingProblem
   | "too_far";
 
 export type LadderArrivalCheck =
@@ -79,20 +105,12 @@ export const checkLadderArrivalReading = ({
 }): LadderArrivalCheck => {
   const courtCoords = getCourtCoords(court);
   if (!courtCoords) return { ok: false, reason: "no_court" };
-  if (reading.mocked) return { ok: false, reason: "mocked" };
-  if (
-    !Number.isFinite(reading.timestamp) ||
-    Math.abs(nowMs - reading.timestamp) > LADDER_ARRIVAL_MAX_AGE_MS
-  ) {
-    return { ok: false, reason: "stale" };
-  }
-  if (
-    reading.accuracy === null ||
-    !Number.isFinite(reading.accuracy) ||
-    reading.accuracy > LADDER_ARRIVAL_MAX_ACCURACY_METERS
-  ) {
-    return { ok: false, reason: "inaccurate" };
-  }
+  const problem = getLocationReadingProblem(reading, {
+    nowMs,
+    maxAgeMs: LADDER_ARRIVAL_MAX_AGE_MS,
+    maxAccuracyMeters: LADDER_ARRIVAL_MAX_ACCURACY_METERS,
+  });
+  if (problem) return { ok: false, reason: problem };
   const distanceMeters = Math.round(distanceInMeters(reading, courtCoords));
   if (distanceMeters > CHECKIN_RADIUS_METERS) {
     return { ok: false, reason: "too_far", distanceMeters };
