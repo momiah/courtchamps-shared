@@ -306,6 +306,18 @@ export {
 } from "./ladderDates";
 export type { DerivedLadderDates } from "./ladderDates";
 export {
+  LADDER_INACTIVITY_MIN_COMPLETED_MATCHES,
+  LADDER_INACTIVITY_WARNING_DAYS,
+  appliesLadderInactivityRemoval,
+  getInactiveLadderEntrants,
+  getLadderInactivityRemoval,
+  getLadderInactivityStep,
+  getLadderInactivityWarning,
+  isCompletedLadderMatchFor,
+  markLadderInactivityWarningSent,
+} from "./ladderInactivity";
+export type { LadderEntrant, LadderInactivityStep } from "./ladderInactivity";
+export {
   EMAIL_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_MAX_LENGTH,
