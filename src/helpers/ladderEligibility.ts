@@ -7,6 +7,7 @@ import {
   getCourtCoords,
   getLocationReadingProblem,
 } from "./ladderArrivals";
+import { isCashLadder } from "./ladderPreRegistrationDisplay";
 import type {
   LadderArrivalReading,
   LocationReadingProblem,
@@ -41,7 +42,7 @@ export const getLadderEligibilityId = (ladderId: string, userId: string) =>
 /** Free ladders are limited to players near their courts; paid ladders are not. */
 export const requiresLadderLocationCheck = (
   ladder: Pick<Ladder, "entryFee">,
-): boolean => !((ladder.entryFee ?? 0) > 0);
+): boolean => !isCashLadder({ entryFee: ladder.entryFee ?? 0 });
 
 export const getLadderEligibilityRadiusMiles = (
   ladder: Pick<Ladder, "eligibilityRadiusMiles">,
