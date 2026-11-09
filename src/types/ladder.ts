@@ -46,6 +46,11 @@ export interface Ladder {
   currencyType: string;
   minRank: number;
   maxPlayers: number;
+  /**
+   * Free ladders only: how far from the nearest of the ladder's courts a
+   * player may be to join. Unset means LADDER_ELIGIBILITY_RADIUS_MILES.
+   */
+  eligibilityRadiusMiles?: number;
   participantCount: number;
   prizesDistributed: boolean;
   /**
@@ -90,6 +95,7 @@ export type LadderInput = Pick<
   | "currencyType"
   | "minRank"
   | "maxPlayers"
+  | "eligibilityRadiusMiles"
 >;
 
 /**

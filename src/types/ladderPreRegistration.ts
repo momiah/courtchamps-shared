@@ -26,6 +26,7 @@ export type LadderPreRegistrationDetails = Pick<
   | "entryFee"
   | "currencyType"
   | "maxPlayers"
+  | "eligibilityRadiusMiles"
 >;
 
 /** ladderPreRegistrations/{preRegistrationId} */
