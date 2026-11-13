@@ -39,7 +39,12 @@ export interface Ladder {
   courtIds: string[];
   status: LadderStatus;
   registrationOpensAt: Date;
+  /** When matches open. Moves back once if too few have joined (see getLadderSeasonStartStep). */
   seasonStartsAt: Date;
+  /** Set by processLadderPhases when the season starts and matches open. */
+  seasonStartedAt?: Date;
+  /** Set by processLadderPhases when the season start moved back for too few entrants. */
+  seasonExtendedAt?: Date;
   registrationClosesAt: Date;
   playoffStartsAt: Date;
   entryFee: number;
