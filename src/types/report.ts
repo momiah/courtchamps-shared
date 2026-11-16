@@ -113,6 +113,11 @@ export interface Report {
   target: ReportTarget;
   /** Present only when reason is `no_show`. */
   walkover?: ReportWalkover;
+  /**
+   * Whether approving ran the walkover. False when the report was upheld after
+   * the ladder's standings were final: a strike only. Unset on older reports.
+   */
+  walkoverApplied?: boolean | null;
 
   /** Denormalised match info for the admin queue (avoids a per-report read). */
   matchDate?: string;
