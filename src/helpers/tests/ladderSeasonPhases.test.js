@@ -34,12 +34,12 @@ describe("getLadderSeasonPhases", () => {
   it("counts season days from the season start", () => {
     expect(byKey.seasonStarts).toMatchObject({
       label: "Season Starts",
-      length: "Day 1 - 30",
+      length: "Day 1 - 60",
       text: "Matches open. Post or accept matches to climb. New players can still join.",
     });
     expect(byKey.registrationClosed).toMatchObject({
       label: "Registration Closed",
-      length: "Day 31 - 90",
+      length: "Day 61 - 90",
       text: "No new players join. Keep climbing; new matches close 7 days before the playoffs.",
     });
   });
@@ -73,7 +73,7 @@ describe("getLadderSeasonStartRules", () => {
     expect(getLadderSeasonStartRules("team")).toEqual([
       "Matches open when the season starts, 14 days after registration opens, once 128 teams have joined.",
       "If fewer have joined by then, the season start moves back 14 days. If there are still too few, the ladder is cancelled and every entry fee is refunded in full.",
-      "Registration stays open for the first 30 days of the season.",
+      "Registration stays open for the first 60 days of the season.",
     ]);
   });
 });

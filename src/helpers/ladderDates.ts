@@ -5,7 +5,7 @@ export const LADDER_SEASON_START_DAYS = 14;
 /** Days the season start moves back, once, when too few have joined. */
 export const LADDER_SEASON_EXTENSION_DAYS = 14;
 /** Days from the season start to registration closing. */
-export const LADDER_REGISTRATION_CLOSE_DAYS = 30;
+export const LADDER_REGISTRATION_CLOSE_DAYS = 60;
 /** Days from the season start to the playoffs. */
 export const LADDER_PLAYOFF_START_DAYS = 90;
 
