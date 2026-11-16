@@ -4,24 +4,48 @@ import { LADDER_MATCH_STATUS } from "../types/ladderMatch";
 import type { LadderMatch } from "../types/ladderMatch";
 import { toMs } from "./ladderAutoCancel";
 import { isCashLadder } from "./ladderPreRegistrationDisplay";
+import { isLadderSeasonStarted } from "./ladderSeasonStart";
 
-/** Days before registration closes when inactive players on a free ladder are warned. */
-export const LADDER_INACTIVITY_WARNING_DAYS = [14, 7, 3, 1] as const;
-/** Completed matches a player (or team) needs by registration close to keep their place. */
+/**
+ * Days before registration closes when entrants without a completed match are
+ * removed from a free ladder, so the places they free can be filled while
+ * registration is still open.
+ */
+export const LADDER_INACTIVITY_REMOVAL_DAYS_BEFORE_CLOSE = 14;
+/** Days before the removal date when inactive entrants are warned. */
+export const LADDER_INACTIVITY_WARNING_DAYS = [7, 3, 1] as const;
+/** Entrants who joined less than this many days before the removal date keep their place. */
+export const LADDER_INACTIVITY_JOIN_GRACE_DAYS = 14;
+/** Completed matches a player (or team) needs by the removal date to keep their place. */
 export const LADDER_INACTIVITY_MIN_COMPLETED_MATCHES = 1;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+type DateLike = Date | { toDate: () => Date } | string | number | null;
 
 /** A singles player (entrantId = userId) or doubles team (entrantId = teamKey). */
 export interface LadderEntrant {
   entrantId: string;
   playerIds: string[];
+  /** When the player or team joined the ladder. */
+  joinedAt?: DateLike;
 }
 
 type InactivityLadder = Pick<Ladder, "entryFee" | "status"> & {
-  registrationClosesAt?: Ladder["registrationClosesAt"] | { toDate: () => Date } | null;
+  registrationClosesAt?: DateLike;
+  seasonStartedAt?: DateLike;
   inactivityWarningDaysSent?: number[];
-  inactivityRemovedAt?: Ladder["inactivityRemovedAt"] | { toDate: () => Date } | null;
+  inactivityRemovedAt?: DateLike;
+};
+
+/** When inactive entrants are removed: LADDER_INACTIVITY_REMOVAL_DAYS_BEFORE_CLOSE days before registration closes. */
+export const getLadderInactivityRemovalMs = (
+  ladder: Pick<InactivityLadder, "registrationClosesAt">,
+): number | null => {
+  const closesMs = toMs(ladder.registrationClosesAt ?? null);
+  return closesMs === null
+    ? null
+    : closesMs - LADDER_INACTIVITY_REMOVAL_DAYS_BEFORE_CLOSE * DAY_MS;
 };
 
 export type LadderInactivityStep =
@@ -37,7 +61,8 @@ export const appliesLadderInactivityRemoval = (
 /**
  * What the scheduled job should do for a ladder now: send the latest warning
  * not yet sent (earlier missed ones are skipped), remove inactive entrants once
- * registration has closed, or nothing.
+ * the removal date has passed, or nothing. Only once the season has started,
+ * since matches can't be played before then.
  */
 export const getLadderInactivityStep = (
   ladder: InactivityLadder,
@@ -46,12 +71,13 @@ export const getLadderInactivityStep = (
   if (!appliesLadderInactivityRemoval(ladder)) return null;
   if (ladder.status !== LADDER_STATUS.REGISTRATION_OPEN) return null;
   if (ladder.inactivityRemovedAt) return null;
-  const closesMs = toMs(ladder.registrationClosesAt ?? null);
-  if (closesMs === null) return null;
-  if (nowMs >= closesMs) return { kind: "remove" };
+  if (!isLadderSeasonStarted(ladder)) return null;
+  const removalMs = getLadderInactivityRemovalMs(ladder);
+  if (removalMs === null) return null;
+  if (nowMs >= removalMs) return { kind: "remove" };
   const sent = ladder.inactivityWarningDaysSent ?? [];
   const due = LADDER_INACTIVITY_WARNING_DAYS.filter(
-    (days) => nowMs >= closesMs - days * DAY_MS && !sent.includes(days),
+    (days) => nowMs >= removalMs - days * DAY_MS && !sent.includes(days),
   );
   return due.length ? { kind: "warn", daysLeft: Math.min(...due) } : null;
 };
@@ -86,14 +112,33 @@ export const isCompletedLadderMatchFor = (
   return (match.participants ?? []).includes(entrant.entrantId);
 };
 
+/** Whether an entrant joined too close to the removal date to be removed. */
+export const isWithinLadderInactivityJoinGrace = (
+  entrant: Pick<LadderEntrant, "joinedAt">,
+  removalMs: number,
+): boolean => {
+  const joinedMs = toMs(entrant.joinedAt ?? null);
+  return (
+    joinedMs !== null &&
+    joinedMs > removalMs - LADDER_INACTIVITY_JOIN_GRACE_DAYS * DAY_MS
+  );
+};
+
+/**
+ * Entrants to remove: fewer than LADDER_INACTIVITY_MIN_COMPLETED_MATCHES
+ * completed season matches, and joined at least LADDER_INACTIVITY_JOIN_GRACE_DAYS
+ * before the removal date.
+ */
 export const getInactiveLadderEntrants = <T extends LadderEntrant>(
   entrants: T[],
   matches: Parameters<typeof isCompletedLadderMatchFor>[1][],
+  removalMs: number,
 ): T[] =>
   entrants.filter(
     (entrant) =>
+      !isWithinLadderInactivityJoinGrace(entrant, removalMs) &&
       matches.filter((match) => isCompletedLadderMatchFor(entrant, match)).length <
-      LADDER_INACTIVITY_MIN_COMPLETED_MATCHES,
+        LADDER_INACTIVITY_MIN_COMPLETED_MATCHES,
   );
 
 const MATCHES_NEEDED =
@@ -106,12 +151,12 @@ export const getLadderInactivityWarning = (
   daysLeft: number,
 ): { title: string; message: string } => ({
   title: "Play a match to keep your place",
-  message: `Registration for ${ladder.name} closes in ${daysLeft} day${daysLeft === 1 ? "" : "s"}. Play ${MATCHES_NEEDED} before then, or you'll be removed from the ladder.`,
+  message: `Play ${MATCHES_NEEDED} in ${ladder.name} in the next ${daysLeft} day${daysLeft === 1 ? "" : "s"}, or you'll be removed from the ladder to make room for new players.`,
 });
 
 export const getLadderInactivityRemoval = (
   ladder: Pick<Ladder, "name">,
 ): { title: string; message: string } => ({
   title: `Removed from ${ladder.name}`,
-  message: `You didn't play ${MATCHES_NEEDED} in ${ladder.name} before registration closed, so you've been removed from the ladder.`,
+  message: `You didn't play ${MATCHES_NEEDED} in ${ladder.name} in time, so you've been removed from the ladder.`,
 });

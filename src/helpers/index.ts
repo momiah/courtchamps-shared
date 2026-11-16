@@ -346,7 +346,11 @@ export type {
 export {
   LADDER_INACTIVITY_MIN_COMPLETED_MATCHES,
   LADDER_INACTIVITY_WARNING_DAYS,
+  LADDER_INACTIVITY_JOIN_GRACE_DAYS,
+  LADDER_INACTIVITY_REMOVAL_DAYS_BEFORE_CLOSE,
   appliesLadderInactivityRemoval,
+  getLadderInactivityRemovalMs,
+  isWithinLadderInactivityJoinGrace,
   getInactiveLadderEntrants,
   getLadderInactivityRemoval,
   getLadderInactivityStep,
