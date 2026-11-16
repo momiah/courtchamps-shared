@@ -15,6 +15,7 @@ import {
   isWithinLadderInactivityJoinGrace,
   markLadderInactivityWarningSent,
 } from "../ladderInactivity";
+import { LADDER_REGISTRATION_CLOSE_DAYS } from "../ladderDates";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const closes = 1_800_000_000_000;
@@ -24,7 +25,7 @@ const ladder = (over = {}) => ({
   entryFee: 0,
   status: "registrationOpen",
   registrationClosesAt: new Date(closes),
-  seasonStartedAt: new Date(removal - 16 * DAY_MS),
+  seasonStartedAt: new Date(closes - LADDER_REGISTRATION_CLOSE_DAYS * DAY_MS),
   ...over,
 });
 const daysBeforeRemoval = (days) => removal - days * DAY_MS;
@@ -82,7 +83,7 @@ describe("getLadderInactivityStep", () => {
 
   it("reads Firestore timestamps", () => {
     const registrationClosesAt = { toDate: () => new Date(closes) };
-    const seasonStartedAt = { toDate: () => new Date(removal - 16 * DAY_MS) };
+    const seasonStartedAt = { toDate: () => new Date(closes - LADDER_REGISTRATION_CLOSE_DAYS * DAY_MS) };
     expect(getLadderInactivityStep(ladder({ registrationClosesAt, seasonStartedAt }), removal)).toEqual({
       kind: "remove",
     });
@@ -165,9 +166,10 @@ describe("rejoining and rules", () => {
   });
 
   it("states the rule with the real numbers", () => {
-    expect(LADDER_INACTIVITY_REMOVAL_SEASON_DAY).toBe(16);
+    const day = LADDER_REGISTRATION_CLOSE_DAYS - LADDER_INACTIVITY_REMOVAL_DAYS_BEFORE_CLOSE;
+    expect(LADDER_INACTIVITY_REMOVAL_SEASON_DAY).toBe(day);
     expect(getLadderInactivityRules("team")).toEqual([
-      "On free ladders, every team needs to play at least one match in the first 16 days of the season.",
+      `On free ladders, every team needs to play at least one match in the first ${day} days of the season.`,
       "Teams who haven't are removed then, 14 days before registration closes, so new players can take their place.",
       "You'll get a reminder 7, 3 and 1 days before.",
       "Teams who join less than 14 days before then keep their place.",
