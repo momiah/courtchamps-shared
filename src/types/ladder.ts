@@ -72,9 +72,9 @@ export interface Ladder {
   playoffBracketSize?: number;
   /** Entrants registered when the bracket was created. */
   playoffEntrantCount?: number;
-  /** Free ladders: the inactivity warnings already sent, as days before registration closes. */
+  /** Free ladders: the inactivity warnings already sent, as days before the removal date. */
   inactivityWarningDaysSent?: number[];
-  /** Free ladders: when entrants without a completed match were removed at registration close. */
+  /** Free ladders: when entrants without a completed match were removed, 14 days before registration closes. */
   inactivityRemovedAt?: Date;
   /** Set when the ladder is cancelled, e.g. too few registrations. */
   cancelledAt?: Date;
