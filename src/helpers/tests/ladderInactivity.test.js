@@ -1,4 +1,7 @@
 import {
+  LADDER_INACTIVITY_REMOVAL_SEASON_DAY,
+  getLadderInactivityRules,
+  isLadderInactivityRemovedUser,
   LADDER_INACTIVITY_JOIN_GRACE_DAYS,
   LADDER_INACTIVITY_REMOVAL_DAYS_BEFORE_CLOSE,
   LADDER_INACTIVITY_WARNING_DAYS,
@@ -146,7 +149,29 @@ describe("messages", () => {
     expect(getLadderInactivityWarning(ladder(), 1).message).toContain("in the next 1 day,");
     expect(getLadderInactivityRemoval(ladder())).toEqual({
       title: "Removed from North London Singles",
-      message: "You didn't play a match in North London Singles in time, so you've been removed from the ladder.",
+      message:
+        "You didn't play a match in North London Singles in time, so you've been removed from the ladder. You can join again next season.",
     });
+  });
+});
+
+describe("rejoining and rules", () => {
+  it("blocks only users removed from this ladder", () => {
+    const removedLadder = ladder({ inactivityRemovedUserIds: ["idle"] });
+    expect(isLadderInactivityRemovedUser(removedLadder, "idle")).toBe(true);
+    expect(isLadderInactivityRemovedUser(removedLadder, "user")).toBe(false);
+    expect(isLadderInactivityRemovedUser(ladder(), "idle")).toBe(false);
+    expect(isLadderInactivityRemovedUser(removedLadder, null)).toBe(false);
+  });
+
+  it("states the rule with the real numbers", () => {
+    expect(LADDER_INACTIVITY_REMOVAL_SEASON_DAY).toBe(16);
+    expect(getLadderInactivityRules("team")).toEqual([
+      "On free ladders, every team needs to play at least one match in the first 16 days of the season.",
+      "Teams who haven't are removed then, 14 days before registration closes, so new players can take their place.",
+      "You'll get a reminder 7, 3 and 1 days before.",
+      "Teams who join less than 14 days before then keep their place.",
+      "Teams removed for inactivity can't rejoin that ladder until next season.",
+    ]);
   });
 });
