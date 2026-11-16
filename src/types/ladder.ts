@@ -76,6 +76,8 @@ export interface Ladder {
   inactivityWarningDaysSent?: number[];
   /** Free ladders: when entrants without a completed match were removed, 14 days before registration closes. */
   inactivityRemovedAt?: Date;
+  /** Free ladders: users removed for inactivity, who can't rejoin this season. */
+  inactivityRemovedUserIds?: string[];
   /** Set when the ladder is cancelled, e.g. too few registrations. */
   cancelledAt?: Date;
   cancelledReason?: string;
