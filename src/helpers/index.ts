@@ -1,12 +1,23 @@
 export { calculatePlayerPerformance } from "./calculatePlayerPerformance";
 export { calculateTeamPerformance } from "./calculateTeamPerformance";
-export { computeGameXp } from "./computeGameXp";
-export type {
-  ComputeGameXpParams,
-  GameXpBreakdown,
+export {
+  computeGameXp,
+  GAME_XP_BASE,
+  WIN_STREAK_XP_MULTIPLIERS,
+  LOSS_STREAK_XP_MULTIPLIERS,
+  RANK_GAP_XP,
+  DECISIVE_WIN_MARGIN,
+  DECISIVE_WIN_XP_MULTIPLIER,
+  WIN_STREAK_MEDALS,
+  getWinStreakXpMultiplier,
+  getLossStreakXpMultiplier,
 } from "./computeGameXp";
+export type { ComputeGameXpParams, GameXpBreakdown } from "./computeGameXp";
 export { transformDate } from "./dateTransform";
 export { calculateTournamentPrizePool } from "./calculateTournamentPrizePool";
+export * from "./tournamentPrizes";
+export * from "./leagueGames";
+export * from "./leaguePrizes";
 export {
   calculateLadderPrizePool,
   getLadderEntryPrice,
@@ -211,6 +222,7 @@ export {
   getLadderArrival,
   getLadderNoShowUnlockMs,
   getLadderOpponentIds,
+  getLocationReadingProblem,
   hasArrivedForLadderMatch,
 } from "./ladderArrivals";
 export type {
@@ -219,7 +231,26 @@ export type {
   LadderArrivalRejection,
   LadderArrivalResult,
   LatLng,
+  LocationReadingProblem,
 } from "./ladderArrivals";
+export {
+  LADDER_ELIGIBILITY_COLLECTION,
+  LADDER_ELIGIBILITY_MAX_ACCURACY_METERS,
+  LADDER_ELIGIBILITY_MAX_AGE_MS,
+  LADDER_ELIGIBILITY_RADIUS_MILES,
+  canPreRegisterForLadder,
+  checkLadderEligibilityReading,
+  getLadderEligibilityId,
+  getLadderEligibilityMessage,
+  getLadderEligibilityRadiusMiles,
+  getLadderEligibilityRule,
+  requiresLadderLocationCheck,
+} from "./ladderEligibility";
+export type {
+  LadderEligibility,
+  LadderEligibilityRejection,
+  LadderEligibilityResult,
+} from "./ladderEligibility";
 export {
   LADDER_NO_SHOW_CLAIM_FLAG_COUNT,
   LADDER_SYSTEM_ACTOR,
@@ -289,11 +320,87 @@ export { getPrizeType, normalizePrizeType } from "./prizeType";
 export type { PrizeType } from "./prizeType";
 export {
   LADDER_SEASON_START_DAYS,
+  LADDER_SEASON_EXTENSION_DAYS,
   LADDER_REGISTRATION_CLOSE_DAYS,
   LADDER_PLAYOFF_START_DAYS,
   deriveLadderDates,
+  deriveLadderSeasonDates,
+  deriveExtendedLadderDates,
 } from "./ladderDates";
 export type { DerivedLadderDates } from "./ladderDates";
+export {
+  LADDER_MIN_ENTRANTS_TO_START,
+  LADDER_SEASON_NOT_STARTED_MESSAGE,
+  getLadderEntrantsNeededToStart,
+  getLadderSeasonCancelledNotification,
+  getLadderSeasonExtendedNotification,
+  getLadderSeasonStartStep,
+  getLadderSeasonStartedNotification,
+  isLadderSeasonStarted,
+} from "./ladderSeasonStart";
+export type {
+  LadderNotificationCopy,
+  LadderSeasonStartStep,
+  SeasonStartLadder,
+} from "./ladderSeasonStart";
+export {
+  LADDER_SEASON_PHASE,
+  getLadderSeasonPhases,
+  getLadderSeasonStartRules,
+} from "./ladderSeasonPhases";
+export type {
+  LadderSeasonPhaseCopy,
+  LadderSeasonPhaseKey,
+} from "./ladderSeasonPhases";
+export {
+  LADDER_INACTIVITY_MIN_COMPLETED_MATCHES,
+  LADDER_INACTIVITY_WARNING_DAYS,
+  LADDER_INACTIVITY_JOIN_GRACE_DAYS,
+  LADDER_INACTIVITY_REMOVAL_DAYS_BEFORE_CLOSE,
+  LADDER_INACTIVITY_REMOVAL_SEASON_DAY,
+  LADDER_INACTIVITY_REMOVED_LABEL,
+  getLadderInactivityRules,
+  isLadderInactivityRemovedUser,
+  appliesLadderInactivityRemoval,
+  getLadderInactivityRemovalMs,
+  isWithinLadderInactivityJoinGrace,
+  getInactiveLadderEntrants,
+  getLadderInactivityRemoval,
+  getLadderInactivityStep,
+  getLadderInactivityWarning,
+  isCompletedLadderMatchFor,
+  markLadderInactivityWarningSent,
+} from "./ladderInactivity";
+export type { LadderEntrant, LadderInactivityStep } from "./ladderInactivity";
+export {
+  EMAIL_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  normaliseEmail,
+  normaliseUsername,
+  getEmailRuleError,
+  getUsernameRuleError,
+} from "./signupFields";
+export {
+  COURT_CHAMPS_SITE_URL,
+  getLadderPreRegistrationJoinPath,
+  getLadderPreRegistrationShareUrl,
+  isCashLadder,
+  getLadderEntrantNoun,
+  getLadderTitle,
+  getLadderLocation,
+  getLadderPrizePoolAtSize,
+  formatLadderPrizePool,
+  getFullLadderPrizeTable,
+} from "./ladderPreRegistrationDisplay";
+export type { LadderPrizeTableRow } from "./ladderPreRegistrationDisplay";
+export {
+  buildClubCreatedEvent,
+  buildPlayerJoinedEvent,
+  buildCompetitionCreatedEvent,
+  buildCompetitionWonEvent,
+} from "./clubFeedEvents";
+export type { ClubFeedEvent } from "./clubFeedEvents";
 export {
   ACCOUNT_STRIKE_LIMIT,
   ACCOUNT_STRIKE_MONTHS,

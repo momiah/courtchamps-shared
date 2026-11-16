@@ -31,19 +31,31 @@ export interface Ladder {
   description: string;
   image: string;
   region: string;
+  /** The city players see with the country code on ladder cards, e.g. "London". */
+  city?: string;
   countryCode: string;
   ladderType: LadderType;
   genderType: GenderType;
   courtIds: string[];
   status: LadderStatus;
   registrationOpensAt: Date;
+  /** When matches open. Moves back once if too few have joined (see getLadderSeasonStartStep). */
   seasonStartsAt: Date;
+  /** Set by processLadderPhases when the season starts and matches open. */
+  seasonStartedAt?: Date;
+  /** Set by processLadderPhases when the season start moved back for too few entrants. */
+  seasonExtendedAt?: Date;
   registrationClosesAt: Date;
   playoffStartsAt: Date;
   entryFee: number;
   currencyType: string;
   minRank: number;
   maxPlayers: number;
+  /**
+   * Free ladders only: how far from the nearest of the ladder's courts a
+   * player may be to join. Unset means LADDER_ELIGIBILITY_RADIUS_MILES.
+   */
+  eligibilityRadiusMiles?: number;
   participantCount: number;
   prizesDistributed: boolean;
   /**
@@ -60,6 +72,12 @@ export interface Ladder {
   playoffBracketSize?: number;
   /** Entrants registered when the bracket was created. */
   playoffEntrantCount?: number;
+  /** Free ladders: the inactivity warnings already sent, as days before the removal date. */
+  inactivityWarningDaysSent?: number[];
+  /** Free ladders: when entrants without a completed match were removed, 14 days before registration closes. */
+  inactivityRemovedAt?: Date;
+  /** Free ladders: users removed for inactivity, who can't rejoin this season. */
+  inactivityRemovedUserIds?: string[];
   /** Set when the ladder is cancelled, e.g. too few registrations. */
   cancelledAt?: Date;
   cancelledReason?: string;
@@ -78,6 +96,7 @@ export type LadderInput = Pick<
   | "description"
   | "image"
   | "region"
+  | "city"
   | "countryCode"
   | "ladderType"
   | "genderType"
@@ -87,6 +106,7 @@ export type LadderInput = Pick<
   | "currencyType"
   | "minRank"
   | "maxPlayers"
+  | "eligibilityRadiusMiles"
 >;
 
 /**

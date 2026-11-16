@@ -19,12 +19,14 @@ export type LadderPreRegistrationDetails = Pick<
   | "description"
   | "image"
   | "region"
+  | "city"
   | "countryCode"
   | "ladderType"
   | "genderType"
   | "entryFee"
   | "currencyType"
   | "maxPlayers"
+  | "eligibilityRadiusMiles"
 >;
 
 /** ladderPreRegistrations/{preRegistrationId} */
@@ -40,10 +42,16 @@ export interface LadderPreRegistration extends LadderPreRegistrationDetails {
   updatedAt: Date;
 }
 
-/** ladderPreRegistrations/{preRegistrationId}/registrants/{userId} */
+/**
+ * ladderPreRegistrations/{preRegistrationId}/registrants/{userId}
+ *
+ * Public to signed-in players (the sign-up screen shows registrants' avatars),
+ * so it holds no email; the email comes from the user's account when needed.
+ */
 export interface LadderPreRegistrant {
   userId: string;
-  email: string;
+  username: string;
+  profileImage: string;
   createdAt: Date;
   notifiedAt: Date | null;
 }
