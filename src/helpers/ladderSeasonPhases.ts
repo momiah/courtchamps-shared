@@ -24,7 +24,7 @@ export type LadderSeasonPhaseKey =
 export interface LadderSeasonPhaseCopy {
   key: LadderSeasonPhaseKey;
   label: string;
-  /** "14 days", "Day 1 - 30" (days of the season), "7 rounds". */
+  /** "14 days", "Day 1 - 60" (days of the season), "7 rounds". */
   length?: string;
   text: string;
 }

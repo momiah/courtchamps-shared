@@ -20,10 +20,10 @@ describe("deriveLadderDates", () => {
     expect(daysBetween(registrationOpensAt, dates.seasonStartsAt)).toBe(14);
   });
 
-  it("closes registration 30 days after the season starts", () => {
-    expect(LADDER_REGISTRATION_CLOSE_DAYS).toBe(30);
+  it("closes registration 60 days after the season starts", () => {
+    expect(LADDER_REGISTRATION_CLOSE_DAYS).toBe(60);
     expect(daysBetween(dates.seasonStartsAt, dates.registrationClosesAt)).toBe(
-      30,
+      60,
     );
   });
 
