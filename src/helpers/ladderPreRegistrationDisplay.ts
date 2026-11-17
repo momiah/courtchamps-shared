@@ -51,6 +51,18 @@ export const getLadderLocation = (
   return details.countryCode ? `${city}, ${details.countryCode}` : city;
 };
 
+/**
+ * "London Men's Singles": the ladder's stored `name`, worked out from its city
+ * and title so it always matches the ticket. Falls back to the region, then the
+ * title alone, while a ladder has no city.
+ */
+export const getLadderName = (
+  details: Partial<Pick<Ladder, "city" | "region" | "genderType" | "ladderType">>,
+) =>
+  [details.city?.trim() || details.region?.trim(), getLadderTitle(details)]
+    .filter(Boolean)
+    .join(" ");
+
 /** "team" in a doubles ladder, "player" in singles. */
 export const getLadderEntrantNoun = (ladderType?: string): "team" | "player" =>
   ladderType === LADDER_TYPE.DOUBLES ? "team" : "player";

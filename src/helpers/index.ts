@@ -389,6 +389,7 @@ export {
   getLadderEntrantNoun,
   getLadderTitle,
   getLadderLocation,
+  getLadderName,
   getLadderPrizePoolAtSize,
   formatLadderPrizePool,
   getFullLadderPrizeTable,
