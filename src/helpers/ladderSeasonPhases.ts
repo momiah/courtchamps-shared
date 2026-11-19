@@ -47,7 +47,7 @@ export const getLadderSeasonPhases = ({
     key: LADDER_SEASON_PHASE.REGISTRATION_OPEN,
     label: LADDER_STATUS_LABELS[LADDER_STATUS.REGISTRATION_OPEN],
     length: `${LADDER_SEASON_START_DAYS} - ${days(LADDER_SEASON_START_DAYS + LADDER_SEASON_EXTENSION_DAYS)}`,
-    text: `Sign up and invite friends. Play starts once ${LADDER_MIN_ENTRANTS_TO_START} ${noun}s join. Not enough after ${days(LADDER_SEASON_START_DAYS + LADDER_SEASON_EXTENSION_DAYS)}? The ladder is cancelled${isPaid ? " and refunded" : ""}.`,
+    text: `Sign up and invite friends. Initial period of ${days(LADDER_SEASON_START_DAYS)} until ${LADDER_MIN_ENTRANTS_TO_START} ${noun}s join, extended to ${days(LADDER_SEASON_START_DAYS + LADDER_SEASON_EXTENSION_DAYS)} until ${LADDER_MIN_ENTRANTS_TO_START} ${noun}s join. If not, the ladder is cancelled${isPaid ? " and refunded" : ""}.`,
   },
   {
     key: LADDER_SEASON_PHASE.SEASON_STARTS,
