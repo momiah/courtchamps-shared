@@ -27,7 +27,7 @@ describe("getLadderSeasonPhases", () => {
       key: "registrationOpen",
       label: "Registration Open",
       length: "14 - 28 days",
-      text: "Sign up and invite friends. Play starts once 128 players join. Not enough after 28 days? The ladder is cancelled and refunded.",
+      text: "Sign up and invite friends. Initial period of 14 days until 128 players join, extended to 28 days until 128 players join. If not, the ladder is cancelled and refunded.",
     });
   });
 
@@ -61,7 +61,7 @@ describe("getLadderSeasonPhases", () => {
       isPaid: false,
     });
     expect(free[0].text).toBe(
-      "Sign up and invite friends. Play starts once 128 teams join. Not enough after 28 days? The ladder is cancelled.",
+      "Sign up and invite friends. Initial period of 14 days until 128 teams join, extended to 28 days until 128 teams join. If not, the ladder is cancelled.",
     );
     expect(free[3].length).toBe("3 rounds");
     expect(free[4].text).toBe("The champion crowned. CP awarded.");
