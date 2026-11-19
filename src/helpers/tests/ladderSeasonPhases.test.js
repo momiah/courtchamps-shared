@@ -26,14 +26,14 @@ describe("getLadderSeasonPhases", () => {
     expect(byKey.registrationOpen).toEqual({
       key: "registrationOpen",
       label: "Registration Open",
-      length: "14 days",
+      length: "14 - 28 days",
       text: "Sign up and invite friends. The season starts once 128 players have joined. If not, it waits 14 days more, then the ladder is cancelled and refunded.",
     });
   });
 
   it("counts season days from the season start", () => {
     expect(byKey.seasonStarts).toMatchObject({
-      label: "Season Starts",
+      label: "Play Starts",
       length: "Day 1 - 60",
       text: "Matches open. Post or accept matches to climb. New players can still join.",
     });
