@@ -24,7 +24,7 @@ export type LadderSeasonPhaseKey =
 export interface LadderSeasonPhaseCopy {
   key: LadderSeasonPhaseKey;
   label: string;
-  /** "14 days", "Day 1 - 60" (days of the season), "7 rounds". */
+  /** "14 - 28 days", "Day 1 - 60" (days of the season), "7 rounds". */
   length?: string;
   text: string;
 }
@@ -46,12 +46,12 @@ export const getLadderSeasonPhases = ({
   {
     key: LADDER_SEASON_PHASE.REGISTRATION_OPEN,
     label: LADDER_STATUS_LABELS[LADDER_STATUS.REGISTRATION_OPEN],
-    length: days(LADDER_SEASON_START_DAYS),
+    length: `${LADDER_SEASON_START_DAYS} - ${days(LADDER_SEASON_START_DAYS + LADDER_SEASON_EXTENSION_DAYS)}`,
     text: `Sign up and invite friends. The season starts once ${LADDER_MIN_ENTRANTS_TO_START} ${noun}s have joined. If not, it waits ${days(LADDER_SEASON_EXTENSION_DAYS)} more, then the ladder is cancelled${isPaid ? " and refunded" : ""}.`,
   },
   {
     key: LADDER_SEASON_PHASE.SEASON_STARTS,
-    label: "Season Starts",
+    label: "Play Starts",
     length: `Day 1 - ${LADDER_REGISTRATION_CLOSE_DAYS}`,
     text: `Matches open. Post or accept matches to climb. New ${noun}s can still join.`,
   },
