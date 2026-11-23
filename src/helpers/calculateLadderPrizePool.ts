@@ -1,5 +1,5 @@
 export const PLATFORM_FEE = 0.1;
-export const LADDER_XP_PER_PLAYER = 20;
+export const LADDER_XP_PER_PLAYER = 25;
 
 export interface LadderPrizePoolParams {
   entryFee: number;
