@@ -3,8 +3,8 @@ import { GENDER_TYPE, LADDER_TYPE } from "../types/ladder";
 import type { Ladder } from "../types/ladder";
 import type { LadderPreRegistrationDetails } from "../types/ladderPreRegistration";
 import { calculateLadderPrizePool } from "./calculateLadderPrizePool";
-import { getLadderPayouts } from "./ladderPayoutStructure";
-import { formatCurrency, ordinalPlace } from "./ladderPrizes";
+import { getLadderPrizeBands } from "./ladderPayoutStructure";
+import { formatCurrency, formatLadderPayoutPlace } from "./ladderPrizes";
 import { getPrizeType } from "./prizeType";
 
 type PrizeDetails = Pick<
@@ -99,17 +99,8 @@ export interface LadderPrizeTableRow {
 /** Each finishing band's cash and CP for a full ladder. */
 export const getFullLadderPrizeTable = (
   details: PrizeDetails,
-): LadderPrizeTableRow[] => {
-  const { cash, xp } = getLadderPrizePoolAtSize(details);
-  const cashPayouts = getLadderPayouts(cash, details.maxPlayers);
-  return getLadderPayouts(xp, details.maxPlayers).map((cpPayout, index) => ({
-    fromPlace: cpPayout.fromPlace,
-    toPlace: cpPayout.toPlace,
-    label:
-      cpPayout.places === 1
-        ? ordinalPlace(cpPayout.fromPlace)
-        : `${ordinalPlace(cpPayout.fromPlace)}–${ordinalPlace(cpPayout.toPlace)}`,
-    cash: cashPayouts[index]?.each ?? 0,
-    cp: cpPayout.each,
+): LadderPrizeTableRow[] =>
+  getLadderPrizeBands(getLadderPrizePoolAtSize(details), details.maxPlayers).map((band) => ({
+    ...band,
+    label: formatLadderPayoutPlace(band),
   }));
-};

@@ -10,48 +10,78 @@ export interface LadderPayout extends LadderPayoutBand {
   each: number;
 }
 
+const band = (fromPlace: number, toPlace: number, share: number): LadderPayoutBand => ({
+  fromPlace,
+  toPlace,
+  share,
+});
+
 const topFour = (
   first: number,
   second: number,
   third: number,
   fourth: number,
 ): LadderPayoutBand[] => [
-  { fromPlace: 1, toPlace: 1, share: first },
-  { fromPlace: 2, toPlace: 2, share: second },
-  { fromPlace: 3, toPlace: 3, share: third },
-  { fromPlace: 4, toPlace: 4, share: fourth },
+  band(1, 1, first),
+  band(2, 2, second),
+  band(3, 3, third),
+  band(4, 4, fourth),
 ];
 
+/** Cash: the in-the-money places, one band per playoff round below 4th. */
 export const LADDER_PAYOUT_STRUCTURE: Record<number, LadderPayoutBand[]> = {
   2048: [
-    ...topFour(0.35, 0.2, 0.1, 0.05),
-    { fromPlace: 5, toPlace: 32, share: 0.2 },
-    { fromPlace: 33, toPlace: 64, share: 0.1 },
+    ...topFour(0.26, 0.16, 0.1, 0.05),
+    band(5, 8, 0.08),
+    band(9, 16, 0.09),
+    band(17, 32, 0.1),
+    band(33, 64, 0.16),
   ],
   1024: [
-    ...topFour(0.35, 0.2, 0.1, 0.05),
-    { fromPlace: 5, toPlace: 32, share: 0.3 },
+    ...topFour(0.28, 0.16, 0.1, 0.06),
+    band(5, 8, 0.12),
+    band(9, 16, 0.13),
+    band(17, 32, 0.15),
+  ],
+  512: [...topFour(0.28, 0.16, 0.1, 0.06), band(5, 8, 0.2), band(9, 16, 0.2)],
+  256: [...topFour(0.3, 0.18, 0.12, 0.086), band(5, 8, 0.314)],
+  128: [...topFour(0.3, 0.18, 0.12, 0.086), band(5, 8, 0.314)],
+};
+
+/** CP: every playoff place, flatter than cash, one band per playoff round below 4th. */
+export const LADDER_CP_PAYOUT_STRUCTURE: Record<number, LadderPayoutBand[]> = {
+  2048: [
+    ...topFour(0.15, 0.1, 0.07, 0.05),
+    band(5, 8, 0.1),
+    band(9, 16, 0.1),
+    band(17, 32, 0.13),
+    band(33, 64, 0.16),
+    band(65, 128, 0.14),
+  ],
+  1024: [
+    ...topFour(0.15, 0.1, 0.07, 0.05),
+    band(5, 8, 0.1),
+    band(9, 16, 0.11),
+    band(17, 32, 0.15),
+    band(33, 64, 0.27),
   ],
   512: [
-    ...topFour(0.35, 0.2, 0.1, 0.05),
-    { fromPlace: 5, toPlace: 16, share: 0.3 },
+    ...topFour(0.15, 0.1, 0.07, 0.05),
+    band(5, 8, 0.14),
+    band(9, 16, 0.18),
+    band(17, 32, 0.31),
   ],
-  256: [
-    ...topFour(0.35, 0.2, 0.12, 0.08),
-    { fromPlace: 5, toPlace: 8, share: 0.25 },
-  ],
-  128: [
-    ...topFour(0.35, 0.2, 0.12, 0.08),
-    { fromPlace: 5, toPlace: 8, share: 0.25 },
-  ],
+  256: [...topFour(0.18, 0.12, 0.09, 0.07), band(5, 8, 0.24), band(9, 16, 0.3)],
+  128: [...topFour(0.24, 0.16, 0.12, 0.1), band(5, 8, 0.38)],
 };
 
 export const getLadderPayouts = (
   prizePool: number,
   ladderSize: number,
+  structure: Record<number, LadderPayoutBand[]> = LADDER_PAYOUT_STRUCTURE,
 ): LadderPayout[] => {
   const pool = Math.floor(prizePool);
-  const payouts = (LADDER_PAYOUT_STRUCTURE[ladderSize] ?? []).map((band) => {
+  const payouts = (structure[ladderSize] ?? []).map((band) => {
     const places = band.toPlace - band.fromPlace + 1;
     const each = Math.floor((pool * band.share) / places + 1e-9);
     return { ...band, places, total: each * places, each };
@@ -64,11 +94,42 @@ export const getLadderPayouts = (
   return payouts;
 };
 
+export const getLadderCpPayouts = (prizePool: number, ladderSize: number): LadderPayout[] =>
+  getLadderPayouts(prizePool, ladderSize, LADDER_CP_PAYOUT_STRUCTURE);
+
+const payoutForPlace = (payouts: LadderPayout[], place: number): number =>
+  payouts.find((payout) => place >= payout.fromPlace && place <= payout.toPlace)?.each ?? 0;
+
 export const getLadderPayoutForPlace = (
   prizePool: number,
   ladderSize: number,
   place: number,
-): number =>
-  getLadderPayouts(prizePool, ladderSize).find(
-    (payout) => place >= payout.fromPlace && place <= payout.toPlace,
-  )?.each ?? 0;
+): number => payoutForPlace(getLadderPayouts(prizePool, ladderSize), place);
+
+export const getLadderCpPayoutForPlace = (
+  prizePool: number,
+  ladderSize: number,
+  place: number,
+): number => payoutForPlace(getLadderCpPayouts(prizePool, ladderSize), place);
+
+export interface LadderPrizeBand {
+  fromPlace: number;
+  toPlace: number;
+  cash: number;
+  cp: number;
+}
+
+/** Every place that wins anything, with the cash and CP each player or team in it takes. */
+export const getLadderPrizeBands = (
+  pool: { cash: number; xp: number },
+  ladderSize: number,
+): LadderPrizeBand[] => {
+  const cash = pool.cash > 0 ? getLadderPayouts(pool.cash, ladderSize) : [];
+  return getLadderCpPayouts(pool.xp, ladderSize).map((cpPayout) => ({
+    fromPlace: cpPayout.fromPlace,
+    toPlace: cpPayout.toPlace,
+    cash: payoutForPlace(cash, cpPayout.fromPlace),
+    cp: cpPayout.each,
+  }));
+};
+

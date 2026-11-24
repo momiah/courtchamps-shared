@@ -7,7 +7,13 @@ import {
 } from "../types/ladderPlayoff";
 import { calculateLadderPrizePool } from "./calculateLadderPrizePool";
 import { getEffectiveLadderSize } from "./ladderPlayoffStructure";
-import { getLadderPayoutForPlace, getLadderPayouts } from "./ladderPayoutStructure";
+import {
+  getLadderCpPayoutForPlace,
+  getLadderCpPayouts,
+  getLadderPayoutForPlace,
+  getLadderPayouts,
+} from "./ladderPayoutStructure";
+import type { LadderPayoutBand } from "./ladderPayoutStructure";
 
 export interface LadderPlacePrize {
   cash: number;
@@ -55,7 +61,7 @@ export const getLadderPlacePrize = (
   const { pool, size } = getLadderPrizeSetup(ladder);
   return {
     cash: pool.cash > 0 ? getLadderPayoutForPlace(pool.cash, size, place) : 0,
-    cp: getLadderPayoutForPlace(pool.xp, size, place),
+    cp: getLadderCpPayoutForPlace(pool.xp, size, place),
   };
 };
 
@@ -76,6 +82,12 @@ export const ordinalPlace = (place: number): string => {
   if (tens >= 11 && tens <= 13) return `${place}th`;
   return `${place}${["th", "st", "nd", "rd"][place % 10] ?? "th"}`;
 };
+
+/** "1st", or "Joint 5th" for a band of places a playoff round shares. */
+export const formatLadderPayoutPlace = (payout: Pick<LadderPayoutBand, "fromPlace" | "toPlace">) =>
+  payout.fromPlace === payout.toPlace
+    ? ordinalPlace(payout.fromPlace)
+    : `Joint ${ordinalPlace(payout.fromPlace)}`;
 
 /**
  * The places a finished tie decides: the Final's winner and loser finish 1st
@@ -197,8 +209,8 @@ export const formatLadderSidePrize = (
   return `${won} for your team (${formatLadderPrizeWon(splitLadderPrize(prize, players), currencyType)} each)`;
 };
 
-const potOf = (amount: number, size: number): number =>
-  getLadderPayouts(amount, size).reduce((sum, payout) => sum + payout.total, 0);
+const sumPayouts = (payouts: { total: number }[]): number =>
+  payouts.reduce((sum, payout) => sum + payout.total, 0);
 
 export interface LadderPlayoffPayout extends LadderPlayoffPlacing {
   /** Prize for the place, for the whole side. */
@@ -221,10 +233,11 @@ export interface LadderPrizePlan {
 
 /**
  * Every side the finished playoffs pay. Each placed side gets the prize for its
- * place. The prize money nobody won goes into the Unclaimed Prize Pot and is
- * split equally between the sides in the money that played and were not
- * disqualified, any rounding going to the highest finisher; with nobody to
- * share it, the funds are retained by Court Champs. A disqualified side keeps its place and
+ * place. The prize nobody won goes into the Unclaimed Prize Pot: its cash is
+ * split equally between the sides that won cash, its CP between the sides that
+ * won CP, counting only sides that played and were not disqualified, any
+ * rounding going to the highest finisher; with nobody to share it, it is
+ * retained by Court Champs. A disqualified side keeps its place and
  * prize, which the caller holds for review.
  */
 export const planLadderPlayoffPrizes = (
@@ -245,32 +258,32 @@ export const planLadderPlayoffPrizes = (
     .sort((a, b) => a.place - b.place || a.tieId.localeCompare(b.tieId));
 
   const { pool, size } = getLadderPrizeSetup(ladder);
-  const pot = { cash: pool.cash > 0 ? potOf(pool.cash, size) : 0, cp: potOf(pool.xp, size) };
+  const pot = {
+    cash: pool.cash > 0 ? sumPayouts(getLadderPayouts(pool.cash, size)) : 0,
+    cp: sumPayouts(getLadderCpPayouts(pool.xp, size)),
+  };
   const claimed = placed.reduce((sum, placing) => addPrizes(sum, placing.placePrize), NO_PRIZE);
   const unclaimed = {
     cash: Math.max(0, pot.cash - claimed.cash),
     cp: Math.max(0, pot.cp - claimed.cp),
   };
-  const sharers = placed.filter((placing) => !placing.voided && !placing.disqualified);
-  const each = sharers.length
-    ? {
-        cash: Math.floor(unclaimed.cash / sharers.length),
-        cp: Math.floor(unclaimed.cp / sharers.length),
-      }
-    : NO_PRIZE;
-  const remainder = {
-    cash: unclaimed.cash - each.cash * sharers.length,
-    cp: unclaimed.cp - each.cp * sharers.length,
+  const sharing = placed.filter((placing) => !placing.voided && !placing.disqualified);
+  const shareOf = (currency: keyof LadderPlacePrize) => {
+    const sharers = sharing.filter((placing) => placing.placePrize[currency] > 0);
+    const each = sharers.length ? Math.floor(unclaimed[currency] / sharers.length) : 0;
+    const remainder = unclaimed[currency] - each * sharers.length;
+    return (placing: (typeof placed)[number]): number =>
+      sharers.includes(placing) ? each + (placing === sharers[0] ? remainder : 0) : 0;
   };
-  const top = sharers[0];
+  const cashShare = shareOf("cash");
+  const cpShare = shareOf("cp");
+  const kept = {
+    cash: sharing.some((placing) => placing.placePrize.cash > 0) ? 0 : unclaimed.cash,
+    cp: sharing.some((placing) => placing.placePrize.cp > 0) ? 0 : unclaimed.cp,
+  };
 
   const payouts = placed.map((placing): LadderPlayoffPayout => {
-    const sharing = sharers.includes(placing);
-    const potShare = sharing
-      ? placing === top
-        ? addPrizes(each, remainder)
-        : each
-      : NO_PRIZE;
+    const potShare = { cash: cashShare(placing), cp: cpShare(placing) };
     const prize = addPrizes(placing.placePrize, potShare);
     const players = Math.max(1, placing.playerIds.length);
     const perPlace = splitLadderPrize(placing.placePrize, players);
@@ -283,5 +296,5 @@ export const planLadderPlayoffPrizes = (
     };
   });
 
-  return { payouts, unclaimed, kept: sharers.length ? NO_PRIZE : unclaimed };
+  return { payouts, unclaimed, kept };
 };
