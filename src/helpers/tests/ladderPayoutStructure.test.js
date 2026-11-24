@@ -200,7 +200,7 @@ describe("ladder payouts", () => {
     expect(getLadderCpPayoutForPlace(51200, 2048, 129, LINEAR)).toBe(0);
   });
 
-  it("lists every place that wins anything, CP-only places with no cash", () => {
+  it("lists a cash ladder's cash places, and every CP place on a free ladder", () => {
     expect(getLadderPrizeBands({ cash: 10240, xp: 12800 }, 512, LINEAR)).toEqual([
       { fromPlace: 1, toPlace: 1, cash: 2868, cp: 1920 },
       { fromPlace: 2, toPlace: 2, cash: 1638, cp: 1280 },
@@ -208,9 +208,10 @@ describe("ladder payouts", () => {
       { fromPlace: 4, toPlace: 4, cash: 614, cp: 640 },
       { fromPlace: 5, toPlace: 8, cash: 512, cp: 448 },
       { fromPlace: 9, toPlace: 16, cash: 256, cp: 288 },
-      { fromPlace: 17, toPlace: 32, cash: 0, cp: 248 },
     ]);
-    expect(getLadderPrizeBands({ cash: 0, xp: 12800 }, 512, LINEAR).every((band) => band.cash === 0)).toBe(true);
+    const free = getLadderPrizeBands({ cash: 0, xp: 12800 }, 512, LINEAR);
+    expect(free.every((band) => band.cash === 0)).toBe(true);
+    expect(free[free.length - 1]).toEqual({ fromPlace: 17, toPlace: 32, cash: 0, cp: 248 });
     expect(getLadderPrizeBands({ cash: 10240, xp: 12800 }, 512, PROGRESSIVE).map((band) => band.toPlace)).toEqual([
       1, 2, 3, 4, 8, 16,
     ]);
