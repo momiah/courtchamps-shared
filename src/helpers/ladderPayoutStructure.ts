@@ -177,18 +177,23 @@ export interface LadderPrizeBand {
   cp: number;
 }
 
-/** Every place that wins anything, with the cash and CP each player or team in it takes. */
+/**
+ * The rows of a prize table, with the cash and CP each player or team takes:
+ * every place that wins CP on a free ladder, and only the places that win cash
+ * on a cash ladder (places paid CP alone are told when they finish).
+ */
 export const getLadderPrizeBands = (
   pool: { cash: number; xp: number },
   ladderSize: number,
   payoutStructure: PayoutStructure,
 ): LadderPrizeBand[] => {
   const cash = pool.cash > 0 ? getLadderPayouts(pool.cash, ladderSize, payoutStructure) : [];
-  return getLadderCpPayouts(pool.xp, ladderSize, payoutStructure).map((cpPayout) => ({
+  const bands = getLadderCpPayouts(pool.xp, ladderSize, payoutStructure).map((cpPayout) => ({
     fromPlace: cpPayout.fromPlace,
     toPlace: cpPayout.toPlace,
     cash: payoutForPlace(cash, cpPayout.fromPlace),
     cp: cpPayout.each,
   }));
+  return pool.cash > 0 ? bands.filter((band) => band.cash > 0) : bands;
 };
 
