@@ -5,6 +5,7 @@ import {
   LADDER_PLAYOFF_TIE_STATUS,
   LADDER_PLAYOFF_WALKOVER_REASON,
 } from "../types/ladderPlayoff";
+import { roundLabel } from "./advanceBrackets";
 import { calculateLadderPrizePool } from "./calculateLadderPrizePool";
 import { getEffectiveLadderSize } from "./ladderPlayoffStructure";
 import {
@@ -93,9 +94,11 @@ export const formatLadderFinishPlace = (place: number, voided = false): string =
     ? `Joint ${ordinalPlace(place / 2 + 1)}`
     : `${voided ? "Joint " : ""}${ordinalPlace(place)}`;
 
-/** "1st", or "Joint 5th" for a band of places a playoff round shares. */
+/** "1st", or "Quarter-Final (Joint 5th)" for a band of places a playoff round shares. */
 export const formatLadderPayoutPlace = (payout: Pick<LadderPayoutBand, "toPlace">) =>
-  formatLadderFinishPlace(payout.toPlace);
+  payout.toPlace > 4
+    ? `${roundLabel(payout.toPlace)} (${formatLadderFinishPlace(payout.toPlace)})`
+    : formatLadderFinishPlace(payout.toPlace);
 
 /**
  * The places a finished tie decides: the Final's winner and loser finish 1st

@@ -20,8 +20,8 @@ describe("ladder pre-registration display", () => {
   it("builds a prize table whose bands start with 1st", () => {
     const rows = getFullLadderPrizeTable(cash);
     expect(rows[0]).toMatchObject({ fromPlace: 1, label: "1st" });
-    expect(rows[4].label).toBe("Joint 5th");
-    expect(rows[rows.length - 1]).toMatchObject({ label: "Joint 65th", cash: 0, cp: 112 });
+    expect(rows[4].label).toBe("Quarter-Final (Joint 5th)");
+    expect(rows[rows.length - 1]).toMatchObject({ label: "Round of 128 (Joint 65th)", cash: 0, cp: 112 });
   });
 
   it("names doubles entrants teams", () => {
