@@ -9,6 +9,7 @@ import {
   ordinalPlace,
   planLadderPlayoffPrizes,
   formatLadderSidePrize,
+  formatLadderFinishPlace,
 } from "../ladderPrizes";
 import { buildLadderPlayoffTies } from "../ladderPlayoffs";
 import { advanceLadderPlayoffBracket } from "../ladderPlayoffMatches";
@@ -41,6 +42,14 @@ describe("ladder prizes", () => {
     expect([1, 2, 3, 4, 11, 12, 13, 21, 22].map(ordinalPlace)).toEqual([
       "1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd",
     ]);
+  });
+
+  it("labels a finish, joint for a shared round or a void tie", () => {
+    expect([1, 2, 3, 4, 8, 16, 32, 64, 128].map((place) => formatLadderFinishPlace(place))).toEqual([
+      "1st", "2nd", "3rd", "4th", "Joint 5th", "Joint 9th", "Joint 17th", "Joint 33rd", "Joint 65th",
+    ]);
+    expect(formatLadderFinishPlace(2, true)).toBe("Joint 2nd");
+    expect(formatLadderFinishPlace(8, true)).toBe("Joint 5th");
   });
 
   it("knows which places a finished tie decides", () => {

@@ -65,6 +65,7 @@ export {
   getPlacementStatKey,
   ordinalPlace,
   formatLadderPayoutPlace,
+  formatLadderFinishPlace,
   PLACEMENT_STAT_KEYS,
 } from "./ladderPrizes";
 export type {

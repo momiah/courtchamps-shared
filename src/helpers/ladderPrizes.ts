@@ -83,11 +83,19 @@ export const ordinalPlace = (place: number): string => {
   return `${place}${["th", "st", "nd", "rd"][place % 10] ?? "th"}`;
 };
 
+/**
+ * How a finishing place reads: "1st" to "4th", "Joint 2nd" for a void Final,
+ * and "Joint 5th", "Joint 9th"… for everyone knocked out in the same round
+ * (a place below 4th is the bottom of its round's band, e.g. 8 for 5th–8th).
+ */
+export const formatLadderFinishPlace = (place: number, voided = false): string =>
+  place > 4
+    ? `Joint ${ordinalPlace(place / 2 + 1)}`
+    : `${voided ? "Joint " : ""}${ordinalPlace(place)}`;
+
 /** "1st", or "Joint 5th" for a band of places a playoff round shares. */
-export const formatLadderPayoutPlace = (payout: Pick<LadderPayoutBand, "fromPlace" | "toPlace">) =>
-  payout.fromPlace === payout.toPlace
-    ? ordinalPlace(payout.fromPlace)
-    : `Joint ${ordinalPlace(payout.fromPlace)}`;
+export const formatLadderPayoutPlace = (payout: Pick<LadderPayoutBand, "toPlace">) =>
+  formatLadderFinishPlace(payout.toPlace);
 
 /**
  * The places a finished tie decides: the Final's winner and loser finish 1st
