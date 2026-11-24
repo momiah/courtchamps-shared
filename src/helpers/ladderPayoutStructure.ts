@@ -1,3 +1,5 @@
+import { getLadderPlayoffStructure } from "./ladderPlayoffStructure";
+
 export interface LadderPayoutBand {
   fromPlace: number;
   toPlace: number;
@@ -111,6 +113,12 @@ export const getLadderCpPayoutForPlace = (
   ladderSize: number,
   place: number,
 ): number => payoutForPlace(getLadderCpPayouts(prizePool, ladderSize), place);
+
+/** How many places win a prize in a full ladder: in the money for cash, every playoff place for CP. */
+export const getLadderPrizePlaces = (maxPlayers: number, cash: boolean): number => {
+  const { inTheMoney, playoffSpots } = getLadderPlayoffStructure(maxPlayers);
+  return cash ? inTheMoney : playoffSpots;
+};
 
 export interface LadderPrizeBand {
   fromPlace: number;

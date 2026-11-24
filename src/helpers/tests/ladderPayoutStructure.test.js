@@ -6,6 +6,7 @@ import {
   getLadderPayouts,
   getLadderPayoutForPlace,
   getLadderPrizeBands,
+  getLadderPrizePlaces,
 } from "../ladderPayoutStructure";
 import { LADDER_PLAYOFF_STRUCTURE } from "../ladderPlayoffStructure";
 
@@ -158,5 +159,11 @@ describe("ladder payouts", () => {
       { fromPlace: 17, toPlace: 32, cash: 0, cp: 248 },
     ]);
     expect(getLadderPrizeBands({ cash: 0, xp: 12800 }, 512).every((band) => band.cash === 0)).toBe(true);
+  });
+
+  it("counts the places that win cash or CP", () => {
+    expect(getLadderPrizePlaces(2048, true)).toBe(64);
+    expect(getLadderPrizePlaces(2048, false)).toBe(128);
+    expect(getLadderPrizePlaces(128, false)).toBe(8);
   });
 });

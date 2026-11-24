@@ -318,6 +318,7 @@ export {
   getLadderCpPayouts,
   getLadderCpPayoutForPlace,
   getLadderPrizeBands,
+  getLadderPrizePlaces,
 } from "./ladderPayoutStructure";
 export type { LadderPayoutBand, LadderPayout, LadderPrizeBand } from "./ladderPayoutStructure";
 export { isLadderPreRegistrationDue } from "./ladderPreRegistration";
