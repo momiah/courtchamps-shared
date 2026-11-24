@@ -7,10 +7,9 @@ import { getLadderPrizeBands } from "./ladderPayoutStructure";
 import { formatCurrency, formatLadderPayoutPlace } from "./ladderPrizes";
 import { getPrizeType } from "./prizeType";
 
-type PrizeDetails = Pick<
-  LadderPreRegistrationDetails,
-  "entryFee" | "currencyType" | "maxPlayers"
->;
+type PoolDetails = Pick<LadderPreRegistrationDetails, "entryFee" | "currencyType" | "maxPlayers">;
+
+type PrizeDetails = PoolDetails & Pick<LadderPreRegistrationDetails, "payoutStructure">;
 
 export const COURT_CHAMPS_SITE_URL = "https://courtchamps.com";
 
@@ -69,7 +68,7 @@ export const getLadderEntrantNoun = (ladderType?: string): "team" | "player" =>
 
 /** The prize pool at a given size; a full ladder by default. */
 export const getLadderPrizePoolAtSize = (
-  details: PrizeDetails,
+  details: PoolDetails,
   ladderSize = details.maxPlayers,
 ) =>
   calculateLadderPrizePool({
@@ -79,7 +78,7 @@ export const getLadderPrizePoolAtSize = (
 
 /** "£40,960" for a cash ladder, "10,240 CP" for a community one. */
 export const formatLadderPrizePool = (
-  details: PrizeDetails,
+  details: PoolDetails,
   ladderSize = details.maxPlayers,
 ) => {
   const { cash, xp } = getLadderPrizePoolAtSize(details, ladderSize);
@@ -100,7 +99,11 @@ export interface LadderPrizeTableRow {
 export const getFullLadderPrizeTable = (
   details: PrizeDetails,
 ): LadderPrizeTableRow[] =>
-  getLadderPrizeBands(getLadderPrizePoolAtSize(details), details.maxPlayers).map((band) => ({
+  getLadderPrizeBands(
+    getLadderPrizePoolAtSize(details),
+    details.maxPlayers,
+    details.payoutStructure,
+  ).map((band) => ({
     ...band,
     label: formatLadderPayoutPlace(band),
   }));

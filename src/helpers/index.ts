@@ -312,10 +312,9 @@ export type {
   PlanLadderGameApprovalResult,
 } from "./planLadderGameApproval";
 export {
-  LADDER_PAYOUT_STRUCTURE,
+  LADDER_PAYOUT_TABLES,
   getLadderPayouts,
   getLadderPayoutForPlace,
-  LADDER_CP_PAYOUT_STRUCTURE,
   getLadderCpPayouts,
   getLadderCpPayoutForPlace,
   getLadderPrizeBands,

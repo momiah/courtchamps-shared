@@ -14,8 +14,8 @@ import {
 import { buildLadderPlayoffTies } from "../ladderPlayoffs";
 import { advanceLadderPlayoffBracket } from "../ladderPlayoffMatches";
 
-const paid256 = { entryFee: 20, participantCount: 256, maxPlayers: 256 };
-const free256 = { entryFee: 0, participantCount: 256, maxPlayers: 256 };
+const paid256 = { entryFee: 20, participantCount: 256, maxPlayers: 256, payoutStructure: "linear" };
+const free256 = { entryFee: 0, participantCount: 256, maxPlayers: 256, payoutStructure: "linear" };
 
 describe("ladder prizes", () => {
   it("pays a place from the whole entry pot and the CP pot, each by its own bands", () => {
@@ -24,6 +24,9 @@ describe("ladder prizes", () => {
     expect(getLadderPlacePrize(paid256, 16)).toEqual({ cash: 0, cp: 240 });
     expect(getLadderPlacePrize(paid256, 17)).toEqual({ cash: 0, cp: 0 });
     expect(getLadderPlacePrize(free256, 1)).toEqual({ cash: 0, cp: 1152 });
+    const progressive256 = { ...paid256, payoutStructure: "progressive" };
+    expect(getLadderPlacePrize(progressive256, 1)).toEqual({ cash: 1793, cp: 2240 });
+    expect(getLadderPlacePrize(progressive256, 16)).toEqual({ cash: 0, cp: 0 });
   });
 
   it("says what was won, and nothing when nothing was", () => {
@@ -84,8 +87,8 @@ const fullBracket = () => [
   tie(3, 0, { isThirdPlacePlayoff: true, side1: side("qf2w"), side2: side("qf4w"), winner: "team2" }),
 ];
 
-const free128 = { entryFee: 0, participantCount: 128, maxPlayers: 128 };
-const paid128 = { entryFee: 20, participantCount: 128, maxPlayers: 128 };
+const free128 = { entryFee: 0, participantCount: 128, maxPlayers: 128, payoutStructure: "linear" };
+const paid128 = { entryFee: 20, participantCount: 128, maxPlayers: 128, payoutStructure: "linear" };
 const plan = (ladder, ties, disqualified) => planLadderPlayoffPrizes(ladder, ties, disqualified);
 const byPlayer = (payouts) =>
   Object.fromEntries(payouts.flatMap((payout) => payout.playerIds.map((id) => [id, payout])));
@@ -250,10 +253,13 @@ describe("ladder playoff prizes never pay more than the pot", () => {
     }
   };
 
-  it.each([[128, 8], [256, 16], [512, 32], [1024, 64], [2048, 128]])(
-    "a %i ladder with random void ties pays exactly its pot, unclaimed cash only to sides that won cash",
-    (players, spots) => {
-      const ladder = { entryFee: 20, participantCount: players, maxPlayers: players };
+  it.each([
+    [128, 8, "linear"], [256, 16, "linear"], [512, 32, "linear"], [1024, 64, "linear"], [2048, 128, "linear"],
+    [128, 8, "progressive"], [512, 32, "progressive"], [2048, 128, "progressive"],
+  ])(
+    "a %i %s ladder with random void ties pays exactly its pot, unclaimed cash only to sides that won cash",
+    (players, spots, payoutStructure) => {
+      const ladder = { entryFee: 20, participantCount: players, maxPlayers: players, payoutStructure };
       const random = seeded(players);
       for (let run = 0; run < 40; run += 1) {
         const ties = playOut(spots, random);

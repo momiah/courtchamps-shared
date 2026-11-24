@@ -25,6 +25,15 @@ export const GENDER_TYPE = {
 
 export type GenderType = (typeof GENDER_TYPE)[keyof typeof GENDER_TYPE];
 
+export const PAYOUT_STRUCTURE = {
+  /** Top-heavy: 35% of the pot to the champion, cash and CP paid to the places in the money. */
+  PROGRESSIVE: "progressive",
+  /** Flatter: less to the top four, more further down; CP paid to every playoff place. */
+  LINEAR: "linear",
+} as const;
+
+export type PayoutStructure = (typeof PAYOUT_STRUCTURE)[keyof typeof PAYOUT_STRUCTURE];
+
 export interface Ladder {
   ladderId: string;
   name: string;
@@ -49,6 +58,8 @@ export interface Ladder {
   playoffStartsAt: Date;
   entryFee: number;
   currencyType: string;
+  /** How the cash and CP pots are split between the places. Required when a ladder is created. */
+  payoutStructure: PayoutStructure;
   minRank: number;
   maxPlayers: number;
   /**
@@ -104,6 +115,7 @@ export type LadderInput = Pick<
   | "registrationOpensAt"
   | "entryFee"
   | "currencyType"
+  | "payoutStructure"
   | "minRank"
   | "maxPlayers"
   | "eligibilityRadiusMiles"

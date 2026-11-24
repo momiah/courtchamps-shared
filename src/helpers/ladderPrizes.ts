@@ -22,7 +22,7 @@ export interface LadderPlacePrize {
 
 export type PrizeLadder = Pick<
   Ladder,
-  "entryFee" | "participantCount" | "maxPlayers" | "playoffEntrantCount"
+  "entryFee" | "participantCount" | "maxPlayers" | "playoffEntrantCount" | "payoutStructure"
 >;
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -51,6 +51,7 @@ export const getLadderPrizeSetup = (ladder: PrizeLadder) => {
       participantCount: registered,
     }),
     size: getEffectiveLadderSize(registered, ladder.maxPlayers),
+    payoutStructure: ladder.payoutStructure,
   };
 };
 
@@ -58,10 +59,10 @@ export const getLadderPlacePrize = (
   ladder: PrizeLadder,
   place: number,
 ): LadderPlacePrize => {
-  const { pool, size } = getLadderPrizeSetup(ladder);
+  const { pool, size, payoutStructure } = getLadderPrizeSetup(ladder);
   return {
-    cash: pool.cash > 0 ? getLadderPayoutForPlace(pool.cash, size, place) : 0,
-    cp: getLadderCpPayoutForPlace(pool.xp, size, place),
+    cash: pool.cash > 0 ? getLadderPayoutForPlace(pool.cash, size, place, payoutStructure) : 0,
+    cp: getLadderCpPayoutForPlace(pool.xp, size, place, payoutStructure),
   };
 };
 
@@ -265,10 +266,10 @@ export const planLadderPlayoffPrizes = (
     .filter((placing) => hasPrize(placing.placePrize))
     .sort((a, b) => a.place - b.place || a.tieId.localeCompare(b.tieId));
 
-  const { pool, size } = getLadderPrizeSetup(ladder);
+  const { pool, size, payoutStructure } = getLadderPrizeSetup(ladder);
   const pot = {
-    cash: pool.cash > 0 ? sumPayouts(getLadderPayouts(pool.cash, size)) : 0,
-    cp: sumPayouts(getLadderCpPayouts(pool.xp, size)),
+    cash: pool.cash > 0 ? sumPayouts(getLadderPayouts(pool.cash, size, payoutStructure)) : 0,
+    cp: sumPayouts(getLadderCpPayouts(pool.xp, size, payoutStructure)),
   };
   const claimed = placed.reduce((sum, placing) => addPrizes(sum, placing.placePrize), NO_PRIZE);
   const unclaimed = {

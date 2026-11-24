@@ -7,8 +7,8 @@ import {
   isCashLadder,
 } from "../ladderPreRegistrationDisplay";
 
-const cash = { entryFee: 20, currencyType: "GBP", maxPlayers: 2048 };
-const community = { entryFee: 0, currencyType: "GBP", maxPlayers: 2048 };
+const cash = { entryFee: 20, currencyType: "GBP", maxPlayers: 2048, payoutStructure: "linear" };
+const community = { entryFee: 0, currencyType: "GBP", maxPlayers: 2048, payoutStructure: "linear" };
 
 describe("ladder pre-registration display", () => {
   it("formats the full-ladder prize pool in cash or CP", () => {
@@ -22,6 +22,12 @@ describe("ladder pre-registration display", () => {
     expect(rows[0]).toMatchObject({ fromPlace: 1, label: "1st" });
     expect(rows[4].label).toBe("Joint 5th");
     expect(rows[rows.length - 1]).toMatchObject({ label: "Joint 65th", cash: 0, cp: 112 });
+  });
+
+  it("builds the prize table from the ladder's payout structure", () => {
+    const progressive = getFullLadderPrizeTable({ ...cash, payoutStructure: "progressive" });
+    expect(progressive[0]).toMatchObject({ label: "1st", cash: 14344 });
+    expect(progressive[progressive.length - 1]).toMatchObject({ label: "Joint 33rd", cash: 128 });
   });
 
   it("names doubles entrants teams", () => {

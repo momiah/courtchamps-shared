@@ -1,3 +1,5 @@
+import { PAYOUT_STRUCTURE } from "../types/ladder";
+import type { PayoutStructure } from "../types/ladder";
 import { getLadderPlayoffStructure } from "./ladderPlayoffStructure";
 
 export interface LadderPayoutBand {
@@ -30,8 +32,33 @@ const topFour = (
   band(4, 4, fourth),
 ];
 
-/** Cash: the in-the-money places, one band per playoff round below 4th. */
-export const LADDER_PAYOUT_STRUCTURE: Record<number, LadderPayoutBand[]> = {
+type PayoutTable = Record<number, LadderPayoutBand[]>;
+
+/**
+ * Progressive, cash and CP alike: top-heavy, paying the in-the-money places,
+ * one band per playoff round below 4th.
+ */
+const PROGRESSIVE: PayoutTable = {
+  2048: [
+    ...topFour(0.35, 0.2, 0.1, 0.05),
+    band(5, 8, 0.07),
+    band(9, 16, 0.06),
+    band(17, 32, 0.07),
+    band(33, 64, 0.1),
+  ],
+  1024: [
+    ...topFour(0.35, 0.2, 0.1, 0.05),
+    band(5, 8, 0.1),
+    band(9, 16, 0.1),
+    band(17, 32, 0.1),
+  ],
+  512: [...topFour(0.35, 0.2, 0.1, 0.05), band(5, 8, 0.15), band(9, 16, 0.15)],
+  256: [...topFour(0.35, 0.2, 0.12, 0.08), band(5, 8, 0.25)],
+  128: [...topFour(0.35, 0.2, 0.12, 0.08), band(5, 8, 0.25)],
+};
+
+/** Linear cash: flatter, paying the in-the-money places, one band per playoff round below 4th. */
+const LINEAR_CASH: PayoutTable = {
   2048: [
     ...topFour(0.26, 0.16, 0.1, 0.05),
     band(5, 8, 0.08),
@@ -50,8 +77,8 @@ export const LADDER_PAYOUT_STRUCTURE: Record<number, LadderPayoutBand[]> = {
   128: [...topFour(0.3, 0.18, 0.12, 0.086), band(5, 8, 0.314)],
 };
 
-/** CP: every playoff place, flatter than cash, one band per playoff round below 4th. */
-export const LADDER_CP_PAYOUT_STRUCTURE: Record<number, LadderPayoutBand[]> = {
+/** Linear CP: flatter still, paying every playoff place, one band per playoff round below 4th. */
+const LINEAR_CP: PayoutTable = {
   2048: [
     ...topFour(0.15, 0.1, 0.07, 0.05),
     band(5, 8, 0.1),
@@ -77,13 +104,18 @@ export const LADDER_CP_PAYOUT_STRUCTURE: Record<number, LadderPayoutBand[]> = {
   128: [...topFour(0.24, 0.16, 0.12, 0.1), band(5, 8, 0.38)],
 };
 
-export const getLadderPayouts = (
-  prizePool: number,
-  ladderSize: number,
-  structure: Record<number, LadderPayoutBand[]> = LADDER_PAYOUT_STRUCTURE,
-): LadderPayout[] => {
+/** Each payout structure's cash and CP tables, by ladder size. */
+export const LADDER_PAYOUT_TABLES: Record<PayoutStructure, { cash: PayoutTable; cp: PayoutTable }> = {
+  [PAYOUT_STRUCTURE.PROGRESSIVE]: { cash: PROGRESSIVE, cp: PROGRESSIVE },
+  [PAYOUT_STRUCTURE.LINEAR]: { cash: LINEAR_CASH, cp: LINEAR_CP },
+};
+
+const tablesFor = (payoutStructure: PayoutStructure) =>
+  LADDER_PAYOUT_TABLES[payoutStructure] ?? LADDER_PAYOUT_TABLES[PAYOUT_STRUCTURE.LINEAR];
+
+const payoutsFrom = (prizePool: number, bands: LadderPayoutBand[]): LadderPayout[] => {
   const pool = Math.floor(prizePool);
-  const payouts = (structure[ladderSize] ?? []).map((band) => {
+  const payouts = bands.map((band) => {
     const places = band.toPlace - band.fromPlace + 1;
     const each = Math.floor((pool * band.share) / places + 1e-9);
     return { ...band, places, total: each * places, each };
@@ -96,8 +128,17 @@ export const getLadderPayouts = (
   return payouts;
 };
 
-export const getLadderCpPayouts = (prizePool: number, ladderSize: number): LadderPayout[] =>
-  getLadderPayouts(prizePool, ladderSize, LADDER_CP_PAYOUT_STRUCTURE);
+export const getLadderPayouts = (
+  prizePool: number,
+  ladderSize: number,
+  payoutStructure: PayoutStructure,
+): LadderPayout[] => payoutsFrom(prizePool, tablesFor(payoutStructure).cash[ladderSize] ?? []);
+
+export const getLadderCpPayouts = (
+  prizePool: number,
+  ladderSize: number,
+  payoutStructure: PayoutStructure,
+): LadderPayout[] => payoutsFrom(prizePool, tablesFor(payoutStructure).cp[ladderSize] ?? []);
 
 const payoutForPlace = (payouts: LadderPayout[], place: number): number =>
   payouts.find((payout) => place >= payout.fromPlace && place <= payout.toPlace)?.each ?? 0;
@@ -106,18 +147,27 @@ export const getLadderPayoutForPlace = (
   prizePool: number,
   ladderSize: number,
   place: number,
-): number => payoutForPlace(getLadderPayouts(prizePool, ladderSize), place);
+  payoutStructure: PayoutStructure,
+): number => payoutForPlace(getLadderPayouts(prizePool, ladderSize, payoutStructure), place);
 
 export const getLadderCpPayoutForPlace = (
   prizePool: number,
   ladderSize: number,
   place: number,
-): number => payoutForPlace(getLadderCpPayouts(prizePool, ladderSize), place);
+  payoutStructure: PayoutStructure,
+): number => payoutForPlace(getLadderCpPayouts(prizePool, ladderSize, payoutStructure), place);
 
-/** How many places win a prize in a full ladder: in the money for cash, every playoff place for CP. */
-export const getLadderPrizePlaces = (maxPlayers: number, cash: boolean): number => {
+/**
+ * How many places win a prize in a full ladder: in the money for cash; for CP,
+ * in the money under progressive and every playoff place under linear.
+ */
+export const getLadderPrizePlaces = (
+  maxPlayers: number,
+  cash: boolean,
+  payoutStructure: PayoutStructure,
+): number => {
   const { inTheMoney, playoffSpots } = getLadderPlayoffStructure(maxPlayers);
-  return cash ? inTheMoney : playoffSpots;
+  return cash || payoutStructure === PAYOUT_STRUCTURE.PROGRESSIVE ? inTheMoney : playoffSpots;
 };
 
 export interface LadderPrizeBand {
@@ -131,9 +181,10 @@ export interface LadderPrizeBand {
 export const getLadderPrizeBands = (
   pool: { cash: number; xp: number },
   ladderSize: number,
+  payoutStructure: PayoutStructure,
 ): LadderPrizeBand[] => {
-  const cash = pool.cash > 0 ? getLadderPayouts(pool.cash, ladderSize) : [];
-  return getLadderCpPayouts(pool.xp, ladderSize).map((cpPayout) => ({
+  const cash = pool.cash > 0 ? getLadderPayouts(pool.cash, ladderSize, payoutStructure) : [];
+  return getLadderCpPayouts(pool.xp, ladderSize, payoutStructure).map((cpPayout) => ({
     fromPlace: cpPayout.fromPlace,
     toPlace: cpPayout.toPlace,
     cash: payoutForPlace(cash, cpPayout.fromPlace),
