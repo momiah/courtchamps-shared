@@ -64,6 +64,8 @@ export {
   getLadderPlayoffTotalRounds,
   getPlacementStatKey,
   ordinalPlace,
+  formatLadderPayoutPlace,
+  formatLadderFinishPlace,
   PLACEMENT_STAT_KEYS,
 } from "./ladderPrizes";
 export type {
@@ -310,11 +312,15 @@ export type {
   PlanLadderGameApprovalResult,
 } from "./planLadderGameApproval";
 export {
-  LADDER_PAYOUT_STRUCTURE,
+  LADDER_PAYOUT_TABLES,
   getLadderPayouts,
   getLadderPayoutForPlace,
+  getLadderCpPayouts,
+  getLadderCpPayoutForPlace,
+  getLadderPrizeBands,
+  getLadderPrizePlaces,
 } from "./ladderPayoutStructure";
-export type { LadderPayoutBand, LadderPayout } from "./ladderPayoutStructure";
+export type { LadderPayoutBand, LadderPayout, LadderPrizeBand } from "./ladderPayoutStructure";
 export { isLadderPreRegistrationDue } from "./ladderPreRegistration";
 export { getPrizeType, normalizePrizeType } from "./prizeType";
 export type { PrizeType } from "./prizeType";

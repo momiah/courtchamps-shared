@@ -25,6 +25,7 @@ export type LadderPreRegistrationDetails = Pick<
   | "genderType"
   | "entryFee"
   | "currencyType"
+  | "payoutStructure"
   | "maxPlayers"
   | "eligibilityRadiusMiles"
 >;

@@ -9,19 +9,24 @@ import {
   ordinalPlace,
   planLadderPlayoffPrizes,
   formatLadderSidePrize,
+  formatLadderFinishPlace,
 } from "../ladderPrizes";
 import { buildLadderPlayoffTies } from "../ladderPlayoffs";
 import { advanceLadderPlayoffBracket } from "../ladderPlayoffMatches";
 
-const paid256 = { entryFee: 20, participantCount: 256, maxPlayers: 256 };
-const free256 = { entryFee: 0, participantCount: 256, maxPlayers: 256 };
+const paid256 = { entryFee: 20, participantCount: 256, maxPlayers: 256, payoutStructure: "linear" };
+const free256 = { entryFee: 0, participantCount: 256, maxPlayers: 256, payoutStructure: "linear" };
 
 describe("ladder prizes", () => {
-  it("pays a place from the whole entry pot and the CP pot by the same bands", () => {
-    expect(getLadderPlacePrize(paid256, 1)).toEqual({ cash: 1793, cp: 4480 });
-    expect(getLadderPlacePrize(paid256, 8)).toEqual({ cash: 320, cp: 800 });
-    expect(getLadderPlacePrize(paid256, 16)).toEqual({ cash: 0, cp: 0 });
-    expect(getLadderPlacePrize(free256, 1)).toEqual({ cash: 0, cp: 4480 });
+  it("pays a place from the whole entry pot and the CP pot, each by its own bands", () => {
+    expect(getLadderPlacePrize(paid256, 1)).toEqual({ cash: 1541, cp: 1152 });
+    expect(getLadderPlacePrize(paid256, 8)).toEqual({ cash: 401, cp: 384 });
+    expect(getLadderPlacePrize(paid256, 16)).toEqual({ cash: 0, cp: 240 });
+    expect(getLadderPlacePrize(paid256, 17)).toEqual({ cash: 0, cp: 0 });
+    expect(getLadderPlacePrize(free256, 1)).toEqual({ cash: 0, cp: 1152 });
+    const progressive256 = { ...paid256, payoutStructure: "progressive" };
+    expect(getLadderPlacePrize(progressive256, 1)).toEqual({ cash: 1793, cp: 2240 });
+    expect(getLadderPlacePrize(progressive256, 16)).toEqual({ cash: 0, cp: 0 });
   });
 
   it("says what was won, and nothing when nothing was", () => {
@@ -40,6 +45,14 @@ describe("ladder prizes", () => {
     expect([1, 2, 3, 4, 11, 12, 13, 21, 22].map(ordinalPlace)).toEqual([
       "1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd",
     ]);
+  });
+
+  it("labels a finish, joint for a shared round or a void tie", () => {
+    expect([1, 2, 3, 4, 8, 16, 32, 64, 128].map((place) => formatLadderFinishPlace(place))).toEqual([
+      "1st", "2nd", "3rd", "4th", "Joint 5th", "Joint 9th", "Joint 17th", "Joint 33rd", "Joint 65th",
+    ]);
+    expect(formatLadderFinishPlace(2, true)).toBe("Joint 2nd");
+    expect(formatLadderFinishPlace(8, true)).toBe("Joint 5th");
   });
 
   it("knows which places a finished tie decides", () => {
@@ -74,8 +87,8 @@ const fullBracket = () => [
   tie(3, 0, { isThirdPlacePlayoff: true, side1: side("qf2w"), side2: side("qf4w"), winner: "team2" }),
 ];
 
-const free128 = { entryFee: 0, participantCount: 128, maxPlayers: 128 };
-const paid128 = { entryFee: 20, participantCount: 128, maxPlayers: 128 };
+const free128 = { entryFee: 0, participantCount: 128, maxPlayers: 128, payoutStructure: "linear" };
+const paid128 = { entryFee: 20, participantCount: 128, maxPlayers: 128, payoutStructure: "linear" };
 const plan = (ladder, ties, disqualified) => planLadderPlayoffPrizes(ladder, ties, disqualified);
 const byPlayer = (payouts) =>
   Object.fromEntries(payouts.flatMap((payout) => payout.playerIds.map((id) => [id, payout])));
@@ -91,8 +104,8 @@ describe("ladder playoff prizes", () => {
   it("pays every place once, with nothing left unclaimed when every tie was played", () => {
     const { payouts, unclaimed, kept } = plan(free128, fullBracket());
     expect(cpOf(payouts)).toEqual({
-      qf1w: 2240, qf3w: 1280, qf4w: 768, qf2w: 512,
-      qf1l: 400, qf2l: 400, qf3l: 400, qf4l: 400,
+      qf1w: 768, qf3w: 512, qf4w: 384, qf2w: 320,
+      qf1l: 304, qf2l: 304, qf3l: 304, qf4l: 304,
     });
     expect(unclaimed).toEqual({ cash: 0, cp: 0 });
     expect(kept).toEqual({ cash: 0, cp: 0 });
@@ -100,16 +113,16 @@ describe("ladder playoff prizes", () => {
       expect(payout.placePrize).toEqual(getLadderPlacePrize(free128, payout.place));
       expect(payout.potShare).toEqual({ cash: 0, cp: 0 });
     });
-    expect(sum(payouts, "cp")).toBe(6400);
+    expect(sum(payouts, "cp")).toBe(3200);
   });
 
   it("splits a doubles side's prize equally between both players, 50p included", () => {
     const ties = fullBracket();
     ties[6] = { ...ties[6], side1: side("user", "partner"), side2: side("opponent", "opponentPartner") };
     const champion = byPlayer(plan(paid128, ties).payouts).user;
-    expect(champion.prize).toEqual({ cash: 897, cp: 2240 });
-    expect(champion.perPlayer.prize).toEqual({ cash: 448.5, cp: 1120 });
-    expect(byPlayer(plan(paid128, ties).payouts).opponent.perPlayer.prize).toEqual({ cash: 256, cp: 640 });
+    expect(champion.prize).toEqual({ cash: 773, cp: 768 });
+    expect(champion.perPlayer.prize).toEqual({ cash: 386.5, cp: 384 });
+    expect(byPlayer(plan(paid128, ties).payouts).opponent.perPlayer.prize).toEqual({ cash: 230, cp: 256 });
   });
 
   it("places both sides of a void Final joint 2nd and shares the 1st prize equally with everyone else in the money", () => {
@@ -117,14 +130,14 @@ describe("ladder playoff prizes", () => {
     ties[6] = { ...ties[6], winner: null, outcome: "void" };
     const { payouts, unclaimed } = plan(paid128, ties);
     const paid = byPlayer(payouts);
-    expect(unclaimed).toEqual({ cash: 385, cp: 960 });
-    expect(paid.qf1w).toMatchObject({ place: 2, voided: true, potShare: { cash: 0, cp: 0 }, prize: { cash: 512, cp: 1280 } });
-    expect(paid.qf3w).toMatchObject({ place: 2, voided: true, prize: { cash: 512, cp: 1280 } });
-    expect(paid.qf4w.prize).toEqual({ cash: 307 + 65, cp: 768 + 160 });
-    expect(paid.qf2w.prize).toEqual({ cash: 204 + 64, cp: 512 + 160 });
-    expect(paid.qf1l.prize).toEqual({ cash: 160 + 64, cp: 400 + 160 });
+    expect(unclaimed).toEqual({ cash: 313, cp: 256 });
+    expect(paid.qf1w).toMatchObject({ place: 2, voided: true, potShare: { cash: 0, cp: 0 }, prize: { cash: 460, cp: 512 } });
+    expect(paid.qf3w).toMatchObject({ place: 2, voided: true, prize: { cash: 460, cp: 512 } });
+    expect(paid.qf4w.prize).toEqual({ cash: 307 + 53, cp: 384 + 46 });
+    expect(paid.qf2w.prize).toEqual({ cash: 220 + 52, cp: 320 + 42 });
+    expect(paid.qf1l.prize).toEqual({ cash: 200 + 52, cp: 304 + 42 });
     expect(sum(payouts, "cash")).toBe(2560);
-    expect(sum(payouts, "cp")).toBe(6400);
+    expect(sum(payouts, "cp")).toBe(3200);
   });
 
   it("places both sides of a void Semi-Final joint 4th and shares the empty 2nd", () => {
@@ -135,12 +148,12 @@ describe("ladder playoff prizes", () => {
     const { payouts, unclaimed } = plan(free128, ties);
     const paid = byPlayer(payouts);
     expect([paid.qf1w.place, paid.qf2w.place, paid.qf1w.voided]).toEqual([4, 4, true]);
-    expect(unclaimed.cp).toBe(768);
+    expect(unclaimed.cp).toBe(192);
     expect(cpOf(payouts)).toEqual({
-      qf3w: 2240 + 128, qf4w: 768 + 128, qf1w: 512, qf2w: 512,
-      qf1l: 528, qf2l: 528, qf3l: 528, qf4l: 528,
+      qf3w: 768 + 32, qf4w: 384 + 32, qf1w: 320, qf2w: 320,
+      qf1l: 336, qf2l: 336, qf3l: 336, qf4l: 336,
     });
-    expect(sum(payouts, "cp")).toBe(6400);
+    expect(sum(payouts, "cp")).toBe(3200);
   });
 
   it("gives the rounding left over to the highest finisher", () => {
@@ -148,22 +161,22 @@ describe("ladder playoff prizes", () => {
     ties[6] = { ...ties[6], side2: null, outcome: "walkover" };
     const { payouts } = plan(free128, ties);
     const paid = byPlayer(payouts);
-    expect(paid.qf1w.potShare.cp).toBe(182 + 6);
-    expect(paid.qf4w.potShare.cp).toBe(182);
-    expect(sum(payouts, "cp")).toBe(6400);
+    expect(paid.qf1w.potShare.cp).toBe(73 + 1);
+    expect(paid.qf4w.potShare.cp).toBe(73);
+    expect(sum(payouts, "cp")).toBe(3200);
   });
 
   it("keeps a disqualified side's place and prize for review and leaves it out of the share", () => {
     const ties = fullBracket();
     ties[6] = { ...ties[6], outcome: "walkover", walkoverReason: "disqualifiedOpponent" };
     const finalist = byPlayer(plan(free128, ties).payouts).qf3w;
-    expect(finalist).toMatchObject({ place: 2, disqualified: true, prize: { cash: 0, cp: 1280 } });
+    expect(finalist).toMatchObject({ place: 2, disqualified: true, prize: { cash: 0, cp: 512 } });
 
     const voidFinal = fullBracket();
     voidFinal[6] = { ...voidFinal[6], winner: null, outcome: "void" };
     const paid = byPlayer(plan(free128, voidFinal, ["qf4w"]).payouts);
     expect(paid.qf4w).toMatchObject({ disqualified: true, potShare: { cash: 0, cp: 0 } });
-    expect(paid.qf2w.potShare.cp).toBe(192);
+    expect(paid.qf2w.potShare.cp).toBe(51 + 1);
   });
 
   it("pays an inactive loser their place as normal", () => {
@@ -176,7 +189,7 @@ describe("ladder playoff prizes", () => {
     const final = tie(1, 0, { side1: side("user"), side2: side("opponent"), winner: null, outcome: "void" });
     const { payouts, unclaimed, kept } = plan(free128, [final]);
     expect(payouts.map((payout) => payout.place)).toEqual([2, 2]);
-    expect(unclaimed.cp).toBe(6400 - 2560);
+    expect(unclaimed.cp).toBe(3200 - 2 * 512);
     expect(kept).toEqual(unclaimed);
   });
 
@@ -240,10 +253,13 @@ describe("ladder playoff prizes never pay more than the pot", () => {
     }
   };
 
-  it.each([[128, 8], [256, 16], [512, 32], [1024, 64], [2048, 128]])(
-    "a %i ladder with random void ties pays exactly its pot",
-    (players, spots) => {
-      const ladder = { entryFee: 20, participantCount: players, maxPlayers: players };
+  it.each([
+    [128, 8, "linear"], [256, 16, "linear"], [512, 32, "linear"], [1024, 64, "linear"], [2048, 128, "linear"],
+    [128, 8, "progressive"], [512, 32, "progressive"], [2048, 128, "progressive"],
+  ])(
+    "a %i %s ladder with random void ties pays exactly its pot, unclaimed cash only to sides that won cash",
+    (players, spots, payoutStructure) => {
+      const ladder = { entryFee: 20, participantCount: players, maxPlayers: players, payoutStructure };
       const random = seeded(players);
       for (let run = 0; run < 40; run += 1) {
         const ties = playOut(spots, random);
@@ -251,7 +267,10 @@ describe("ladder playoff prizes never pay more than the pot", () => {
         const claimed = payouts.reduce((total, payout) => total + payout.placePrize.cash, 0);
         expect(claimed).toBeLessThanOrEqual(players * 20);
         expect(sum(payouts, "cash") + kept.cash).toBe(players * 20);
-        expect(sum(payouts, "cp") + kept.cp).toBe(players * 50);
+        expect(sum(payouts, "cp") + kept.cp).toBe(players * 25);
+        payouts
+          .filter((payout) => payout.placePrize.cash === 0)
+          .forEach((payout) => expect(payout.potShare.cash).toBe(0));
       }
     },
   );

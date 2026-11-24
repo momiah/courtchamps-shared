@@ -3,14 +3,13 @@ import { GENDER_TYPE, LADDER_TYPE } from "../types/ladder";
 import type { Ladder } from "../types/ladder";
 import type { LadderPreRegistrationDetails } from "../types/ladderPreRegistration";
 import { calculateLadderPrizePool } from "./calculateLadderPrizePool";
-import { getLadderPayouts } from "./ladderPayoutStructure";
-import { formatCurrency, ordinalPlace } from "./ladderPrizes";
+import { getLadderPrizeBands } from "./ladderPayoutStructure";
+import { formatCurrency, formatLadderPayoutPlace } from "./ladderPrizes";
 import { getPrizeType } from "./prizeType";
 
-type PrizeDetails = Pick<
-  LadderPreRegistrationDetails,
-  "entryFee" | "currencyType" | "maxPlayers"
->;
+type PoolDetails = Pick<LadderPreRegistrationDetails, "entryFee" | "currencyType" | "maxPlayers">;
+
+type PrizeDetails = PoolDetails & Pick<LadderPreRegistrationDetails, "payoutStructure">;
 
 export const COURT_CHAMPS_SITE_URL = "https://courtchamps.com";
 
@@ -69,7 +68,7 @@ export const getLadderEntrantNoun = (ladderType?: string): "team" | "player" =>
 
 /** The prize pool at a given size; a full ladder by default. */
 export const getLadderPrizePoolAtSize = (
-  details: PrizeDetails,
+  details: PoolDetails,
   ladderSize = details.maxPlayers,
 ) =>
   calculateLadderPrizePool({
@@ -79,7 +78,7 @@ export const getLadderPrizePoolAtSize = (
 
 /** "£40,960" for a cash ladder, "10,240 CP" for a community one. */
 export const formatLadderPrizePool = (
-  details: PrizeDetails,
+  details: PoolDetails,
   ladderSize = details.maxPlayers,
 ) => {
   const { cash, xp } = getLadderPrizePoolAtSize(details, ladderSize);
@@ -99,17 +98,12 @@ export interface LadderPrizeTableRow {
 /** Each finishing band's cash and CP for a full ladder. */
 export const getFullLadderPrizeTable = (
   details: PrizeDetails,
-): LadderPrizeTableRow[] => {
-  const { cash, xp } = getLadderPrizePoolAtSize(details);
-  const cashPayouts = getLadderPayouts(cash, details.maxPlayers);
-  return getLadderPayouts(xp, details.maxPlayers).map((cpPayout, index) => ({
-    fromPlace: cpPayout.fromPlace,
-    toPlace: cpPayout.toPlace,
-    label:
-      cpPayout.places === 1
-        ? ordinalPlace(cpPayout.fromPlace)
-        : `${ordinalPlace(cpPayout.fromPlace)}–${ordinalPlace(cpPayout.toPlace)}`,
-    cash: cashPayouts[index]?.each ?? 0,
-    cp: cpPayout.each,
+): LadderPrizeTableRow[] =>
+  getLadderPrizeBands(
+    getLadderPrizePoolAtSize(details),
+    details.maxPlayers,
+    details.payoutStructure,
+  ).map((band) => ({
+    ...band,
+    label: formatLadderPayoutPlace(band),
   }));
-};
