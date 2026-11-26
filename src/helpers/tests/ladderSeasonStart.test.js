@@ -124,7 +124,7 @@ describe("season start notifications", () => {
 
   it("says how many more are needed when the start moves back", () => {
     expect(getLadderSeasonExtendedNotification(doubles, 100).message).toBe(
-      "London Doubles needs 28 more teams to start, so the season now starts 14 days later. Invite your friends to join. If fewer than 128 teams have joined by then, the ladder will be cancelled and any entry fees refunded in full.",
+      "London Doubles needs 28 more teams to start, so the season now starts 14 days later. Invite your friends to join. If fewer than 128 teams have joined by then, the ladder will be cancelled and any entry fees refunded in full, including the 10% platform fee.",
     );
     expect(getLadderSeasonExtendedNotification(singles, 127).message).toContain(
       "needs 1 more player to start",
@@ -135,7 +135,7 @@ describe("season start notifications", () => {
     expect(getLadderSeasonCancelledNotification(singles)).toEqual({
       title: "Ladder cancelled",
       message:
-        "London Singles has been cancelled because fewer than 128 players joined before the season start. If you paid an entry fee, it will be refunded to you in full.",
+        "London Singles has been cancelled because fewer than 128 players joined before the season start. If you paid an entry fee, it will be refunded in full, including the 10% platform fee.",
     });
   });
 });
