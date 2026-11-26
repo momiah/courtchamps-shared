@@ -86,3 +86,10 @@ export const getLadderSeasonCancelledNotification = (
   title: "Ladder cancelled",
   message: `${ladder.name} has been cancelled because fewer than ${LADDER_MIN_ENTRANTS_TO_START} ${getLadderEntrantNoun(ladder.ladderType)}s joined before the season start. If you paid an entry fee, it will be ${LADDER_CANCELLED_REFUND}.`,
 });
+
+export const getLadderRegistrationClosedCancelledNotification = (
+  ladder: CopyLadder,
+): LadderNotificationCopy => ({
+  title: "Ladder cancelled",
+  message: `${ladder.name} has been cancelled because not enough ${getLadderEntrantNoun(ladder.ladderType)}s signed up before registration closed. If you paid an entry fee, it will be ${LADDER_CANCELLED_REFUND}.`,
+});

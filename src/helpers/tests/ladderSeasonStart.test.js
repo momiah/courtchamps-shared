@@ -3,6 +3,7 @@ import { LADDER_MIN_PLAYOFF_SIZE } from "../ladderPlayoffStructure";
 import {
   LADDER_MIN_ENTRANTS_TO_START,
   getLadderEntrantsNeededToStart,
+  getLadderRegistrationClosedCancelledNotification,
   getLadderSeasonCancelledNotification,
   getLadderSeasonExtendedNotification,
   getLadderSeasonStartStep,
@@ -136,6 +137,19 @@ describe("season start notifications", () => {
       title: "Ladder cancelled",
       message:
         "London Singles has been cancelled because fewer than 128 players joined before the season start. If you paid an entry fee, it will be refunded in full, including the 10% platform fee.",
+    });
+  });
+
+  it("tells entrants of a ladder cancelled at registration close about the full refund", () => {
+    expect(
+      getLadderRegistrationClosedCancelledNotification({
+        name: "London Doubles",
+        ladderType: LADDER_TYPE.DOUBLES,
+      }),
+    ).toEqual({
+      title: "Ladder cancelled",
+      message:
+        "London Doubles has been cancelled because not enough teams signed up before registration closed. If you paid an entry fee, it will be refunded in full, including the 10% platform fee.",
     });
   });
 });
