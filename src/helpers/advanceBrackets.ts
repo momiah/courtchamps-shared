@@ -40,6 +40,10 @@ const teamFromLoser = (
   return { player1: losingSide.player1, player2: losingSide.player2 };
 };
 
+// A reported game keeps its teams and scores; refilling it from the feeder
+// winners would wipe the scores it was played with.
+const isReported = (game: Game): boolean => !!game.result;
+
 const fillNextRoundShells = (
   completedRoundGames: Game[],
   nextRoundGames: Game[],
@@ -51,6 +55,7 @@ const fillNextRoundShells = (
   if (nextIsFinalRound) {
     const [semiOne, semiTwo] = completedRoundGames;
     return nextRoundGames.map((shell) => {
+      if (isReported(shell)) return shell;
       if (shell.isThirdPlacePlayoff) {
         return {
           ...shell,
@@ -67,6 +72,7 @@ const fillNextRoundShells = (
   }
 
   return nextRoundGames.map((shell, childIndex) => {
+    if (isReported(shell)) return shell;
     const feederOne = completedRoundGames[childIndex * 2];
     const feederTwo = completedRoundGames[childIndex * 2 + 1];
 
