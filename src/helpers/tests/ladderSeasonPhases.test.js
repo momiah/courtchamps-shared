@@ -27,7 +27,7 @@ describe("getLadderSeasonPhases", () => {
       key: "registrationOpen",
       label: "Registration Open",
       length: "14 - 28 days",
-      text: "Play starts once at least 128 players have joined. If there aren't enough after 28 days, the ladder is cancelled and entry fees refunded.",
+      text: "Play starts once at least 128 players have joined. If there aren't enough after 28 days, the ladder is cancelled and entry fees are refunded in full, including the 10% platform fee.",
     });
   });
 
@@ -72,7 +72,7 @@ describe("getLadderSeasonStartRules", () => {
   it("explains the season start", () => {
     expect(getLadderSeasonStartRules("team")).toEqual([
       "Matches open when the season starts, 14 days after registration opens, once 128 teams have joined.",
-      "If fewer have joined by then, the season start moves back 14 days. If there are still too few, the ladder is cancelled and every entry fee is refunded in full.",
+      "If fewer have joined by then, the season start moves back 14 days. If there are still too few, the ladder is cancelled and any entry fees are refunded in full, including the 10% platform fee.",
       "Registration stays open for the first 60 days of the season.",
     ]);
   });

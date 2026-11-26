@@ -338,6 +338,7 @@ export {
   LADDER_MIN_ENTRANTS_TO_START,
   LADDER_SEASON_NOT_STARTED_MESSAGE,
   getLadderEntrantsNeededToStart,
+  getLadderRegistrationClosedCancelledNotification,
   getLadderSeasonCancelledNotification,
   getLadderSeasonExtendedNotification,
   getLadderSeasonStartStep,

@@ -9,6 +9,7 @@ import {
 import { LADDER_POSTING_CLOSE_DAYS } from "./ladderSeasonClose";
 import { LADDER_MIN_ENTRANTS_TO_START } from "./ladderSeasonStart";
 import { LADDER_STATUS_LABELS } from "./ladderStatus";
+import { LADDER_CANCELLED_REFUND } from "../legal/disclaimers";
 
 export const LADDER_SEASON_PHASE = {
   REGISTRATION_OPEN: LADDER_STATUS.REGISTRATION_OPEN,
@@ -47,7 +48,7 @@ export const getLadderSeasonPhases = ({
     key: LADDER_SEASON_PHASE.REGISTRATION_OPEN,
     label: LADDER_STATUS_LABELS[LADDER_STATUS.REGISTRATION_OPEN],
     length: `${LADDER_SEASON_START_DAYS} - ${days(LADDER_SEASON_START_DAYS + LADDER_SEASON_EXTENSION_DAYS)}`,
-    text: `Play starts once at least ${LADDER_MIN_ENTRANTS_TO_START} ${noun}s have joined. If there aren't enough after ${days(LADDER_SEASON_START_DAYS + LADDER_SEASON_EXTENSION_DAYS)}, the ladder is cancelled${isPaid ? " and entry fees refunded" : ""}.`,
+    text: `Play starts once at least ${LADDER_MIN_ENTRANTS_TO_START} ${noun}s have joined. If there aren't enough after ${days(LADDER_SEASON_START_DAYS + LADDER_SEASON_EXTENSION_DAYS)}, the ladder is cancelled${isPaid ? ` and entry fees are ${LADDER_CANCELLED_REFUND}` : ""}.`,
   },
   {
     key: LADDER_SEASON_PHASE.SEASON_STARTS,
@@ -79,6 +80,6 @@ export const getLadderSeasonPhases = ({
 /** The season start rules, for the Registration section of the ladder rules. */
 export const getLadderSeasonStartRules = (noun: Noun): string[] => [
   `Matches open when the season starts, ${LADDER_SEASON_START_DAYS} days after registration opens, once ${LADDER_MIN_ENTRANTS_TO_START} ${noun}s have joined.`,
-  `If fewer have joined by then, the season start moves back ${LADDER_SEASON_EXTENSION_DAYS} days. If there are still too few, the ladder is cancelled and every entry fee is refunded in full.`,
+  `If fewer have joined by then, the season start moves back ${LADDER_SEASON_EXTENSION_DAYS} days. If there are still too few, the ladder is cancelled and any entry fees are ${LADDER_CANCELLED_REFUND}.`,
   `Registration stays open for the first ${LADDER_REGISTRATION_CLOSE_DAYS} days of the season.`,
 ];
